@@ -1,6 +1,6 @@
 {
-  "projectId": "",
-  "endpoint": "https://cloud.appwrite.io/v1",
+  "projectId": "6a2bc15c00065b3c91a0",
+  "endpoint": "https://nyc.cloud.appwrite.io/v1",
   "collections": [
     {
       "$id": "campaigns",
