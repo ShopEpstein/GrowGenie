@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GrowthGenie — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+/* =========================================================================
+   GROWTHGENIE — DASHBOARD
+   Self-contained, vanilla JS, Appwrite Web SDK v17 via CDN ESM
+   ========================================================================= */
+
+:root{
+  --ink:#0B0C13;
+  --ink-2:#101220;
+  --ink-3:#171a2b;
+  --line:rgba(255,255,255,.08);
+  --line-2:rgba(255,255,255,.14);
+  --text:#ECEDF5;
+  --dim:#8A8DA3;
+  --dim-2:#5d6075;
+  --accent:#8A5BFF;
+  --accent-2:#FF4D9D;
+  --gold:#FFC53D;
+  --good:#2BD576;
+  --bad:#FF5C5C;
+  --r:16px;
+  --r-sm:11px;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  line-height:1.5;
+  min-height:100vh;
+}
+
+/* ambient glow */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(60% 50% at 78% -5%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 12% 8%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 70%);
+  opacity:.6;
+}
+
+a{color:inherit;text-decoration:none}
+.mono{font-family:'Space Mono',monospace}
+.grotesk{font-family:'Space Grotesk',sans-serif}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* ---------- topbar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  background:color-mix(in srgb, var(--ink) 72%, transparent);
+  border-bottom:1px solid var(--line);
+}
+.topbar .row{
+  display:flex;align-items:center;gap:14px;height:64px;
+}
+.brand{
+  display:flex;align-items:center;gap:11px;
+  font-family:'Space Grotesk';font-weight:700;font-size:17px;letter-spacing:-.01em;
+}
+.brand .logo{
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 0 0 1px var(--line-2), 0 8px 22px -8px var(--accent);
+  flex-shrink:0;
+}
+.spacer{flex:1}
+.user-email{
+  font-family:'Space Mono';font-size:12px;color:var(--dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;
+}
+@media(max-width:560px){.user-email{display:none}}
+
+/* ---------- buttons ---------- */
+.btn{
+  font-family:'Space Grotesk';font-weight:600;font-size:14px;
+  border:0;border-radius:999px;padding:11px 19px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;
+  color:#0a0a10;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 10px 26px -12px var(--accent);
+  transition:transform .12s ease, box-shadow .12s ease, filter .12s;
+  white-space:nowrap;
+  text-decoration:none;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 14px 30px -10px var(--accent);filter:brightness(1.06)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line-2);box-shadow:none}
+.btn.ghost:hover{border-color:var(--text);filter:none}
+.btn.sm{padding:8px 14px;font-size:13px}
+.btn.full{width:100%;justify-content:center;justify-content:center}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+
+/* ---------- page header ---------- */
+.page-header{
+  padding:40px 0 28px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.page-header h1{
+  font-family:'Space Grotesk';font-weight:700;font-size:clamp(24px,4vw,34px);
+  letter-spacing:-.025em;margin:0;flex:1;min-width:160px;
+}
+
+/* ---------- campaign grid ---------- */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:18px;
+  padding-bottom:60px;
+}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+
+/* ---------- campaign card ---------- */
+.card{
+  background:var(--ink-2);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:20px;
+  display:flex;flex-direction:column;gap:14px;
+  transition:border-color .15s ease, transform .15s ease, box-shadow .15s ease;
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 4%,transparent),transparent 60%);
+  opacity:0;transition:opacity .2s;
+}
+.card:hover{
+  border-color:var(--line-2);
+  transform:translateY(-2px);
+  box-shadow:0 20px 48px -18px rgba(0,0,0,.6);
+}
+.card:hover::before{opacity:1}
+
+.card-top{display:flex;align-items:flex-start;gap:14px}
+.campaign-emoji{
+  font-size:36px;line-height:1;flex-shrink:0;
+  width:52px;height:52px;display:grid;place-items:center;
+  background:var(--ink-3);border-radius:var(--r-sm);
+  border:1px solid var(--line);
+}
+.campaign-meta{flex:1;min-width:0}
+.campaign-name{
+  font-family:'Space Grotesk';font-weight:700;font-size:17px;
+  letter-spacing:-.015em;margin:0 0 4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.campaign-slug{
+  font-family:'Space Mono';font-size:11.5px;color:var(--dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+.card-prize{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Space Grotesk';font-size:15px;font-weight:600;
+}
+.prize-amount{color:var(--gold);font-size:17px}
+.prize-token{color:var(--dim);font-size:13px}
+
+.card-stats{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:'Space Mono';font-size:11px;
+  border-radius:999px;padding:4px 10px;
+  border:1px solid var(--line);background:var(--ink-3);
+}
+.badge.good{color:var(--good);border-color:color-mix(in srgb,var(--good) 30%,transparent);background:color-mix(in srgb,var(--good) 8%,transparent)}
+.badge.gold{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 30%,transparent);background:color-mix(in srgb,var(--gold) 8%,transparent)}
+.badge.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 30%,transparent);background:color-mix(in srgb,var(--bad) 8%,transparent)}
+
+.card-actions{
+  display:flex;gap:8px;margin-top:2px;
+}
+
+/* ---------- empty state ---------- */
+.empty{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:80px 24px;
+  gap:18px;
+}
+.empty-art{
+  font-size:72px;line-height:1;
+  filter:grayscale(.4) opacity(.7);
+  margin-bottom:4px;
+}
+.empty h2{
+  font-family:'Space Grotesk';font-weight:700;font-size:22px;
+  letter-spacing:-.02em;margin:0;color:var(--text);
+}
+.empty p{color:var(--dim);margin:0;font-size:15px;max-width:320px}
+
+/* ---------- loading skeleton ---------- */
+.skeleton-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:18px;
+  padding-bottom:60px;
+}
+@media(max-width:700px){.skeleton-grid{grid-template-columns:1fr}}
+.skel-card{
+  background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);
+  padding:20px;height:196px;
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1}
+  50%{opacity:.45}
+}
+
+/* ---------- toast ---------- */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--ink-3);border:1px solid var(--line-2);border-radius:var(--r-sm);
+  padding:11px 18px;font-size:14px;font-family:'Space Grotesk';font-weight:500;
+  box-shadow:var(--shadow);z-index:999;opacity:0;
+  transition:opacity .2s,transform .2s;
+  pointer-events:none;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{color:var(--bad)}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="wrap row">
+    <a class="brand" href="dashboard.html">
+      <div class="logo">🧞</div>
+      GrowthGenie
+    </a>
+    <div class="spacer"></div>
+    <span class="user-email" id="userEmail"></span>
+    <button class="btn ghost sm" id="signOutBtn">Sign out</button>
+  </div>
+</header>
+
+<!-- Main content -->
+<main class="wrap">
+  <div class="page-header">
+    <h1 class="grotesk">Your Campaigns</h1>
+    <a href="builder.html" class="btn">+ Create campaign</a>
+  </div>
+
+  <div id="content">
+    <!-- Loading skeletons -->
+    <div class="skeleton-grid" id="skeletons">
+      <div class="skel-card"></div>
+      <div class="skel-card"></div>
+      <div class="skel-card"></div>
+      <div class="skel-card"></div>
+    </div>
+  </div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { Client, Account, Databases, Query }
+  from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
+
+/* ── Appwrite setup ─────────────────────────────────────────────────────── */
+const client = new Client()
+  .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+  .setProject('6a2bc15c00065b3c91a0');
+
+const account   = new Account(client);
+const databases = new Databases(client);
+
+const DB  = 'growthgenie';
+const COL = 'campaigns';
+
+/* ── Utility helpers ────────────────────────────────────────────────────── */
+function showToast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => { t.className = 'toast'; }, 3200);
+}
+
+function daysLeft(endDateStr) {
+  if (!endDateStr) return null;
+  const end  = new Date(endDateStr);
+  const now  = new Date();
+  return Math.ceil((end - now) / 864e5);
+}
+
+function daysBadge(dl) {
+  if (dl === null) return '';
+  if (dl <= 0) return `<span class="badge bad">Ended</span>`;
+  if (dl <= 3) return `<span class="badge gold">⏳ ${dl}d left</span>`;
+  return `<span class="badge good">🟢 ${dl}d left</span>`;
+}
+
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── Render campaigns ───────────────────────────────────────────────────── */
+function renderCampaigns(docs) {
+  const content = document.getElementById('content');
+
+  if (!docs.length) {
+    content.innerHTML = `
+      <div class="empty">
+        <div class="empty-art">🧞</div>
+        <h2>No campaigns yet</h2>
+        <p>Launch your first referral campaign and start growing your audience.</p>
+        <a href="builder.html" class="btn" style="margin-top:6px">
+          Create your first campaign →
+        </a>
+      </div>`;
+    return;
+  }
+
+  const cards = docs.map(doc => {
+    const name    = esc(doc.projectName ?? doc.name ?? 'Untitled');
+    const slug    = esc(doc.slug ?? doc.$id);
+    const emoji   = esc(doc.logo ?? doc.emoji ?? '🚀');
+    const amount  = esc(doc.prizeAmount ?? doc.prize ?? '—');
+    const token   = esc(doc.prizeToken ?? doc.token ?? '');
+    const winners = doc.numWinners ?? doc.winners ?? '—';
+    const dl      = daysLeft(doc.endDate ?? doc.endsAt ?? null);
+    const badge   = daysBadge(dl);
+    const winnersLabel = winners === 1 ? '1 winner' : `${winners} winners`;
+
+    return `
+      <article class="card">
+        <div class="card-top">
+          <div class="campaign-emoji">${emoji}</div>
+          <div class="campaign-meta">
+            <div class="campaign-name">${name}</div>
+            <div class="campaign-slug mono">/${slug}</div>
+          </div>
+        </div>
+        <div class="card-prize">
+          <span class="prize-amount">${amount}</span>
+          <span class="prize-token">${token}</span>
+        </div>
+        <div class="card-stats">
+          ${badge}
+          <span class="badge">🏆 ${winnersLabel}</span>
+        </div>
+        <div class="card-actions">
+          <a href="index.html?c=${encodeURIComponent(slug)}" target="_blank" rel="noopener"
+             class="btn ghost sm">View</a>
+          <a href="builder.html?id=${encodeURIComponent(esc(doc.$id))}"
+             class="btn ghost sm">Edit</a>
+        </div>
+      </article>`;
+  });
+
+  content.innerHTML = `<div class="grid">${cards.join('')}</div>`;
+}
+
+/* ── Boot ───────────────────────────────────────────────────────────────── */
+async function boot() {
+  // 1. Auth check
+  let user;
+  try {
+    user = await account.get();
+  } catch {
+    window.location.replace('login.html');
+    return;
+  }
+
+  // Display email
+  const emailEl = document.getElementById('userEmail');
+  if (emailEl) emailEl.textContent = user.email ?? user.name ?? '';
+
+  // Sign-out
+  document.getElementById('signOutBtn').addEventListener('click', async () => {
+    try {
+      await account.deleteSession('current');
+    } catch { /* ignore */ }
+    window.location.replace('login.html');
+  });
+
+  // 2. Fetch campaigns
+  let docs = [];
+  try {
+    const res = await databases.listDocuments(DB, COL, [
+      Query.equal('clientId', user.$id),
+      Query.orderDesc('$createdAt'),
+      Query.limit(50),
+    ]);
+    docs = res.documents;
+  } catch (err) {
+    showToast('Could not load campaigns.', true);
+    console.error(err);
+  }
+
+  // 3. Render
+  renderCampaigns(docs);
+}
+
+boot();
+</script>
+</body>
+</html>
