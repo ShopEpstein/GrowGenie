@@ -1,0 +1,99 @@
+{
+  "projectId": "",
+  "endpoint": "https://cloud.appwrite.io/v1",
+  "collections": [
+    {
+      "$id": "campaigns",
+      "databaseId": "growthgenie",
+      "name": "campaigns",
+      "documentSecurity": true,
+      "$permissions": [
+        "read(\"any\")",
+        "create(\"users\")"
+      ],
+      "attributes": [
+        { "key": "slug",          "type": "string",  "size": 64,   "required": true  },
+        { "key": "clientId",      "type": "string",  "size": 64,   "required": true  },
+        { "key": "projectName",   "type": "string",  "size": 128,  "required": true  },
+        { "key": "title",         "type": "string",  "size": 256,  "required": false },
+        { "key": "tag",           "type": "string",  "size": 512,  "required": false },
+        { "key": "logo",          "type": "string",  "size": 64,   "required": false },
+        { "key": "accentColor",   "type": "string",  "size": 16,   "required": false },
+        { "key": "prizeAmount",   "type": "string",  "size": 64,   "required": false },
+        { "key": "prizeToken",    "type": "string",  "size": 32,   "required": false },
+        { "key": "numWinners",    "type": "integer", "required": false, "min": 1, "max": 100 },
+        { "key": "referralBonus", "type": "integer", "required": false, "min": 0, "max": 99999 },
+        { "key": "endDate",       "type": "integer", "required": false },
+        { "key": "tokenName",     "type": "string",  "size": 32,   "required": false },
+        { "key": "tokenPrice",    "type": "string",  "size": 32,   "required": false },
+        { "key": "tokenChange",   "type": "string",  "size": 16,   "required": false },
+        { "key": "tokenCa",       "type": "string",  "size": 128,  "required": false },
+        { "key": "tokenBuyUrl",   "type": "string",  "size": 2048, "format": "url", "required": false },
+        { "key": "tokenSiteUrl",  "type": "string",  "size": 2048, "format": "url", "required": false },
+        { "key": "active",        "type": "boolean", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_slug",     "type": "key", "attributes": ["slug"],     "orders": ["ASC"] },
+        { "key": "idx_clientId", "type": "key", "attributes": ["clientId"], "orders": ["ASC"] }
+      ]
+    },
+    {
+      "$id": "missions",
+      "databaseId": "growthgenie",
+      "name": "missions",
+      "documentSecurity": false,
+      "$permissions": [
+        "read(\"any\")",
+        "create(\"users\")"
+      ],
+      "attributes": [
+        { "key": "campaignId", "type": "string",  "size": 64,   "required": true  },
+        { "key": "name",       "type": "string",  "size": 256,  "required": true  },
+        { "key": "desc",       "type": "string",  "size": 512,  "required": false },
+        { "key": "icon",       "type": "string",  "size": 16,   "required": false },
+        { "key": "pts",        "type": "integer", "required": true,  "min": 0, "max": 999999 },
+        { "key": "type",       "type": "string",  "size": 32,   "required": false },
+        { "key": "proof",      "type": "string",  "size": 32,   "required": false },
+        { "key": "daily",      "type": "boolean", "required": false },
+        { "key": "min",        "type": "integer", "required": false, "min": 0, "max": 9999 },
+        { "key": "lockHrs",    "type": "integer", "required": false, "min": 0, "max": 8760 },
+        { "key": "order",      "type": "integer", "required": false, "min": 0, "max": 9999 },
+        { "key": "q",          "type": "string",  "size": 8,    "required": false },
+        { "key": "active",     "type": "boolean", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_campaignId", "type": "key", "attributes": ["campaignId"],         "orders": ["ASC"] },
+        { "key": "idx_order",      "type": "key", "attributes": ["campaignId", "order"], "orders": ["ASC", "ASC"] }
+      ]
+    },
+    {
+      "$id": "entries",
+      "databaseId": "growthgenie",
+      "name": "entries",
+      "documentSecurity": true,
+      "$permissions": [
+        "read(\"any\")",
+        "create(\"users\")"
+      ],
+      "attributes": [
+        { "key": "campaignId",        "type": "string",  "size": 64,    "required": true  },
+        { "key": "name",              "type": "string",  "size": 128,   "required": false },
+        { "key": "email",             "type": "string",  "size": 256,   "required": false },
+        { "key": "wallet",            "type": "string",  "size": 64,    "required": false },
+        { "key": "walletFull",        "type": "string",  "size": 256,   "required": false },
+        { "key": "x",                 "type": "string",  "size": 64,    "required": false },
+        { "key": "pts",               "type": "integer", "required": false, "min": 0, "max": 9999999 },
+        { "key": "completedMissions", "type": "string",  "size": 4096,  "required": false },
+        { "key": "refCode",           "type": "string",  "size": 16,    "required": false },
+        { "key": "referredBy",        "type": "string",  "size": 16,    "required": false },
+        { "key": "flagged",           "type": "boolean", "required": false },
+        { "key": "timestamp",         "type": "integer", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_campaignId", "type": "key", "attributes": ["campaignId"],        "orders": ["ASC"] },
+        { "key": "idx_pts",        "type": "key", "attributes": ["campaignId", "pts"], "orders": ["ASC", "DESC"] },
+        { "key": "idx_refCode",    "type": "key", "attributes": ["refCode"],            "orders": ["ASC"] }
+      ]
+    }
+  ]
+}
