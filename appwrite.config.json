@@ -73,7 +73,7 @@
       "documentSecurity": true,
       "$permissions": [
         "read(\"any\")",
-        "create(\"users\")"
+        "create(\"any\")"
       ],
       "attributes": [
         { "key": "campaignId",        "type": "string",  "size": 64,    "required": true  },

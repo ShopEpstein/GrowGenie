@@ -454,22 +454,16 @@ footer a:hover{color:var(--text)}
 <div id="toast"></div>
 
 <script type="module">
+import { Client, Databases, Query } from
+  'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
+
 /* =========================================================================
-   1) FIREBASE CONFIG  ——  PASTE YOUR **NEW** PROJECT'S CONFIG HERE
-   Leave blank to run in demo mode. When projectId is set, the page goes
-   live automatically and reads/writes these collections:
-     campaigns/{id}  (with field: slug)   missions/{id} (field: campaignId)
-     entries/{id}    (field: campaignId)
+   1) APPWRITE CONFIG — leave projectId blank to run in demo mode
    ========================================================================= */
-const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",        // <-- set this to go live
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
-};
-const DEMO_MODE = !firebaseConfig.projectId;
+const APPWRITE_ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
+const APPWRITE_PROJECT  = '6a2bc15c00065b3c91a0';
+const DATABASE_ID       = 'growthgenie';
+const DEMO_MODE = !APPWRITE_PROJECT;
 
 /* =========================================================================
    2) DEMO DATA  (only used when DEMO_MODE) — two campaigns to prove multi-campaign
@@ -513,7 +507,7 @@ const DEMO = {
 /* =========================================================================
    3) STATE
    ========================================================================= */
-let CAMP=null, MISSIONS=[], BOARD=[], db=null;
+let CAMP=null, MISSIONS=[], BOARD=[], _db=null, _client=null;
 let player={ wallet:"", name:"", email:"", x:"", xp:0, done:[], ref:"", refBy:"", registered:false, id:null };
 const slug = new URLSearchParams(location.search).get("c") || (DEMO_MODE ? "staccana" : "");
 const refBy = new URLSearchParams(location.search).get("ref") || "";
@@ -544,8 +538,23 @@ function chip(x,y,txt,big){const c=document.createElement("div");c.className="ch
 function rollup(el,to){const from=0,dur=900,t0=performance.now();function step(t){const p=Math.min(1,(t-t0)/dur);const e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(from+(to-from)*e));if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
 
 /* =========================================================================
-   5) DATA LAYER  (demo  ↔  firestore)
+   5) DATA LAYER  (demo  ↔  appwrite)
    ========================================================================= */
+async function _fetchMissions(campaignId){
+  const r=await _db.listDocuments(DATABASE_ID,'missions',[
+    Query.equal('campaignId',campaignId),Query.orderAsc('order'),Query.limit(100)
+  ]);
+  return r.documents.filter(m=>m.active!==false).map(m=>({
+    ...m,id:m.$id,unlockAt:m.lockHrs?Date.now()+m.lockHrs*3600000:null
+  }));
+}
+async function _fetchBoard(campaignId){
+  const r=await _db.listDocuments(DATABASE_ID,'entries',[
+    Query.equal('campaignId',campaignId),Query.orderDesc('pts'),Query.limit(100)
+  ]);
+  return r.documents.filter(e=>!e.flagged).map(e=>({...e,id:e.$id}));
+}
+
 async function loadCampaign(){
   if(DEMO_MODE){
     const d=DEMO[slug]||DEMO.staccana;
@@ -555,22 +564,23 @@ async function loadCampaign(){
     BOARD=d.seed.map(([n,p])=>({name:n,wallet:n.slice(0,3)+"…"+n.slice(-2),pts:p,id:"s_"+n}));
     return;
   }
-  const {getFirestore,collection,query,where,getDocs,onSnapshot}=window._fs;
-  // campaign by slug
-  const cq=query(collection(db,"campaigns"),where("slug","==",slug));
-  const cs=await getDocs(cq);
-  if(cs.empty){renderNotFound();throw new Error("no campaign");}
-  CAMP={id:cs.docs[0].id,...cs.docs[0].data()};
-  // live quests
-  onSnapshot(query(collection(db,"missions"),where("campaignId","==",CAMP.id)),s=>{
-    MISSIONS=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.active!==false).sort((a,b)=>(a.order||0)-(b.order||0));
-    renderQuests();renderStats();
-  });
-  // live leaderboard
-  onSnapshot(query(collection(db,"entries"),where("campaignId","==",CAMP.id)),s=>{
-    BOARD=s.docs.map(d=>({id:d.id,...d.data()})).filter(e=>!e.flagged).sort((a,b)=>(b.pts||0)-(a.pts||0));
-    renderBoard();renderStats();
-  });
+  // fetch campaign by slug
+  const cr=await _db.listDocuments(DATABASE_ID,'campaigns',[Query.equal('slug',slug)]);
+  if(!cr.documents.length){renderNotFound();throw new Error("no campaign");}
+  CAMP={...cr.documents[0],id:cr.documents[0].$id};
+  // initial fetch
+  MISSIONS=await _fetchMissions(CAMP.id);
+  BOARD=await _fetchBoard(CAMP.id);
+  // live quests via Realtime
+  _client.subscribe(
+    `databases.${DATABASE_ID}.collections.missions.documents`,
+    async()=>{MISSIONS=await _fetchMissions(CAMP.id);renderQuests();renderStats();}
+  );
+  // live leaderboard via Realtime
+  _client.subscribe(
+    `databases.${DATABASE_ID}.collections.entries.documents`,
+    async()=>{BOARD=await _fetchBoard(CAMP.id);renderBoard();renderStats();}
+  );
 }
 
 async function persistEntry(){
@@ -580,12 +590,18 @@ async function persistEntry(){
     me.pts=player.xp;me.name=player.name;
     BOARD.sort((a,b)=>b.pts-a.pts);renderBoard();return;
   }
-  const {doc,setDoc}=window._fs;
-  await setDoc(doc(db,"entries",player.id),{
-    campaignId:CAMP.id,name:player.name,email:player.email,wallet:trunc(player.wallet),walletFull:player.wallet,
-    x:player.x,pts:player.xp,completedMissions:player.done,refCode:player.ref,referredBy:player.refBy,
-    flagged:false,timestamp:Date.now()
-  },{merge:true});
+  const data={
+    campaignId:CAMP.id,name:player.name,email:player.email,
+    wallet:trunc(player.wallet),walletFull:player.wallet,
+    x:player.x,pts:player.xp,completedMissions:JSON.stringify(player.done),
+    refCode:player.ref,referredBy:player.refBy,flagged:false,timestamp:Date.now()
+  };
+  try{
+    await _db.createDocument(DATABASE_ID,'entries',player.id,data);
+  }catch(err){
+    if(err.code===409){await _db.updateDocument(DATABASE_ID,'entries',player.id,data);}
+    else throw err;
+  }
 }
 
 /* =========================================================================
@@ -603,17 +619,19 @@ function applyBranding(){
   $("prizeTok").textContent=CAMP.prizeToken||"";
   $("numWinners").textContent=CAMP.numWinners||1;
   $("refBonus").textContent=CAMP.referralBonus||0;
-  // token
-  if(CAMP.token&&CAMP.token.name){
+  // token — support nested (demo) and flat (live) shapes
+  const tk=CAMP.token||{name:CAMP.tokenName,price:CAMP.tokenPrice,change:CAMP.tokenChange,
+    ca:CAMP.tokenCa,buyUrl:CAMP.tokenBuyUrl,siteUrl:CAMP.tokenSiteUrl};
+  if(tk&&tk.name){
     $("tokenTicker").style.display="flex";
-    $("tkName").textContent=CAMP.token.name;$("tkPrice").textContent=CAMP.token.price||"";
-    const chg=$("tkChg");chg.textContent=CAMP.token.change||"";chg.classList.toggle("down",(CAMP.token.change||"").startsWith("-"));
+    $("tkName").textContent=tk.name;$("tkPrice").textContent=tk.price||"";
+    const chg=$("tkChg");chg.textContent=tk.change||"";chg.classList.toggle("down",(tk.change||"").startsWith("-"));
     $("tokenPanel").classList.remove("hidden");
-    $("tpName").textContent=CAMP.token.name;$("tpPrice").textContent=CAMP.token.price||"";
-    const c2=$("tpChg");c2.textContent=CAMP.token.change||"";c2.style.color=(CAMP.token.change||"").startsWith("-")?"var(--bad)":"var(--good)";
-    $("tpCa").value=CAMP.token.ca||"";
-    $("tpBuy").onclick=()=>CAMP.token.buyUrl&&window.open(CAMP.token.buyUrl,"_blank");
-    $("tpSite").onclick=()=>CAMP.token.siteUrl&&window.open(CAMP.token.siteUrl,"_blank");
+    $("tpName").textContent=tk.name;$("tpPrice").textContent=tk.price||"";
+    const c2=$("tpChg");c2.textContent=tk.change||"";c2.style.color=(tk.change||"").startsWith("-")?"var(--bad)":"var(--good)";
+    $("tpCa").value=tk.ca||"";
+    $("tpBuy").onclick=()=>tk.buyUrl&&window.open(tk.buyUrl,"_blank");
+    $("tpSite").onclick=()=>tk.siteUrl&&window.open(tk.siteUrl,"_blank");
   }
 }
 
@@ -832,9 +850,8 @@ async function boot(){
   renderWallets();
   if(!DEMO_MODE){
     $("demoBanner").classList.add("hidden");
-    const a=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
-    const fs=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    window._fs=fs;const app=a.initializeApp(firebaseConfig);db=fs.getFirestore(app);
+    _client=new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
+    _db=new Databases(_client);
   }
   try{ await loadCampaign(); }catch(e){ renderStats(); return; }
   applyBranding();renderQuests();renderBoard();renderStats();
