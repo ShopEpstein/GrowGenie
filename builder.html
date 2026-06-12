@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GrowthGenie — Campaign Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0B0C13;--ink-2:#101220;--ink-3:#171a2b;
+  --line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+  --text:#ECEDF5;--dim:#8A8DA3;--dim-2:#5d6075;
+  --accent:#8A5BFF;--accent-2:#FF4D9D;
+  --gold:#FFC53D;--good:#2BD576;--bad:#FF5C5C;
+  --r:16px;--r-sm:11px;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+}
+html{background:var(--ink);color:var(--text);font-family:'Inter',sans-serif;font-size:15px;line-height:1.5}
+body{min-height:100vh;background:var(--ink)}
+
+/* TOPBAR */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(11,12,19,.85);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 24px;height:60px;
+}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--text);text-decoration:none}
+.topbar-brand span.logo{font-size:22px}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px 20px;border-radius:var(--r-sm);font-family:'Space Grotesk',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .18s;
+  text-decoration:none;white-space:nowrap;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#7a4df5;transform:translateY(-1px);box-shadow:0 6px 24px rgba(138,91,255,.35)}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--line-2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--line-2);background:var(--ink-3)}
+.btn-sm{padding:7px 14px;font-size:13px}
+.btn-danger{background:rgba(255,92,92,.12);color:var(--bad);border:1px solid rgba(255,92,92,.2)}
+.btn-danger:hover{background:rgba(255,92,92,.22)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* MAIN LAYOUT */
+.main{padding:32px 24px 80px;max-width:760px;margin:0 auto}
+
+/* STEP INDICATOR */
+.step-indicator{
+  display:flex;align-items:center;justify-content:center;
+  gap:0;margin-bottom:36px;
+}
+.step-item{
+  display:flex;align-items:center;gap:0;
+}
+.step-dot{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  position:relative;
+}
+.step-circle{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+  border:2px solid var(--line-2);background:var(--ink-2);color:var(--dim);
+  transition:all .25s;flex-shrink:0;
+}
+.step-label{
+  font-size:11px;font-weight:500;color:var(--dim-2);white-space:nowrap;
+  transition:color .25s;
+}
+.step-line{
+  width:60px;height:2px;background:var(--line);margin:0 4px;margin-bottom:22px;
+  transition:background .25s;flex-shrink:0;
+}
+.step-item.active .step-circle{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 16px rgba(138,91,255,.4)}
+.step-item.active .step-label{color:var(--accent)}
+.step-item.done .step-circle{background:rgba(43,213,118,.12);border-color:var(--good);color:var(--good)}
+.step-item.done .step-label{color:var(--good)}
+.step-item.done+.step-item .step-line,.step-line.done{background:var(--good)}
+
+/* PANELS */
+.step-panel{display:none}
+.step-panel.active{display:block}
+.panel-box{
+  background:var(--ink-2);border:1px solid var(--line);
+  border-radius:var(--r);padding:32px;
+  box-shadow:var(--shadow);
+}
+.panel-title{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;
+  color:var(--text);margin-bottom:6px;
+}
+.panel-sub{color:var(--dim);font-size:14px;margin-bottom:28px}
+
+/* FIELDS */
+.field{margin-bottom:20px}
+.field label{display:block;font-size:13px;font-weight:500;color:var(--dim);margin-bottom:7px;font-family:'Space Grotesk',sans-serif}
+.field label span.req{color:var(--accent)}
+.input{
+  width:100%;background:var(--ink-3);border:1px solid var(--line-2);
+  border-radius:var(--r-sm);padding:11px 14px;
+  color:var(--text);font-size:14px;font-family:'Inter',sans-serif;
+  outline:none;transition:border-color .18s,box-shadow .18s;
+}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(138,91,255,.14)}
+.input::placeholder{color:var(--dim-2)}
+.input-mono{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.3px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:580px){.field-row,.field-row-3{grid-template-columns:1fr}}
+
+/* COLOR PICKER */
+.color-row{display:flex;align-items:center;gap:10px}
+.color-swatch{
+  width:40px;height:40px;border-radius:var(--r-sm);border:2px solid var(--line-2);
+  cursor:pointer;overflow:hidden;flex-shrink:0;padding:0;
+}
+.color-swatch input[type=color]{
+  width:56px;height:56px;border:none;background:none;cursor:pointer;
+  transform:translate(-8px,-8px);opacity:0;position:absolute;
+}
+.color-swatch-wrap{position:relative;width:40px;height:40px;flex-shrink:0}
+.color-preview{
+  width:40px;height:40px;border-radius:var(--r-sm);
+  border:2px solid var(--line-2);display:block;
+}
+
+/* TOGGLE / COLLAPSIBLE */
+.toggle-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;background:var(--ink-3);border:1px solid var(--line);
+  border-radius:var(--r-sm);cursor:pointer;margin-bottom:4px;
+  transition:border-color .18s;user-select:none;
+}
+.toggle-row:hover{border-color:var(--line-2)}
+.toggle-arrow{
+  margin-left:auto;color:var(--dim-2);font-size:13px;
+  transition:transform .22s;
+}
+.toggle-row.open .toggle-arrow{transform:rotate(180deg)}
+.collapsible-body{
+  background:var(--ink-3);border:1px solid var(--line);border-top:none;
+  border-radius:0 0 var(--r-sm) var(--r-sm);
+  padding:16px;display:none;
+}
+.collapsible-body.open{display:block}
+
+/* QUEST TEMPLATES GRID */
+.templates-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
+  margin-bottom:24px;
+}
+@media(max-width:520px){.templates-grid{grid-template-columns:repeat(2,1fr)}}
+.tpl-card{
+  background:var(--ink-3);border:1px solid var(--line);
+  border-radius:var(--r-sm);padding:12px 14px;cursor:pointer;
+  transition:border-color .18s,background .18s,transform .12s;
+  display:flex;flex-direction:column;gap:4px;
+}
+.tpl-card:hover{border-color:var(--accent);background:rgba(138,91,255,.06);transform:translateY(-2px)}
+.tpl-card.flash{background:rgba(138,91,255,.18);border-color:var(--accent)}
+.tpl-icon{font-size:20px;line-height:1}
+.tpl-name{font-size:12px;font-weight:600;color:var(--text);font-family:'Space Grotesk',sans-serif}
+.tpl-xp{font-size:11px;color:var(--accent);font-family:'Space Mono',monospace}
+
+/* CUSTOM QUEST FORM */
+.custom-form{
+  background:var(--ink-3);border:1px solid var(--line-2);
+  border-radius:var(--r-sm);padding:18px;margin-bottom:20px;
+  display:none;
+}
+.custom-form.open{display:block}
+
+/* ADDED QUESTS */
+.quests-list{display:flex;flex-direction:column;gap:8px}
+.quest-card{
+  background:var(--ink-3);border:1px solid var(--line);
+  border-radius:var(--r-sm);overflow:hidden;
+  transition:border-color .18s;
+}
+.quest-card:hover{border-color:var(--line-2)}
+.quest-card-header{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;cursor:pointer;
+}
+.quest-drag{color:var(--dim-2);font-size:14px;cursor:grab;flex-shrink:0;user-select:none}
+.quest-icon-badge{font-size:18px;flex-shrink:0}
+.quest-name-text{font-weight:600;font-size:14px;font-family:'Space Grotesk',sans-serif;flex:1}
+.quest-xp-badge{
+  background:rgba(138,91,255,.15);color:var(--accent);
+  font-size:11px;font-family:'Space Mono',monospace;font-weight:700;
+  padding:3px 8px;border-radius:20px;flex-shrink:0;
+}
+.quest-remove{
+  background:none;border:none;color:var(--dim-2);font-size:17px;cursor:pointer;
+  padding:2px 6px;border-radius:6px;transition:color .15s,background .15s;flex-shrink:0;
+}
+.quest-remove:hover{color:var(--bad);background:rgba(255,92,92,.1)}
+.quest-edit-body{
+  padding:14px;border-top:1px solid var(--line);display:none;
+}
+.quest-edit-body.open{display:block}
+
+/* NAV BUTTONS */
+.nav-buttons{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:28px;padding-top:24px;border-top:1px solid var(--line);
+}
+
+/* REVIEW SECTION */
+.review-section{margin-bottom:24px}
+.review-section h3{
+  font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;
+  color:var(--dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:.6px;font-size:11px;
+}
+.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.review-grid{grid-template-columns:1fr}}
+.review-item{background:var(--ink-3);border-radius:var(--r-sm);padding:12px 14px}
+.review-item label{display:block;font-size:11px;color:var(--dim-2);margin-bottom:3px;font-family:'Space Grotesk',sans-serif;text-transform:uppercase;letter-spacing:.4px}
+.review-item .val{font-size:14px;color:var(--text);font-weight:500;word-break:break-all}
+.review-item .val.mono{font-family:'Space Mono',monospace;font-size:12px}
+.review-quests-list{display:flex;flex-direction:column;gap:6px}
+.review-quest-row{
+  display:flex;align-items:center;gap:10px;
+  background:var(--ink-3);border-radius:var(--r-sm);padding:10px 14px;
+}
+.review-quest-row .rq-xp{margin-left:auto;font-family:'Space Mono',monospace;font-size:12px;color:var(--accent)}
+
+/* TOAST */
+.toast-container{
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  display:flex;flex-direction:column;gap:10px;pointer-events:none;
+}
+.toast{
+  background:var(--ink-3);border:1px solid var(--line-2);
+  border-radius:var(--r-sm);padding:13px 18px;
+  font-size:14px;color:var(--text);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  display:flex;align-items:center;gap:10px;
+  animation:toastIn .25s ease;pointer-events:all;
+  max-width:320px;
+}
+.toast.success{border-left:3px solid var(--good)}
+.toast.error{border-left:3px solid var(--bad)}
+.toast.info{border-left:3px solid var(--accent)}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(12px)}}
+.toast.out{animation:toastOut .22s ease forwards}
+
+/* LOADER */
+.loader{
+  display:flex;align-items:center;justify-content:center;
+  min-height:70vh;flex-direction:column;gap:16px;
+}
+.spinner{
+  width:40px;height:40px;border:3px solid var(--line-2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SELECT */
+select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238A8DA3' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+
+/* CHECKBOX */
+.check-row{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.check-row input[type=checkbox]{
+  width:18px;height:18px;accent-color:var(--accent);cursor:pointer;
+}
+.check-row span{font-size:14px;color:var(--dim)}
+
+/* EMPTY STATE */
+.empty-state{
+  text-align:center;padding:28px;color:var(--dim-2);
+  border:1px dashed var(--line-2);border-radius:var(--r-sm);
+  font-size:14px;
+}
+
+/* CAMPAIGN TYPE CARDS */
+.type-card{
+  background:var(--ink-3);border:2px solid var(--line);
+  border-radius:var(--r-sm);padding:16px;cursor:pointer;
+  transition:border-color .18s,background .18s;
+}
+.type-card:hover{border-color:var(--line-2)}
+.type-card.active{border-color:var(--accent);background:rgba(138,91,255,.07)}
+.type-card.active-fud{border-color:var(--bad);background:rgba(255,92,92,.07)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--ink)}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:3px}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--line);margin:20px 0}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a href="dashboard.html" class="topbar-brand"><span class="logo">🧞</span> GrowthGenie</a>
+  <a href="dashboard.html" class="btn btn-ghost btn-sm">← Back to dashboard</a>
+</header>
+
+<!-- LOADER -->
+<div id="loader" class="loader">
+  <div class="spinner"></div>
+  <span style="color:var(--dim);font-size:14px">Loading…</span>
+</div>
+
+<!-- MAIN CONTENT -->
+<main class="main" id="mainContent" style="display:none">
+  <h1 id="pageTitle" style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:28px;margin-bottom:6px;text-align:center">Create Campaign</h1>
+  <p id="pageSubtitle" style="color:var(--dim);text-align:center;margin-bottom:32px;font-size:14px">Fill in the wizard below to launch your growth campaign</p>
+
+  <!-- STEP INDICATOR -->
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-item active" data-step="1">
+      <div class="step-dot">
+        <div class="step-circle" id="sc1">1</div>
+        <span class="step-label">Basics</span>
+      </div>
+    </div>
+    <div class="step-line" id="sl1"></div>
+    <div class="step-item" data-step="2">
+      <div class="step-dot">
+        <div class="step-circle" id="sc2">2</div>
+        <span class="step-label">Branding</span>
+      </div>
+    </div>
+    <div class="step-line" id="sl2"></div>
+    <div class="step-item" data-step="3">
+      <div class="step-dot">
+        <div class="step-circle" id="sc3">3</div>
+        <span class="step-label">Quests</span>
+      </div>
+    </div>
+    <div class="step-line" id="sl3"></div>
+    <div class="step-item" data-step="4">
+      <div class="step-dot">
+        <div class="step-circle" id="sc4">4</div>
+        <span class="step-label">Settings</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: BASICS -->
+  <div class="step-panel active" id="step1">
+    <div class="panel-box">
+      <div class="panel-title">Campaign Basics</div>
+      <div class="panel-sub">Set up the core details of your campaign</div>
+
+      <div class="field">
+        <label>Project Name <span class="req">*</span></label>
+        <input type="text" id="projectName" class="input" placeholder="e.g. Staccana Moon Mission" autocomplete="off"/>
+      </div>
+
+      <div class="field">
+        <label>Slug <span class="req">*</span></label>
+        <input type="text" id="slug" class="input input-mono" placeholder="staccana-moon-mission" autocomplete="off"/>
+        <p style="font-size:12px;color:var(--dim-2);margin-top:5px">Auto-generated from project name. Used in campaign URL.</p>
+      </div>
+
+      <div class="field-row">
+        <div class="field" style="margin-bottom:0">
+          <label>Prize Amount <span class="req">*</span></label>
+          <input type="text" id="prizeAmount" class="input" placeholder="1,000,000" autocomplete="off"/>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Prize Token <span class="req">*</span></label>
+          <input type="text" id="prizeToken" class="input" placeholder="$STACCANA" autocomplete="off"/>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:20px">
+        <label>End Date &amp; Time <span class="req">*</span></label>
+        <input type="datetime-local" id="endDate" class="input" />
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field" style="margin-bottom:0">
+        <label>Campaign Type</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px" id="typeCards">
+          <div class="type-card active" id="typeStandard" onclick="setCampaignType('standard')">
+            <div style="font-size:22px;margin-bottom:4px">🚀</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px">Growth Campaign</div>
+            <div style="font-size:12px;color:var(--dim);margin-top:3px">Players earn XP by completing quests that grow your community.</div>
+          </div>
+          <div class="type-card" id="typeFud" onclick="setCampaignType('fudfund')">
+            <div style="font-size:22px;margin-bottom:4px">💀</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px">FUD FUND</div>
+            <div style="font-size:12px;color:var(--dim);margin-top:3px">Sponsor a FUD campaign. Players earn XP for dunking on a target project.</div>
+          </div>
+        </div>
+        <div id="fudTargetWrap" style="display:none;margin-top:14px">
+          <div class="field" style="margin-bottom:0">
+            <label>FUD Target <span class="req">*</span></label>
+            <input type="text" id="fudTarget" class="input" placeholder="e.g. @CopiumLabs or $COPE" autocomplete="off"/>
+            <p style="font-size:12px;color:var(--dim-2);margin-top:5px">The project or community being FUD'd. Shown to players.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-buttons">
+        <span></span>
+        <button class="btn btn-primary" onclick="goTo(2)">Next → Branding</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: BRANDING -->
+  <div class="step-panel" id="step2">
+    <div class="panel-box">
+      <div class="panel-title">Branding</div>
+      <div class="panel-sub">Customize how your campaign looks and feels</div>
+
+      <div class="field-row">
+        <div class="field" style="margin-bottom:0">
+          <label>Campaign Logo (emoji)</label>
+          <input type="text" id="logo" class="input" placeholder="🧞" maxlength="8" autocomplete="off"/>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Accent Color</label>
+          <div class="color-row">
+            <div class="color-swatch-wrap">
+              <div class="color-preview" id="colorPreview" style="background:#8A5BFF"></div>
+              <input type="color" id="accentColorPicker" value="#8A5BFF" title="Pick accent color" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0"/>
+            </div>
+            <input type="text" id="accentColorHex" class="input input-mono" placeholder="#8A5BFF" style="flex:1" value="#8A5BFF" maxlength="7" autocomplete="off"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:20px">
+        <label>Tagline</label>
+        <input type="text" id="tagline" class="input" placeholder="The moon is just the beginning…" autocomplete="off"/>
+      </div>
+
+      <!-- Token section toggle -->
+      <div class="divider"></div>
+
+      <div class="toggle-row" id="tokenToggle" onclick="toggleTokenSection()">
+        <span style="font-size:16px">💎</span>
+        <span style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px">Add token info</span>
+        <span style="font-size:12px;color:var(--dim-2);margin-left:6px">(optional)</span>
+        <span class="toggle-arrow">▾</span>
+      </div>
+      <div class="collapsible-body" id="tokenBody">
+        <div class="field-row" style="margin-bottom:14px">
+          <div class="field" style="margin-bottom:0">
+            <label>Token Name</label>
+            <input type="text" id="tokenName" class="input" placeholder="Staccana" autocomplete="off"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Token Price</label>
+            <input type="text" id="tokenPrice" class="input" placeholder="$0.0042" autocomplete="off"/>
+          </div>
+        </div>
+        <div class="field-row" style="margin-bottom:14px">
+          <div class="field" style="margin-bottom:0">
+            <label>24h Change</label>
+            <input type="text" id="tokenChange" class="input" placeholder="+12.4%" autocomplete="off"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Contract Address</label>
+            <input type="text" id="tokenCa" class="input input-mono" placeholder="0x…" autocomplete="off"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="margin-bottom:0">
+            <label>Buy URL</label>
+            <input type="text" id="tokenBuyUrl" class="input" placeholder="https://raydium.io/…" autocomplete="off"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Site URL</label>
+            <input type="text" id="tokenSiteUrl" class="input" placeholder="https://staccana.io" autocomplete="off"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" onclick="goTo(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(3)">Next → Quests</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: QUESTS -->
+  <div class="step-panel" id="step3">
+    <div class="panel-box">
+      <div class="panel-title">Quest Builder</div>
+      <div class="panel-sub">Click templates to add quests, or create a custom one</div>
+
+      <p style="font-size:12px;color:var(--dim-2);margin-bottom:12px;font-family:'Space Grotesk',sans-serif;text-transform:uppercase;letter-spacing:.5px;font-size:11px">Quest Templates</p>
+      <div class="templates-grid" id="templatesGrid"></div>
+
+      <!-- Custom quest form -->
+      <div class="custom-form" id="customForm">
+        <p style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;margin-bottom:14px;color:var(--text)">➕ Custom Quest</p>
+        <div class="field-row" style="margin-bottom:14px">
+          <div class="field" style="margin-bottom:0">
+            <label>Quest Name</label>
+            <input type="text" id="cName" class="input" placeholder="e.g. Tag 3 friends" autocomplete="off"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Icon (emoji)</label>
+            <input type="text" id="cIcon" class="input" placeholder="🎯" maxlength="4" autocomplete="off"/>
+          </div>
+        </div>
+        <div class="field-row" style="margin-bottom:14px">
+          <div class="field" style="margin-bottom:0">
+            <label>XP Points</label>
+            <input type="number" id="cXp" class="input" placeholder="100" min="1" autocomplete="off"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Proof Type</label>
+            <select id="cProof" class="input">
+              <option value="text">text</option>
+              <option value="url">url</option>
+              <option value="wallet">wallet</option>
+              <option value="none">none</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label>Description (optional)</label>
+          <input type="text" id="cDesc" class="input" placeholder="Brief instructions for participants" autocomplete="off"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:20px;margin-bottom:14px">
+          <label class="check-row">
+            <input type="checkbox" id="cDaily"/>
+            <span>Daily quest</span>
+          </label>
+          <div id="cMinWrap" style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:13px;color:var(--dim);font-family:'Space Grotesk',sans-serif">Min chars:</label>
+            <input type="number" id="cMin" class="input" style="width:80px" placeholder="0" min="0" autocomplete="off"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-primary btn-sm" onclick="addCustomQuest()">Add Quest</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeCustomForm()">Cancel</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <p style="font-size:11px;color:var(--dim-2);margin-bottom:12px;font-family:'Space Grotesk',sans-serif;text-transform:uppercase;letter-spacing:.5px">Added Quests (<span id="questCount">0</span>)</p>
+
+      <div id="questsList" class="quests-list">
+        <div class="empty-state" id="questsEmpty">No quests added yet. Click a template above to get started.</div>
+      </div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" onclick="goTo(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goTo(4)">Next → Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: SETTINGS + REVIEW -->
+  <div class="step-panel" id="step4">
+    <div class="panel-box">
+      <div class="panel-title">Settings &amp; Review</div>
+      <div class="panel-sub">Final configuration and a summary of your campaign</div>
+
+      <div class="field-row">
+        <div class="field" style="margin-bottom:0">
+          <label>Number of Winners <span class="req">*</span></label>
+          <input type="number" id="numWinners" class="input" placeholder="10" min="1" value="1" autocomplete="off"/>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Referral Bonus XP</label>
+          <input type="number" id="referralBonus" class="input" placeholder="50" min="0" value="0" autocomplete="off"/>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Review summary -->
+      <p style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;color:var(--dim);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px">Review Summary</p>
+
+      <div id="reviewContent"></div>
+
+      <div class="nav-buttons">
+        <button class="btn btn-ghost" onclick="goTo(3)">← Back</button>
+        <button class="btn btn-primary" id="launchBtn" onclick="saveCampaign()" style="min-width:160px">
+          🚀 Launch Campaign
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import { Client, Account, Databases, Query, ID, Permission, Role }
+  from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
+
+// ── Appwrite setup ──────────────────────────────────────────────
+const client = new Client()
+  .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+  .setProject('6a2bc15c00065b3c91a0');
+
+const account   = new Account(client);
+const databases = new Databases(client);
+const DB        = 'growthgenie';
+
+// ── State ───────────────────────────────────────────────────────
+let user         = null;
+let editId       = null;
+let currentStep  = 1;
+let quests       = [];
+let editQuestIdx = null;
+let campaignType = 'standard'; // 'standard' | 'fudfund'
+
+// ── URL params ──────────────────────────────────────────────────
+const params = new URLSearchParams(location.search);
+editId = params.get('id') || null;
+
+// ── Boot ────────────────────────────────────────────────────────
+async function boot() {
+  try {
+    user = await account.get();
+  } catch {
+    location.href = 'login.html';
+    return;
+  }
+
+  if (editId) {
+    document.getElementById('pageTitle').textContent    = 'Edit Campaign';
+    document.getElementById('pageSubtitle').textContent = 'Update your campaign details and quests';
+    document.getElementById('launchBtn').textContent    = '💾 Save Changes';
+    await loadCampaign(editId);
+  }
+
+  document.getElementById('loader').style.display      = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+}
+
+// ── Load existing campaign ──────────────────────────────────────
+async function loadCampaign(id) {
+  try {
+    const camp = await databases.getDocument(DB, 'campaigns', id);
+    if (camp.clientId !== user.$id) {
+      toast('You do not own this campaign.', 'error');
+      setTimeout(() => { location.href = 'dashboard.html'; }, 1800);
+      return;
+    }
+    // Fill basics
+    setVal('projectName', camp.projectName || camp.title || '');
+    setVal('slug',        camp.slug || '');
+    setVal('prizeAmount', camp.prizeAmount || '');
+    setVal('prizeToken',  camp.prizeToken  || '');
+    if (camp.endDate) {
+      const d = new Date(camp.endDate);
+      document.getElementById('endDate').value = toLocalDatetimeInput(d);
+    }
+    // Branding
+    setVal('logo',         camp.logo     || '');
+    setVal('tagline',      camp.tag      || '');
+    const ac = camp.accentColor || '#8A5BFF';
+    setVal('accentColorHex', ac);
+    document.getElementById('accentColorPicker').value = ac;
+    document.getElementById('colorPreview').style.background = ac;
+    // Token
+    if (camp.tokenName || camp.tokenCa) {
+      openTokenSection();
+      setVal('tokenName',    camp.tokenName    || '');
+      setVal('tokenPrice',   camp.tokenPrice   || '');
+      setVal('tokenChange',  camp.tokenChange  || '');
+      setVal('tokenCa',      camp.tokenCa      || '');
+      setVal('tokenBuyUrl',  camp.tokenBuyUrl  || '');
+      setVal('tokenSiteUrl', camp.tokenSiteUrl || '');
+    }
+    // Settings
+    setVal('numWinners',    camp.numWinners    || 1);
+    setVal('referralBonus', camp.referralBonus || 0);
+    // Campaign type
+    if (camp.campaignType === 'fudfund') {
+      setCampaignType('fudfund');
+      setVal('fudTarget', camp.fudTarget || '');
+    }
+
+    // Load missions
+    const ms = await databases.listDocuments(DB, 'missions', [
+      Query.equal('campaignId', id),
+      Query.orderAsc('order'),
+      Query.limit(100)
+    ]);
+    quests = ms.documents.map(m => ({
+      name:  m.name,
+      desc:  m.desc   || '',
+      icon:  m.icon   || '🎯',
+      pts:   m.pts    || 0,
+      type:  m.type   || 'text',
+      proof: m.proof  || 'text',
+      daily: m.daily  || false,
+      min:   m.min    || 0,
+      _id:   m.$id,
+    }));
+    renderQuests();
+  } catch (e) {
+    toast('Failed to load campaign: ' + (e.message || e), 'error');
+  }
+}
+
+function toLocalDatetimeInput(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+// ── Step navigation ─────────────────────────────────────────────
+window.goTo = function(step) {
+  if (step > currentStep && !validateStep(currentStep)) return;
+  const prev = currentStep;
+  currentStep = step;
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step' + step).classList.add('active');
+  updateStepIndicator(prev, step);
+  if (step === 4) buildReview();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+function updateStepIndicator(prev, now) {
+  for (let i = 1; i <= 4; i++) {
+    const item   = document.querySelector(`.step-item[data-step="${i}"]`);
+    const circle = document.getElementById('sc' + i);
+    item.classList.remove('active', 'done');
+    if (i < now) {
+      item.classList.add('done');
+      circle.textContent = '✓';
+    } else if (i === now) {
+      item.classList.add('active');
+      circle.textContent = i;
+    } else {
+      circle.textContent = i;
+    }
+  }
+  for (let i = 1; i <= 3; i++) {
+    const line = document.getElementById('sl' + i);
+    line.classList.toggle('done', i < now);
+    if (i < now) line.style.background = 'var(--good)';
+    else line.style.background = 'var(--line)';
+  }
+}
+
+// ── Validation ──────────────────────────────────────────────────
+function validateStep(step) {
+  if (step === 1) {
+    if (!v('projectName')) { toast('Project Name is required', 'error'); return false; }
+    if (!v('slug'))         { toast('Slug is required', 'error'); return false; }
+    if (!v('prizeAmount'))  { toast('Prize Amount is required', 'error'); return false; }
+    if (!v('prizeToken'))   { toast('Prize Token is required', 'error'); return false; }
+    if (!v('endDate'))      { toast('End Date is required', 'error'); return false; }
+    if (campaignType === 'fudfund' && !v('fudTarget')) { toast('Set a FUD target', 'error'); return false; }
+  }
+  if (step === 3) {
+    if (quests.length === 0) { toast('Add at least one quest', 'error'); return false; }
+  }
+  return true;
+}
+function v(id) { return document.getElementById(id).value.trim(); }
+
+// ── Slug generation ─────────────────────────────────────────────
+document.getElementById('projectName').addEventListener('input', function() {
+  const slugEl = document.getElementById('slug');
+  slugEl.value = slugify(this.value);
+});
+
+function slugify(str) {
+  return str.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+// ── Color picker sync ───────────────────────────────────────────
+document.getElementById('accentColorPicker').addEventListener('input', function() {
+  document.getElementById('accentColorHex').value = this.value;
+  document.getElementById('colorPreview').style.background = this.value;
+});
+document.getElementById('accentColorHex').addEventListener('input', function() {
+  const val = this.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById('accentColorPicker').value = val;
+    document.getElementById('colorPreview').style.background = val;
+  }
+});
+
+// ── Token section toggle ─────────────────────────────────────────
+window.toggleTokenSection = function() {
+  const body   = document.getElementById('tokenBody');
+  const toggle = document.getElementById('tokenToggle');
+  const open   = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  toggle.classList.toggle('open', !open);
+};
+function openTokenSection() {
+  document.getElementById('tokenBody').classList.add('open');
+  document.getElementById('tokenToggle').classList.add('open');
+}
+
+// ── Campaign type ────────────────────────────────────────────────
+window.setCampaignType = function(type) {
+  campaignType = type;
+  const isFud = type === 'fudfund';
+  document.getElementById('typeStandard').classList.toggle('active', !isFud);
+  document.getElementById('typeStandard').classList.remove('active-fud');
+  document.getElementById('typeFud').classList.toggle('active-fud', isFud);
+  document.getElementById('typeFud').classList.toggle('active', false);
+  document.getElementById('fudTargetWrap').style.display = isFud ? 'block' : 'none';
+  // swap quest templates
+  renderTemplates();
+  // tint page accent for FUD mode
+  document.documentElement.style.setProperty('--accent', isFud ? '#FF5C5C' : '#8A5BFF');
+  document.documentElement.style.setProperty('--accent-2', isFud ? '#FF9000' : '#FF4D9D');
+};
+
+// ── Quest templates ─────────────────────────────────────────────
+const TEMPLATES = [
+  { name:'Follow on X',      icon:'🐦',  pts:50,   type:'follow',   proof:'text',   daily:false, min:0 },
+  { name:'Retweet pinned',   icon:'🔁',  pts:75,   type:'rt',       proof:'url',    daily:false, min:0 },
+  { name:'Post with ticker', icon:'📣',  pts:120,  type:'post',     proof:'url',    daily:true,  min:0 },
+  { name:'Hold token',       icon:'💎',  pts:300,  type:'hold',     proof:'wallet', daily:false, min:0 },
+  { name:'Alpha thread',     icon:'🧵',  pts:500,  type:'quality',  proof:'text',   daily:false, min:180 },
+  { name:'Attend Space',     icon:'🎙️', pts:400,  type:'space',    proof:'url',    daily:false, min:0 },
+  { name:'Host a Space',     icon:'📡',  pts:1200, type:'host',     proof:'url',    daily:false, min:0 },
+  { name:'Join Telegram',    icon:'✈️', pts:60,   type:'tg',       proof:'text',   daily:false, min:0 },
+  { name:'Written review',   icon:'✍️', pts:450,  type:'written',  proof:'text',   daily:false, min:150 },
+  { name:'TikTok post',      icon:'🎵',  pts:180,  type:'tiktok',   proof:'url',    daily:true,  min:0 },
+  { name:'Make a meme',      icon:'🎨',  pts:140,  type:'meme',     proof:'url',    daily:true,  min:0 },
+  { name:'Custom quest',     icon:'➕',  pts:null, type:'custom',   proof:'text',   daily:false, min:0, custom:true },
+];
+
+const FUD_TEMPLATES = [
+  { name:'Post FUD thread',    icon:'🔥',  pts:150,  type:'fud_post',    proof:'url',  daily:false, min:0, desc:'Write a FUD thread about the target and drop the link' },
+  { name:'Ratio their tweet',  icon:'💀',  pts:100,  type:'fud_ratio',   proof:'url',  daily:true,  min:0, desc:'Ratio the target\'s latest tweet — post the link' },
+  { name:'Daily FUD post',     icon:'📉',  pts:80,   type:'fud_daily',   proof:'url',  daily:true,  min:0, desc:'Post daily FUD — fresh content each day' },
+  { name:'Make a FUD meme',    icon:'😂',  pts:120,  type:'fud_meme',    proof:'url',  daily:true,  min:0, desc:'Original FUD meme — no recycled content' },
+  { name:'Write a hit piece',  icon:'✍️', pts:500,  type:'fud_written',  proof:'text', daily:false, min:200, desc:'Long-form FUD article or thread, min 200 chars' },
+  { name:'Host FUD Space',     icon:'📢',  pts:800,  type:'fud_space',   proof:'url',  daily:false, min:0, desc:'Host a Space roasting the target — MEGA XP' },
+  { name:'Convert a believer', icon:'🧠',  pts:300,  type:'fud_convert',  proof:'text', daily:false, min:150, desc:'Share a screenshot/proof of convincing someone to sell' },
+  { name:'Start a cope thread',icon:'😭',  pts:90,   type:'fud_cope',    proof:'url',  daily:true,  min:0, desc:'Quote-tweet their hopium and reply with facts' },
+  { name:'Spread to a server', icon:'💣',  pts:200,  type:'fud_spread',  proof:'url',  daily:false, min:0, desc:'Post FUD in a Discord or Telegram — screenshot it' },
+  { name:'Make a TikTok FUD',  icon:'🎵',  pts:180,  type:'fud_tiktok',  proof:'url',  daily:true,  min:0, desc:'TikTok video exposing the target' },
+  { name:'VC leak expose',     icon:'🕵️', pts:600,  type:'fud_expose',  proof:'url',  daily:false, min:0, desc:'Post receipts — wallet dumps, insider leaks, rugs' },
+  { name:'Custom quest',       icon:'➕',  pts:null, type:'custom',      proof:'text', daily:false, min:0, custom:true },
+];
+
+function renderTemplates() {
+  const grid = document.getElementById('templatesGrid');
+  grid.innerHTML = '';
+  const list = campaignType === 'fudfund' ? FUD_TEMPLATES : TEMPLATES;
+  list.forEach((tpl, idx) => {
+    const card = document.createElement('div');
+    card.className = 'tpl-card';
+    card.innerHTML = `
+      <div class="tpl-icon">${tpl.icon}</div>
+      <div class="tpl-name">${tpl.name}</div>
+      <div class="tpl-xp">${tpl.custom ? 'Custom' : tpl.pts + ' XP'}</div>
+    `;
+    card.addEventListener('click', () => {
+      if (tpl.custom) {
+        openCustomForm();
+        return;
+      }
+      quests.push({ ...tpl, desc: '' });
+      renderQuests();
+      card.classList.add('flash');
+      setTimeout(() => card.classList.remove('flash'), 500);
+      toast(`${tpl.icon} ${tpl.name} added!`, 'success');
+    });
+    grid.appendChild(card);
+  });
+}
+
+// ── Custom quest form ────────────────────────────────────────────
+function openCustomForm() {
+  document.getElementById('customForm').classList.add('open');
+  document.getElementById('cName').focus();
+}
+window.closeCustomForm = function() {
+  document.getElementById('customForm').classList.remove('open');
+  clearCustomForm();
+};
+
+function clearCustomForm() {
+  ['cName','cIcon','cDesc'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('cXp').value   = '';
+  document.getElementById('cProof').value = 'text';
+  document.getElementById('cDaily').checked = false;
+  document.getElementById('cMin').value  = '';
+}
+
+window.addCustomQuest = function() {
+  const name  = document.getElementById('cName').value.trim();
+  const icon  = document.getElementById('cIcon').value.trim() || '🎯';
+  const pts   = parseInt(document.getElementById('cXp').value) || 100;
+  const proof = document.getElementById('cProof').value;
+  const desc  = document.getElementById('cDesc').value.trim();
+  const daily = document.getElementById('cDaily').checked;
+  const min   = parseInt(document.getElementById('cMin').value) || 0;
+  if (!name) { toast('Quest name is required', 'error'); return; }
+  quests.push({ name, icon, pts, proof, desc, daily, min, type:'custom' });
+  renderQuests();
+  closeCustomForm();
+  toast(`${icon} ${name} added!`, 'success');
+};
+
+// ── Render quests list ───────────────────────────────────────────
+function renderQuests() {
+  const list  = document.getElementById('questsList');
+  const empty = document.getElementById('questsEmpty');
+  const count = document.getElementById('questCount');
+  count.textContent = quests.length;
+
+  if (quests.length === 0) {
+    list.innerHTML = '';
+    list.appendChild(empty);
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = '';
+
+  quests.forEach((q, idx) => {
+    const card = document.createElement('div');
+    card.className = 'quest-card';
+    card.id = 'qc-' + idx;
+
+    const isExpanded = editQuestIdx === idx;
+
+    card.innerHTML = `
+      <div class="quest-card-header" onclick="toggleQuestEdit(${idx})">
+        <span class="quest-drag" title="Drag to reorder">⠿</span>
+        <span class="quest-icon-badge">${q.icon}</span>
+        <span class="quest-name-text">${q.name}</span>
+        ${q.daily ? '<span style="font-size:10px;background:rgba(255,197,61,.12);color:var(--gold);padding:2px 7px;border-radius:10px;font-family:Space Mono,monospace">DAILY</span>' : ''}
+        <span class="quest-xp-badge">${q.pts} XP</span>
+        <button class="quest-remove" onclick="removeQuest(event,${idx})" title="Remove quest">×</button>
+      </div>
+      <div class="quest-edit-body ${isExpanded ? 'open' : ''}" id="qeb-${idx}">
+        <div class="field-row" style="margin-bottom:12px">
+          <div class="field" style="margin-bottom:0">
+            <label>Quest Name</label>
+            <input type="text" class="input" value="${escHtml(q.name)}" onchange="updateQuest(${idx},'name',this.value)" autocomplete="off"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Icon</label>
+            <input type="text" class="input" value="${escHtml(q.icon)}" maxlength="4" onchange="updateQuest(${idx},'icon',this.value)" autocomplete="off"/>
+          </div>
+        </div>
+        <div class="field-row" style="margin-bottom:12px">
+          <div class="field" style="margin-bottom:0">
+            <label>XP Points</label>
+            <input type="number" class="input" value="${q.pts}" min="1" onchange="updateQuest(${idx},'pts',parseInt(this.value)||1)" autocomplete="off"/>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Proof Type</label>
+            <select class="input" onchange="updateQuest(${idx},'proof',this.value)">
+              ${['text','url','wallet','none'].map(t => `<option value="${t}" ${q.proof===t?'selected':''}>${t}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Description</label>
+          <input type="text" class="input" value="${escHtml(q.desc||'')}" placeholder="Optional instructions" onchange="updateQuest(${idx},'desc',this.value)" autocomplete="off"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:20px">
+          <label class="check-row">
+            <input type="checkbox" ${q.daily?'checked':''} onchange="updateQuest(${idx},'daily',this.checked)"/>
+            <span>Daily quest</span>
+          </label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:13px;color:var(--dim);font-family:'Space Grotesk',sans-serif">Min chars:</label>
+            <input type="number" class="input" style="width:80px" value="${q.min||0}" min="0" onchange="updateQuest(${idx},'min',parseInt(this.value)||0)" autocomplete="off"/>
+          </div>
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+window.toggleQuestEdit = function(idx) {
+  editQuestIdx = editQuestIdx === idx ? null : idx;
+  renderQuests();
+};
+window.removeQuest = function(e, idx) {
+  e.stopPropagation();
+  quests.splice(idx, 1);
+  if (editQuestIdx === idx) editQuestIdx = null;
+  else if (editQuestIdx > idx) editQuestIdx--;
+  renderQuests();
+};
+window.updateQuest = function(idx, key, val) {
+  quests[idx][key] = val;
+  // update header without full re-render
+  const header = document.querySelector(`#qc-${idx} .quest-card-header`);
+  if (header) {
+    const namEl = header.querySelector('.quest-name-text');
+    const xpEl  = header.querySelector('.quest-xp-badge');
+    const icEl  = header.querySelector('.quest-icon-badge');
+    if (namEl) namEl.textContent = quests[idx].name;
+    if (xpEl)  xpEl.textContent  = quests[idx].pts + ' XP';
+    if (icEl)  icEl.textContent   = quests[idx].icon;
+  }
+  document.getElementById('questCount').textContent = quests.length;
+};
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Review ───────────────────────────────────────────────────────
+function buildReview() {
+  const container = document.getElementById('reviewContent');
+  const basics = [
+    { label:'Project Name',  val: v('projectName') || '—' },
+    { label:'Slug',          val: v('slug') || '—',       mono:true },
+    { label:'Prize',         val: (v('prizeAmount') || '—') + ' ' + (v('prizeToken') || '') },
+    { label:'End Date',      val: formatDate(v('endDate')) },
+  ];
+  const branding = [
+    { label:'Logo',         val: v('logo') || '🧞' },
+    { label:'Tagline',      val: v('tagline') || '—' },
+    { label:'Accent Color', val: v('accentColorHex') || '#8A5BFF' },
+    { label:'Token Name',   val: v('tokenName') || '—' },
+  ];
+  const settings = [
+    { label:'Winners',         val: v('numWinners') || '1' },
+    { label:'Referral Bonus',  val: (v('referralBonus') || '0') + ' XP' },
+  ];
+
+  container.innerHTML = `
+    <div class="review-section">
+      <h3>Basics</h3>
+      <div class="review-grid">
+        ${basics.map(i => `<div class="review-item"><label>${i.label}</label><div class="val${i.mono?' mono':''}">${escHtml(i.val)}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="review-section">
+      <h3>Branding</h3>
+      <div class="review-grid">
+        ${branding.map(i => `<div class="review-item"><label>${i.label}</label><div class="val">${escHtml(i.val)}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="review-section">
+      <h3>Settings</h3>
+      <div class="review-grid">
+        ${settings.map(i => `<div class="review-item"><label>${i.label}</label><div class="val">${escHtml(i.val)}</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="review-section">
+      <h3>Quests (${quests.length})</h3>
+      <div class="review-quests-list">
+        ${quests.length === 0
+          ? '<div class="empty-state">No quests added</div>'
+          : quests.map(q => `
+            <div class="review-quest-row">
+              <span style="font-size:18px">${q.icon}</span>
+              <span style="font-weight:600;font-size:14px;font-family:'Space Grotesk',sans-serif">${escHtml(q.name)}</span>
+              ${q.daily ? '<span style="font-size:10px;background:rgba(255,197,61,.12);color:var(--gold);padding:2px 7px;border-radius:10px;font-family:Space Mono,monospace">DAILY</span>' : ''}
+              <span class="rq-xp">${q.pts} XP</span>
+            </div>`).join('')
+        }
+      </div>
+    </div>
+  `;
+}
+
+function formatDate(val) {
+  if (!val) return '—';
+  try { return new Date(val).toLocaleString(); } catch { return val; }
+}
+
+// ── Save ─────────────────────────────────────────────────────────
+window.saveCampaign = async function() {
+  if (!validateStep(1) || !validateStep(3)) return;
+  if (parseInt(v('numWinners')) < 1) { toast('Number of winners must be at least 1', 'error'); return; }
+
+  const btn = document.getElementById('launchBtn');
+  btn.disabled = true;
+  btn.textContent = editId ? '💾 Saving…' : '🚀 Launching…';
+
+  const campaignData = {
+    slug:          v('slug'),
+    clientId:      user.$id,
+    campaignType:  campaignType,
+    fudTarget:     campaignType === 'fudfund' ? (v('fudTarget') || '') : '',
+    projectName:   v('projectName'),
+    title:         v('projectName'),
+    tag:           v('tagline'),
+    logo:          v('logo') || '🧞',
+    accentColor:   v('accentColorHex') || '#8A5BFF',
+    prizeAmount:   v('prizeAmount'),
+    prizeToken:    v('prizeToken'),
+    endDate:       new Date(v('endDate')).getTime(),
+    numWinners:    parseInt(v('numWinners'))    || 1,
+    referralBonus: parseInt(v('referralBonus')) || 0,
+    tokenName:     v('tokenName'),
+    tokenPrice:    v('tokenPrice'),
+    tokenChange:   v('tokenChange'),
+    tokenCa:       v('tokenCa'),
+    tokenBuyUrl:   v('tokenBuyUrl'),
+    tokenSiteUrl:  v('tokenSiteUrl'),
+    active:        true,
+  };
+
+  const perms = [
+    Permission.read(Role.any()),
+    Permission.update(Role.user(user.$id)),
+    Permission.delete(Role.user(user.$id)),
+  ];
+
+  try {
+    let campId;
+
+    if (editId) {
+      await databases.updateDocument(DB, 'campaigns', editId, campaignData);
+      campId = editId;
+      toast('Campaign updated!', 'success');
+    } else {
+      const camp = await databases.createDocument(DB, 'campaigns', ID.unique(), campaignData, perms);
+      campId = camp.$id;
+    }
+
+    // Delete existing missions for this campaign (edit mode)
+    if (editId) {
+      let done = false;
+      while (!done) {
+        const existing = await databases.listDocuments(DB, 'missions', [
+          Query.equal('campaignId', campId),
+          Query.limit(100),
+        ]);
+        if (existing.documents.length === 0) { done = true; break; }
+        await Promise.all(existing.documents.map(d => databases.deleteDocument(DB, 'missions', d.$id)));
+        if (existing.documents.length < 100) done = true;
+      }
+    }
+
+    // Create missions
+    for (let i = 0; i < quests.length; i++) {
+      const m = quests[i];
+      await databases.createDocument(DB, 'missions', ID.unique(), {
+        campaignId: campId,
+        name:       m.name,
+        desc:       m.desc || '',
+        icon:       m.icon,
+        pts:        m.pts,
+        type:       m.type,
+        proof:      m.proof,
+        daily:      m.daily || false,
+        min:        m.min   || 0,
+        order:      i,
+        q:          m.pts >= 400 ? 'high' : m.pts >= 100 ? 'med' : 'low',
+        active:     true,
+      }, [
+        Permission.read(Role.any()),
+        Permission.update(Role.user(user.$id)),
+        Permission.delete(Role.user(user.$id)),
+      ]);
+    }
+
+    if (!editId) toast('🚀 Campaign launched!', 'success');
+    setTimeout(() => { location.href = 'dashboard.html'; }, 1400);
+
+  } catch (e) {
+    console.error(e);
+    toast('Error: ' + (e.message || JSON.stringify(e)), 'error');
+    btn.disabled = false;
+    btn.textContent = editId ? '💾 Save Changes' : '🚀 Launch Campaign';
+  }
+};
+
+// ── Toast ────────────────────────────────────────────────────────
+window.toast = function(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+  el.innerHTML = `<span style="flex-shrink:0">${icon}</span><span>${escHtml(msg)}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    el.addEventListener('animationend', () => el.remove());
+  }, 3800);
+};
+
+// ── Init ─────────────────────────────────────────────────────────
+renderTemplates();
+boot();
+</script>
+</body>
+</html>
