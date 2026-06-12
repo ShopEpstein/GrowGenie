@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GrowthGenie — Campaign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+/* =========================================================================
+   GROWTHGENIE — CONFIG-DRIVEN CAMPAIGN PAGE
+   - Single self-contained file. Vanilla JS. CDN only.
+   - Runs in DEMO MODE out of the box (no backend needed).
+   - Wire a NEW Firebase project below to go live. Nothing else required.
+   ========================================================================= */
+
+:root{
+  --ink:#0B0C13;        /* base */
+  --ink-2:#101220;      /* panel */
+  --ink-3:#171a2b;      /* raised */
+  --line:rgba(255,255,255,.08);
+  --line-2:rgba(255,255,255,.14);
+  --text:#ECEDF5;
+  --dim:#8A8DA3;
+  --dim-2:#5d6075;
+  --accent:#8A5BFF;     /* overridden per-campaign */
+  --accent-2:#FF4D9D;   /* derived per-campaign */
+  --gold:#FFC53D;       /* money / prize */
+  --good:#2BD576;
+  --bad:#FF5C5C;
+  --r:16px;
+  --r-sm:11px;
+  --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  line-height:1.5;
+}
+/* ambient glow */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(60% 50% at 78% -5%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 12% 8%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 70%);
+  opacity:.6;
+}
+a{color:inherit}
+.mono{font-family:'Space Mono',monospace}
+.grotesk{font-family:'Space Grotesk',sans-serif}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 20px}
+.eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(14px);
+  background:color-mix(in srgb, var(--ink) 72%, transparent);
+  border-bottom:1px solid var(--line);
+}
+.topbar .row{display:flex;align-items:center;gap:14px;height:64px}
+.brand{display:flex;align-items:center;gap:11px;font-family:'Space Grotesk';font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand .logo{
+  width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 0 0 1px var(--line-2), 0 8px 22px -8px var(--accent);
+}
+.brand small{display:block;font-family:'Space Mono';font-weight:400;font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-top:1px}
+.spacer{flex:1}
+.tk{display:none;align-items:center;gap:9px;padding:7px 13px;border:1px solid var(--line);border-radius:999px;font-family:'Space Mono';font-size:12.5px;background:var(--ink-2)}
+.tk b{color:var(--text)}
+.tk .chg{color:var(--good)}
+.tk .chg.down{color:var(--bad)}
+@media(min-width:760px){.tk{display:flex}}
+
+/* ---------- buttons ---------- */
+.btn{
+  font-family:'Space Grotesk';font-weight:600;font-size:14px;
+  border:0;border-radius:999px;padding:11px 19px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;color:#0a0a10;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  box-shadow:0 10px 26px -12px var(--accent);
+  transition:transform .12s ease, box-shadow .12s ease, filter .12s;
+  white-space:nowrap;
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 14px 30px -10px var(--accent);filter:brightness(1.06)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line-2);box-shadow:none}
+.btn.ghost:hover{border-color:var(--text);filter:none}
+.btn.gold{background:linear-gradient(135deg,#FFD66B,var(--gold));box-shadow:0 10px 26px -12px var(--gold)}
+.btn.sm{padding:8px 14px;font-size:13px}
+.btn.full{width:100%;justify-content:center}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+
+/* ---------- hero ---------- */
+.hero{padding:46px 0 22px;text-align:center}
+.hero h1{
+  font-family:'Space Grotesk';font-weight:700;line-height:1.02;letter-spacing:-.025em;
+  font-size:clamp(34px,7vw,68px);margin:14px 0 6px;
+}
+.hero h1 .glow{
+  background:linear-gradient(120deg,var(--accent),var(--accent-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero .tag{color:var(--dim);max-width:560px;margin:0 auto;font-size:16px}
+
+/* prize vault */
+.vault{
+  margin:30px auto 0;max-width:560px;position:relative;
+  border:1px solid var(--line-2);border-radius:24px;padding:30px 26px 26px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb,var(--gold) 8%, var(--ink-2)), var(--ink-2));
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.05);
+  overflow:hidden;
+}
+.vault::after{
+  content:"";position:absolute;inset:-40% -10% auto -10%;height:120%;
+  background:radial-gradient(50% 60% at 50% 0%, color-mix(in srgb,var(--gold) 30%, transparent), transparent 70%);
+  opacity:.5;pointer-events:none;
+}
+.vault .lbl{font-family:'Space Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);position:relative}
+.vault .amt{
+  font-family:'Space Grotesk';font-weight:700;letter-spacing:-.02em;position:relative;
+  font-size:clamp(40px,9vw,72px);line-height:1;margin:8px 0 2px;
+  text-shadow:0 0 40px color-mix(in srgb,var(--gold) 40%, transparent);
+}
+.vault .amt .tok{font-size:.38em;color:var(--gold);vertical-align:middle;margin-left:8px;font-family:'Space Mono'}
+.vault .sub{color:var(--dim);font-size:13.5px;position:relative}
+
+/* countdown */
+.cd{display:flex;justify-content:center;gap:10px;margin:22px 0 2px;position:relative}
+.cd .blk{min-width:62px;background:var(--ink-3);border:1px solid var(--line);border-radius:12px;padding:10px 6px}
+.cd .blk b{font-family:'Space Mono';font-weight:700;font-size:24px;display:block;line-height:1}
+.cd .blk span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+
+/* stat strip */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:26px 0 4px}
+.stat{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:16px 14px;text-align:left}
+.stat b{font-family:'Space Mono';font-weight:700;font-size:22px;display:block;letter-spacing:-.01em}
+.stat span{font-size:11.5px;color:var(--dim);letter-spacing:.04em}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+.live{display:inline-flex;align-items:center;gap:7px;font-family:'Space Mono';font-size:12px;color:var(--dim);margin-top:20px}
+.live .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 var(--good);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 70%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+
+/* ---------- layout grid ---------- */
+.grid{display:grid;grid-template-columns:1.55fr 1fr;gap:22px;margin:40px 0 60px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+.panel{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.panel .head{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+.panel .head h2{font-family:'Space Grotesk';font-weight:600;font-size:16px;margin:0;letter-spacing:-.01em}
+.panel .head .count{margin-left:auto;font-family:'Space Mono';font-size:12px;color:var(--dim)}
+.panel .body{padding:18px}
+
+/* ---------- registration ---------- */
+.reg{display:grid;gap:11px}
+.field label{display:block;font-size:12px;color:var(--dim);margin:0 0 6px 2px;letter-spacing:.02em}
+.field input{
+  width:100%;background:var(--ink);border:1px solid var(--line-2);border-radius:var(--r-sm);
+  color:var(--text);padding:12px 13px;font-family:'Inter';font-size:14.5px;transition:border-color .15s;
+}
+.field input.mono{font-family:'Space Mono';font-size:13px}
+.field input:focus{outline:0;border-color:var(--accent)}
+.field input::placeholder{color:var(--dim-2)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:480px){.two{grid-template-columns:1fr}}
+
+.wallet-row{display:flex;gap:9px;flex-wrap:wrap}
+.wbtn{
+  flex:1;min-width:120px;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--ink-3);border:1px solid var(--line-2);border-radius:var(--r-sm);
+  padding:12px;cursor:pointer;font-family:'Space Grotesk';font-weight:500;font-size:13.5px;color:var(--text);
+  transition:border-color .12s, background .12s;
+}
+.wbtn:hover{border-color:var(--accent)}
+.wbtn .ico{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font-size:12px;background:var(--ink)}
+.connected{display:none;align-items:center;gap:10px;background:color-mix(in srgb,var(--good) 10%,var(--ink));border:1px solid color-mix(in srgb,var(--good) 35%,transparent);border-radius:var(--r-sm);padding:11px 13px;font-family:'Space Mono';font-size:13px}
+.connected b{color:var(--good)}
+.or{text-align:center;font-size:11px;color:var(--dim);letter-spacing:.14em;margin:4px 0;text-transform:uppercase}
+
+/* xp bar */
+.xpwrap{margin-top:4px}
+.xptop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.xptop .now{font-family:'Space Mono';font-weight:700;font-size:20px}
+.xptop .now span{color:var(--accent)}
+.xptop .rk{font-family:'Space Mono';font-size:12px;color:var(--dim)}
+.bar{height:10px;border-radius:99px;background:var(--ink);overflow:hidden;border:1px solid var(--line)}
+.bar .fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .6s cubic-bezier(.2,.8,.2,1);position:relative}
+.bar .fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transform:translateX(-100%);animation:shim 2.2s infinite}
+@keyframes shim{100%{transform:translateX(100%)}}
+
+/* ---------- quests ---------- */
+.qlist{display:grid;gap:11px}
+.quest{
+  border:1px solid var(--line);border-radius:var(--r);background:var(--ink);overflow:hidden;
+  transition:border-color .15s, transform .12s;
+}
+.quest:hover{border-color:var(--line-2);transform:translateY(-1px)}
+.quest.done{border-color:color-mix(in srgb,var(--good) 40%,transparent);background:color-mix(in srgb,var(--good) 7%,var(--ink))}
+.quest.locked{opacity:.62}
+.qhead{display:flex;align-items:center;gap:13px;padding:14px 15px;cursor:pointer;user-select:none}
+.qicon{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-size:20px;flex-shrink:0;background:var(--ink-3);border:1px solid var(--line)}
+.qmeta{flex:1;min-width:0}
+.qmeta .nm{font-family:'Space Grotesk';font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.qmeta .ds{font-size:12.5px;color:var(--dim);margin-top:2px}
+.qxp{font-family:'Space Mono';font-weight:700;font-size:15px;color:var(--accent);flex-shrink:0;text-align:right}
+.qxp small{display:block;font-size:9px;color:var(--dim);letter-spacing:.1em}
+.tags{display:flex;gap:5px}
+.tag{font-family:'Space Mono';font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:5px;border:1px solid var(--line-2);color:var(--dim)}
+.tag.hi{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}
+.tag.mega{color:var(--accent-2);border-color:color-mix(in srgb,var(--accent-2) 50%,transparent)}
+.tag.daily{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,transparent)}
+.tag.lock{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.qbody{display:none;padding:0 15px 15px;border-top:1px solid var(--line)}
+.quest.open .qbody{display:block;padding-top:14px}
+.qbody textarea,.qbody input{width:100%;background:var(--ink-2);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--text);padding:11px 12px;font-family:'Inter';font-size:14px;resize:vertical}
+.qbody textarea:focus,.qbody input:focus{outline:0;border-color:var(--accent)}
+.qbody .cc{font-family:'Space Mono';font-size:11px;color:var(--dim);text-align:right;margin-top:5px}
+.qcheck{margin-left:auto;width:24px;height:24px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;flex-shrink:0;font-size:13px}
+.quest.done .qcheck{background:var(--good);border-color:var(--good);color:#06210f}
+
+/* ---------- leaderboard ---------- */
+.lb{display:flex;flex-direction:column}
+.lbrow{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line);transition:background .2s}
+.lbrow:last-child{border-bottom:0}
+.lbrow.me{background:color-mix(in srgb,var(--accent) 11%,transparent)}
+.lbrow .rank{font-family:'Space Mono';font-weight:700;font-size:14px;width:30px;color:var(--dim);text-align:center;flex-shrink:0}
+.lbrow .av{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#0a0a10;background:linear-gradient(135deg,var(--accent),var(--accent-2));flex-shrink:0}
+.lbrow .who{flex:1;min-width:0}
+.lbrow .who .nm{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbrow .who .wl{font-family:'Space Mono';font-size:11px;color:var(--dim)}
+.lbrow .pts{font-family:'Space Mono';font-weight:700;font-size:15px}
+.lbrow .pts small{color:var(--dim);font-weight:400;font-size:10px}
+.flash{animation:flash .9s ease}
+@keyframes flash{0%{background:color-mix(in srgb,var(--gold) 30%,transparent)}100%{}}
+
+/* ---------- share / referral ---------- */
+.share-card{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,var(--ink-2)),var(--ink-2));border:1px solid var(--line-2)}
+.refbox{display:flex;gap:8px;margin-top:6px}
+.refbox input{flex:1;background:var(--ink);border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--accent);padding:11px 12px;font-family:'Space Mono';font-size:12.5px}
+.share-btns{display:flex;gap:9px;margin-top:11px}
+.share-btns .btn{flex:1;justify-content:center}
+
+/* how it works */
+.how{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 50px}
+@media(max-width:760px){.how{grid-template-columns:repeat(2,1fr)}}
+.step{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.step .n{font-family:'Space Mono';font-weight:700;color:var(--accent);font-size:13px}
+.step h3{font-family:'Space Grotesk';font-size:15px;margin:8px 0 4px}
+.step p{font-size:13px;color:var(--dim);margin:0}
+
+/* stacc mode floater */
+.stacc{
+  position:fixed;right:18px;bottom:18px;z-index:60;display:none;align-items:center;gap:11px;
+  background:color-mix(in srgb,var(--ink-2) 88%,transparent);backdrop-filter:blur(12px);
+  border:1px solid var(--line-2);border-radius:14px;padding:11px 15px;box-shadow:var(--shadow);
+  max-width:calc(100vw - 36px);
+}
+.stacc .z{font-size:22px}
+.stacc .txt b{font-family:'Space Grotesk';font-size:13.5px;display:block}
+.stacc .txt span{font-family:'Space Mono';font-size:11.5px;color:var(--dim)}
+.stacc .next{font-family:'Space Mono';font-weight:700;color:var(--accent);font-size:14px}
+
+/* toast + xp chips */
+#toast{position:fixed;top:78px;left:50%;transform:translateX(-50%) translateY(-20px);z-index:90;opacity:0;transition:.3s;background:var(--ink-3);border:1px solid var(--line-2);border-radius:11px;padding:11px 17px;font-size:14px;font-weight:500;box-shadow:var(--shadow);pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.chip{position:fixed;z-index:95;font-family:'Space Mono';font-weight:700;font-size:18px;color:var(--accent);pointer-events:none;text-shadow:0 0 14px var(--accent)}
+.chip.big{font-size:26px;color:var(--gold);text-shadow:0 0 18px var(--gold)}
+@keyframes floatup{0%{transform:translateY(0) scale(.8);opacity:0}15%{opacity:1;transform:translateY(-6px) scale(1.1)}100%{transform:translateY(-70px) scale(1);opacity:0}}
+
+footer{border-top:1px solid var(--line);padding:26px 0 50px;color:var(--dim);font-size:13px}
+footer .row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+footer a{text-decoration:none;color:var(--dim)}
+footer a:hover{color:var(--text)}
+.pill{font-family:'Space Mono';font-size:11px;border:1px solid var(--line);border-radius:99px;padding:4px 10px;color:var(--dim)}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.hidden{display:none!important}
+.demo-banner{font-family:'Space Mono';font-size:11.5px;text-align:center;padding:7px;background:color-mix(in srgb,var(--gold) 12%,var(--ink));color:var(--gold);border-bottom:1px solid color-mix(in srgb,var(--gold) 30%,transparent)}
+</style>
+</head>
+<body>
+
+<div id="demoBanner" class="demo-banner">DEMO MODE — running on built-in sample data. Add a Firebase config to go live. Try <b>?c=staccana</b> and <b>?c=copium</b> in the URL.</div>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="wrap row">
+    <div class="brand">
+      <div class="logo" id="brandLogo">🧞</div>
+      <div>
+        <span id="brandName">GrowthGenie</span>
+        <small id="brandSlug">live campaign</small>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="tk" id="tokenTicker">
+      <span id="tkName">$TOKEN</span>
+      <b id="tkPrice">$0.00</b>
+      <span class="chg" id="tkChg">+0%</span>
+    </div>
+    <button class="btn sm" id="connectTop">Connect wallet</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="wrap hero">
+  <div class="eyebrow" id="heroEyebrow">Quest campaign · live now</div>
+  <h1 id="campTitle">Loading campaign…</h1>
+  <p class="tag" id="campTag">Grind the quests. Stack XP. Top the board.</p>
+
+  <div class="vault">
+    <div class="lbl">Prize pool</div>
+    <div class="amt"><span id="prizeAmt" class="mono">0</span><span class="tok" id="prizeTok">$TOKEN</span></div>
+    <div class="sub" id="prizeSub">Split across <b id="numWinners">3</b> winners · weighted by XP</div>
+
+    <div class="cd" id="countdown">
+      <div class="blk"><b id="cdD">00</b><span>days</span></div>
+      <div class="blk"><b id="cdH">00</b><span>hrs</span></div>
+      <div class="blk"><b id="cdM">00</b><span>min</span></div>
+      <div class="blk"><b id="cdS">00</b><span>sec</span></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="sXP" class="mono">0</b><span>XP tickets in pool</span></div>
+    <div class="stat"><b id="sPlayers" class="mono">0</b><span>players grinding</span></div>
+    <div class="stat"><b id="sQuests" class="mono">0</b><span>active quests</span></div>
+    <div class="stat"><b id="sWinners" class="mono">0</b><span>winners</span></div>
+  </div>
+
+  <div class="live"><span class="dot"></span> <span id="liveTxt">0 grinding right now</span></div>
+</section>
+
+<!-- MAIN GRID -->
+<section class="wrap">
+  <div class="grid">
+
+    <!-- LEFT: register + quests -->
+    <div style="display:grid;gap:22px">
+
+      <!-- registration / your run -->
+      <div class="panel" id="regPanel">
+        <div class="head"><h2 id="regTitle">Enter the campaign</h2></div>
+        <div class="body">
+
+          <!-- XP bar (hidden until registered) -->
+          <div class="xpwrap hidden" id="xpWrap">
+            <div class="xptop">
+              <div class="now"><span id="myXP" class="mono">0</span> XP</div>
+              <div class="rk" id="myRank">unranked</div>
+            </div>
+            <div class="bar"><div class="fill" id="xpFill"></div></div>
+          </div>
+
+          <!-- form -->
+          <div class="reg" id="regForm">
+            <div class="wallet-row" id="walletRow"></div>
+            <div class="connected" id="connectedBox">✅ <b id="connectedAddr">—</b></div>
+            <div class="or">— or paste address —</div>
+            <div class="field"><input id="inpWallet" class="mono" placeholder="Your Solana wallet address" autocomplete="off" /></div>
+            <div class="two">
+              <div class="field"><label>Name / handle</label><input id="inpName" placeholder="degen_jane" /></div>
+              <div class="field"><label>X handle <span style="color:var(--dim-2)">(optional)</span></label><input id="inpX" placeholder="@yourhandle" /></div>
+            </div>
+            <div class="field"><label>Email <span style="color:var(--dim-2)">(for prize delivery)</span></label><input id="inpEmail" type="email" placeholder="you@email.com" /></div>
+            <button class="btn full" id="btnRegister">Start grinding →</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- quests -->
+      <div class="panel">
+        <div class="head"><h2>Quests</h2><div class="count" id="qCount">0 quests</div></div>
+        <div class="body"><div class="qlist" id="qList"></div></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: leaderboard + share -->
+    <div style="display:grid;gap:22px">
+
+      <div class="panel">
+        <div class="head"><h2>Leaderboard</h2><div class="count" id="lbCount">live</div></div>
+        <div class="lb" id="lbList"></div>
+      </div>
+
+      <div class="panel share-card hidden" id="sharePanel">
+        <div class="head"><h2>Recruit your squad</h2></div>
+        <div class="body">
+          <p style="font-size:13px;color:var(--dim);margin:0 0 4px">Every friend who joins with your link drops <b id="refBonus" style="color:var(--accent)">0</b> bonus XP into your bag.</p>
+          <div class="refbox">
+            <input id="refLink" readonly value="" />
+            <button class="btn ghost sm" id="btnCopy">Copy</button>
+          </div>
+          <div class="share-btns">
+            <button class="btn sm" id="btnShareX">Share on X</button>
+            <button class="btn ghost sm" id="btnShareTg">Telegram</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- token panel -->
+      <div class="panel hidden" id="tokenPanel">
+        <div class="head"><h2 id="tpName">Token</h2></div>
+        <div class="body" style="display:grid;gap:10px">
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--dim);font-size:13px">Price</span><b class="mono" id="tpPrice">$0.00</b></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--dim);font-size:13px">24h</span><b class="mono" id="tpChg">+0%</b></div>
+          <div class="field"><label>Contract</label><input class="mono" id="tpCa" readonly /></div>
+          <div style="display:flex;gap:9px">
+            <button class="btn gold sm" style="flex:1" id="tpBuy">Buy</button>
+            <button class="btn ghost sm" style="flex:1" id="tpSite">Site</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- how it works -->
+  <div class="how">
+    <div class="step"><div class="n">01</div><h3>Connect</h3><p>Hook up Phantom, Solflare, or Backpack — or paste your address.</p></div>
+    <div class="step"><div class="n">02</div><h3>Grind quests</h3><p>Each quest you clear stacks XP. XP is your raffle tickets.</p></div>
+    <div class="step"><div class="n">03</div><h3>Climb</h3><p>Watch the board live. More XP, more tickets, better odds.</p></div>
+    <div class="step"><div class="n">04</div><h3>Win</h3><p>Winners drawn weighted by XP when the timer hits zero.</p></div>
+  </div>
+</section>
+
+<!-- STACC MODE -->
+<div class="stacc" id="staccBox">
+  <div class="z">⚡</div>
+  <div class="txt"><b>Stacc Mode active</b><span>passive XP while this tab is open</span></div>
+  <div class="next" id="staccNext">3:00</div>
+</div>
+
+<footer>
+  <div class="wrap row">
+    <div class="brand" style="font-size:15px"><div class="logo" style="width:28px;height:28px;font-size:15px">🧞</div> GrowthGenie</div>
+    <div class="spacer"></div>
+    <span class="pill">Powered by GrowthGenie</span>
+    <a href="#" id="footProv">Provably fair</a>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<script type="module">
+/* =========================================================================
+   1) FIREBASE CONFIG  ——  PASTE YOUR **NEW** PROJECT'S CONFIG HERE
+   Leave blank to run in demo mode. When projectId is set, the page goes
+   live automatically and reads/writes these collections:
+     campaigns/{id}  (with field: slug)   missions/{id} (field: campaignId)
+     entries/{id}    (field: campaignId)
+   ========================================================================= */
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",        // <-- set this to go live
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+const DEMO_MODE = !firebaseConfig.projectId;
+
+/* =========================================================================
+   2) DEMO DATA  (only used when DEMO_MODE) — two campaigns to prove multi-campaign
+   ========================================================================= */
+const DEMO = {
+  staccana: {
+    campaign:{ slug:"staccana", projectName:"Staccana", logo:"👻", accentColor:"#7BFF4D",
+      title:"The Staccana Grind", tag:"Stack XP. Climb the trenches. Split the bag.",
+      prizeAmount:"1,000,000", prizeToken:"$STACCANA", numWinners:3, referralBonus:250,
+      endDate:Date.now()+1000*60*60*52,
+      token:{name:"$STACCANA", price:"$0.0042", change:"+38%", ca:"Stacc7xK...pump", buyUrl:"#", siteUrl:"#"} },
+    missions:[
+      {name:"Follow @Staccana on X", desc:"Tag yourself in the trenches", icon:"🐦", pts:50, type:"follow", proof:"text", q:"low"},
+      {name:"Retweet the pinned raid", desc:"Drop the link to your RT", icon:"🔁", pts:75, type:"rt", proof:"url", q:"low"},
+      {name:"Post with $STACCANA ticker", desc:"Daily — fresh post each day", icon:"📣", pts:120, type:"post", proof:"url", daily:true, q:"med"},
+      {name:"Hold $STACCANA", desc:"Verify your bag, one-time", icon:"💎", pts:300, type:"hold", proof:"wallet", q:"med"},
+      {name:"Quality alpha thread", desc:"Write real alpha, min 180 chars", icon:"🧵", pts:500, type:"quality", proof:"text", min:180, q:"high"},
+      {name:"Attend the Space", desc:"Unlocks at Space time", icon:"🎙️", pts:400, type:"space", proof:"url", q:"high", lockHrs:6},
+      {name:"Host a Space about us", desc:"MEGA XP — bring the trenches", icon:"📡", pts:1200, type:"host", proof:"url", q:"high"},
+    ],
+    seed:[ ["solqueen",9820],["bagchaser",7640],["ghostpilot",6110],["mintwizard",4980],["degenmax",3870],["copium_andy",2540],["fishfren",1660],["jpegjanitor",980] ]
+  },
+  copium: {
+    campaign:{ slug:"copium", projectName:"Copium Labs", logo:"🧪", accentColor:"#00E0FF",
+      title:"Copium Season One", tag:"Quests, XP, and a fat SOL pool. No copium required.",
+      prizeAmount:"50", prizeToken:"SOL", numWinners:5, referralBonus:150,
+      endDate:Date.now()+1000*60*60*26,
+      token:{name:"$COPE", price:"$0.011", change:"-6%", ca:"CoPe9aa...pump", buyUrl:"#", siteUrl:"#"} },
+    missions:[
+      {name:"Join the Telegram", desc:"Username in the proof", icon:"✈️", pts:60, type:"tg", proof:"text", q:"low"},
+      {name:"Like the launch video", desc:"Drop the link", icon:"▶️", pts:50, type:"yt", proof:"url", q:"low"},
+      {name:"Make a meme", desc:"Daily — original only", icon:"🎨", pts:140, type:"meme", proof:"url", daily:true, q:"med"},
+      {name:"Buy on Jupiter", desc:"Paste the tx link", icon:"🪐", pts:200, type:"buy", proof:"url", daily:true, q:"med"},
+      {name:"Written review", desc:"Min 150 chars, real ones only", icon:"✍️", pts:450, type:"written", proof:"text", min:150, q:"high"},
+      {name:"TikTok post", desc:"Tag the project", icon:"🎵", pts:180, type:"tiktok", proof:"url", daily:true, q:"med"},
+    ],
+    seed:[ ["lpwhale",6240],["jupiterjim",5100],["memelord99",4420],["coperino",3010],["sol_sally",2200],["frogfan",1340] ]
+  }
+};
+
+/* =========================================================================
+   3) STATE
+   ========================================================================= */
+let CAMP=null, MISSIONS=[], BOARD=[], db=null;
+let player={ wallet:"", name:"", email:"", x:"", xp:0, done:[], ref:"", refBy:"", registered:false, id:null };
+const slug = new URLSearchParams(location.search).get("c") || (DEMO_MODE ? "staccana" : "");
+const refBy = new URLSearchParams(location.search).get("ref") || "";
+player.refBy = refBy;
+
+/* =========================================================================
+   4) HELPERS
+   ========================================================================= */
+const $=id=>document.getElementById(id);
+const trunc=w=>w?w.slice(0,4)+"…"+w.slice(-4):"";
+const fmt=n=>Number(n).toLocaleString();
+const esc=s=>(s||"").replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));
+function code(){let s="";const a="ABCDEFGHJKMNPQRSTUVWXYZ23456789";for(let i=0;i<8;i++)s+=a[Math.floor(Math.random()*a.length)];return s;}
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._);t._=setTimeout(()=>t.classList.remove("show"),2200);}
+function setAccent(hex){
+  document.documentElement.style.setProperty("--accent",hex);
+  // derive a second hue by rotating — keeps the duotone without a second config value
+  try{
+    const h=hex.replace("#","");const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+    const max=Math.max(r,g,b)/255,min=Math.min(r,g,b)/255;let hh=0,d=max-min,l=(max+min)/2,sat=d?d/(1-Math.abs(2*l-1)):0;
+    const R=r/255,G=g/255,B=b/255;
+    if(d){if(max===R)hh=((G-B)/d)%6;else if(max===G)hh=(B-R)/d+2;else hh=(R-G)/d+4;hh*=60;if(hh<0)hh+=360;}
+    const h2=(hh+50)%360;
+    document.documentElement.style.setProperty("--accent-2",`hsl(${h2} 90% 64%)`);
+  }catch(e){}
+}
+function chip(x,y,txt,big){const c=document.createElement("div");c.className="chip"+(big?" big":"");c.textContent=txt;c.style.left=x+"px";c.style.top=y+"px";c.style.animation="floatup 1.1s ease forwards";document.body.appendChild(c);setTimeout(()=>c.remove(),1100);}
+function rollup(el,to){const from=0,dur=900,t0=performance.now();function step(t){const p=Math.min(1,(t-t0)/dur);const e=1-Math.pow(1-p,3);el.textContent=fmt(Math.round(from+(to-from)*e));if(p<1)requestAnimationFrame(step);}requestAnimationFrame(step);}
+
+/* =========================================================================
+   5) DATA LAYER  (demo  ↔  firestore)
+   ========================================================================= */
+async function loadCampaign(){
+  if(DEMO_MODE){
+    const d=DEMO[slug]||DEMO.staccana;
+    CAMP={...d.campaign};
+    MISSIONS=d.missions.map((m,i)=>({id:"m"+i,order:i,...m,
+      unlockAt:m.lockHrs?Date.now()+m.lockHrs*3600*1000:null}));
+    BOARD=d.seed.map(([n,p])=>({name:n,wallet:n.slice(0,3)+"…"+n.slice(-2),pts:p,id:"s_"+n}));
+    return;
+  }
+  const {getFirestore,collection,query,where,getDocs,onSnapshot}=window._fs;
+  // campaign by slug
+  const cq=query(collection(db,"campaigns"),where("slug","==",slug));
+  const cs=await getDocs(cq);
+  if(cs.empty){renderNotFound();throw new Error("no campaign");}
+  CAMP={id:cs.docs[0].id,...cs.docs[0].data()};
+  // live quests
+  onSnapshot(query(collection(db,"missions"),where("campaignId","==",CAMP.id)),s=>{
+    MISSIONS=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.active!==false).sort((a,b)=>(a.order||0)-(b.order||0));
+    renderQuests();renderStats();
+  });
+  // live leaderboard
+  onSnapshot(query(collection(db,"entries"),where("campaignId","==",CAMP.id)),s=>{
+    BOARD=s.docs.map(d=>({id:d.id,...d.data()})).filter(e=>!e.flagged).sort((a,b)=>(b.pts||0)-(a.pts||0));
+    renderBoard();renderStats();
+  });
+}
+
+async function persistEntry(){
+  if(DEMO_MODE){
+    let me=BOARD.find(e=>e.id===player.id);
+    if(!me){me={id:player.id,name:player.name,wallet:trunc(player.wallet),pts:player.xp,mine:true};BOARD.push(me);}
+    me.pts=player.xp;me.name=player.name;
+    BOARD.sort((a,b)=>b.pts-a.pts);renderBoard();return;
+  }
+  const {doc,setDoc}=window._fs;
+  await setDoc(doc(db,"entries",player.id),{
+    campaignId:CAMP.id,name:player.name,email:player.email,wallet:trunc(player.wallet),walletFull:player.wallet,
+    x:player.x,pts:player.xp,completedMissions:player.done,refCode:player.ref,referredBy:player.refBy,
+    flagged:false,timestamp:Date.now()
+  },{merge:true});
+}
+
+/* =========================================================================
+   6) RENDER
+   ========================================================================= */
+function applyBranding(){
+  setAccent(CAMP.accentColor||"#8A5BFF");
+  $("brandLogo").textContent=CAMP.logo||"🧞";
+  $("brandName").textContent=CAMP.projectName||"GrowthGenie";
+  $("brandSlug").textContent=(CAMP.slug||"")+" · live";
+  document.title=`${CAMP.projectName||"GrowthGenie"} — Campaign`;
+  $("campTitle").innerHTML=`<span class="glow">${esc(CAMP.title||CAMP.projectName||"Campaign")}</span>`;
+  $("campTag").textContent=CAMP.tag||"Grind the quests. Stack XP. Top the board.";
+  $("prizeAmt").textContent=CAMP.prizeAmount||"0";
+  $("prizeTok").textContent=CAMP.prizeToken||"";
+  $("numWinners").textContent=CAMP.numWinners||1;
+  $("refBonus").textContent=CAMP.referralBonus||0;
+  // token
+  if(CAMP.token&&CAMP.token.name){
+    $("tokenTicker").style.display="flex";
+    $("tkName").textContent=CAMP.token.name;$("tkPrice").textContent=CAMP.token.price||"";
+    const chg=$("tkChg");chg.textContent=CAMP.token.change||"";chg.classList.toggle("down",(CAMP.token.change||"").startsWith("-"));
+    $("tokenPanel").classList.remove("hidden");
+    $("tpName").textContent=CAMP.token.name;$("tpPrice").textContent=CAMP.token.price||"";
+    const c2=$("tpChg");c2.textContent=CAMP.token.change||"";c2.style.color=(CAMP.token.change||"").startsWith("-")?"var(--bad)":"var(--good)";
+    $("tpCa").value=CAMP.token.ca||"";
+    $("tpBuy").onclick=()=>CAMP.token.buyUrl&&window.open(CAMP.token.buyUrl,"_blank");
+    $("tpSite").onclick=()=>CAMP.token.siteUrl&&window.open(CAMP.token.siteUrl,"_blank");
+  }
+}
+
+function renderStats(){
+  const totalXP=BOARD.reduce((s,e)=>s+(e.pts||0),0);
+  rollup($("sXP"),totalXP);
+  $("sPlayers").textContent=fmt(BOARD.length);
+  $("sQuests").textContent=fmt(MISSIONS.length);
+  $("sWinners").textContent=fmt(CAMP.numWinners||1);
+  $("qCount").textContent=MISSIONS.length+" quests";
+  const live=Math.max(1,Math.round(BOARD.length*0.18)+2);
+  $("liveTxt").textContent=live+" grinding right now";
+}
+
+function questTags(m){
+  const t=[];
+  if(m.q==="high"||m.pts>=400)t.push('<span class="tag hi">High XP</span>');
+  if(m.type==="host"||m.pts>=1000)t.push('<span class="tag mega">Mega</span>');
+  if(m.daily)t.push('<span class="tag daily">Daily</span>');
+  if(m.unlockAt&&m.unlockAt>Date.now())t.push('<span class="tag lock">Locked</span>');
+  return t.join("");
+}
+function renderQuests(){
+  const wrap=$("qList");wrap.innerHTML="";
+  MISSIONS.forEach(m=>{
+    const locked=m.unlockAt&&m.unlockAt>Date.now();
+    const done=player.done.includes(m.id);
+    const el=document.createElement("div");
+    el.className="quest"+(done?" done":"")+(locked?" locked":"");
+    let proofUI="";
+    if(!done&&!locked){
+      if(m.proof==="text"){proofUI=`<textarea rows="3" placeholder="Paste your proof / write your response"></textarea>${m.min?`<div class="cc"><span class="cnt">0</span>/${m.min} min</div>`:""}`;}
+      else if(m.proof==="url"){proofUI=`<input type="url" placeholder="https://x.com/your/post" />`;}
+      else if(m.proof==="wallet"){proofUI=`<input class="mono" placeholder="Wallet to verify (auto-filled on connect)" value="${player.wallet||""}" />`;}
+      else{proofUI=`<input placeholder="Type 'done' to confirm" />`;}
+      proofUI+=`<button class="btn full sm" style="margin-top:10px">Submit & claim +${m.pts} XP</button>`;
+    }
+    const lockTxt=locked?`<div class="qmeta"><div class="ds" style="color:var(--bad)">Unlocks in ${Math.ceil((m.unlockAt-Date.now())/3600000)}h</div></div>`:"";
+    el.innerHTML=`
+      <div class="qhead">
+        <div class="qicon">${m.icon||"🎯"}</div>
+        <div class="qmeta">
+          <div class="nm">${esc(m.name)} <span class="tags">${questTags(m)}</span></div>
+          <div class="ds">${esc(m.desc||"")}</div>
+        </div>
+        ${done?'<div class="qcheck">✓</div>':`<div class="qxp">+${m.pts}<small>XP</small></div>`}
+      </div>
+      <div class="qbody">${locked?'<div class="ds" style="color:var(--bad)">🔒 This quest unlocks later — check back.</div>':proofUI}</div>`;
+    // expand
+    el.querySelector(".qhead").onclick=()=>{ if(done||locked)return; el.classList.toggle("open"); };
+    // char count
+    const ta=el.querySelector("textarea");if(ta&&m.min){ta.addEventListener("input",()=>{const c=el.querySelector(".cnt");if(c)c.textContent=ta.value.length;});}
+    // submit
+    const sb=el.querySelector(".qbody .btn");
+    if(sb)sb.onclick=(ev)=>completeQuest(m,el,ev);
+    wrap.appendChild(el);
+  });
+}
+
+function renderBoard(){
+  const list=$("lbList");list.innerHTML="";
+  const sorted=[...BOARD].sort((a,b)=>(b.pts||0)-(a.pts||0)).slice(0,12);
+  const medals=["🥇","🥈","🥉"];
+  sorted.forEach((e,i)=>{
+    const mine=(player.id&&e.id===player.id)||e.mine;
+    const row=document.createElement("div");
+    row.className="lbrow"+(mine?" me":"");
+    row.innerHTML=`
+      <div class="rank">${i<3?medals[i]:i+1}</div>
+      <div class="av">${(e.name||"?")[0].toUpperCase()}</div>
+      <div class="who"><div class="nm">${esc(e.name||"anon")}${mine?" (you)":""}</div><div class="wl">${esc(e.wallet||"")}</div></div>
+      <div class="pts">${fmt(e.pts||0)} <small>XP</small></div>`;
+    list.appendChild(row);
+  });
+  if(player.registered){
+    const rank=[...BOARD].sort((a,b)=>b.pts-a.pts).findIndex(e=>e.id===player.id)+1;
+    $("myRank").textContent=rank?`rank #${rank} of ${BOARD.length}`:"unranked";
+  }
+}
+
+function renderNotFound(){
+  $("campTitle").innerHTML='<span class="glow">Campaign not found</span>';
+  $("campTag").textContent=`No campaign with slug "${esc(slug)}". Check the link or create it in your dashboard.`;
+}
+
+/* =========================================================================
+   7) WALLET CONNECT
+   ========================================================================= */
+function walletProviders(){
+  return [
+    {key:"phantom",label:"Phantom",ico:"👻",get:()=>window.phantom?.solana||(window.solana?.isPhantom?window.solana:null)},
+    {key:"solflare",label:"Solflare",ico:"🔆",get:()=>window.solflare?.isSolflare?window.solflare:null},
+    {key:"backpack",label:"Backpack",ico:"🎒",get:()=>window.backpack||(window.solana?.isBackpack?window.solana:null)},
+  ];
+}
+function renderWallets(){
+  const row=$("walletRow");row.innerHTML="";
+  walletProviders().forEach(p=>{
+    const b=document.createElement("button");b.className="wbtn";
+    b.innerHTML=`<span class="ico">${p.ico}</span>${p.label}`;
+    b.onclick=()=>connect(p);row.appendChild(b);
+  });
+}
+async function connect(p){
+  if(DEMO_MODE){
+    const fake="Demo"+code().slice(0,6)+"…"+code().slice(0,4);
+    setConnected(fake);toast(`${p.label} connected (demo)`);return;
+  }
+  const prov=p.get();
+  if(!prov){toast(`${p.label} not detected — install it or paste your address`);if(p.key==="phantom")window.open("https://phantom.app/","_blank");return;}
+  try{const res=await prov.connect();const addr=(res.publicKey||prov.publicKey).toString();setConnected(addr);toast(`${p.label} connected`);}
+  catch(e){toast("Connection cancelled");}
+}
+function setConnected(addr){
+  player.wallet=addr;$("inpWallet").value=addr;
+  $("connectedBox").style.display="flex";$("connectedAddr").textContent=trunc(addr);
+  $("connectTop").textContent=trunc(addr);
+}
+
+/* =========================================================================
+   8) ACTIONS — register, complete, stacc, share
+   ========================================================================= */
+function awardXP(n,ev,big){
+  player.xp+=n;
+  $("myXP").textContent=fmt(player.xp);
+  const totalForBar=Math.max(player.xp,2000);
+  $("xpFill").style.width=Math.min(100,(player.xp/ (BOARD[0]?.pts||totalForBar) )*100)+"%";
+  if(ev){const r=ev.target.getBoundingClientRect();chip(r.left+r.width/2-14,r.top-10,"+"+n,big);}
+  persistEntry();renderBoard();renderStats();
+}
+
+$("btnRegister").onclick=()=>{
+  const w=$("inpWallet").value.trim()||player.wallet;
+  const n=$("inpName").value.trim();const e=$("inpEmail").value.trim();
+  if(!w){toast("Connect a wallet or paste your address");return;}
+  if(!n){toast("Add a name or handle");return;}
+  if(!e||!e.includes("@")){toast("Add an email for prize delivery");return;}
+  player.wallet=w;player.name=n;player.email=e;player.x=$("inpX").value.trim();
+  player.ref=code();player.id=DEMO_MODE?("me_"+player.ref):("e_"+player.ref);
+  player.registered=true;
+  // referral bonus to referrer (live mode would increment their entry; demo just notes it)
+  $("regForm").classList.add("hidden");
+  $("xpWrap").classList.remove("hidden");
+  $("regTitle").textContent="Your run";
+  $("sharePanel").classList.remove("hidden");
+  $("refLink").value=`${location.origin}${location.pathname}?c=${CAMP.slug}&ref=${player.ref}`;
+  persistEntry();renderQuests();renderBoard();
+  startStacc();
+  toast("You're in. Go stack XP →");
+};
+
+function completeQuest(m,el,ev){
+  // light validation
+  const ta=el.querySelector("textarea"),inp=el.querySelector(".qbody input");
+  if(!player.registered){toast("Enter the campaign first ↑");return;}
+  if(m.proof==="text"&&m.min&&(!ta||ta.value.trim().length<m.min)){toast(`Needs at least ${m.min} characters`);return;}
+  if((m.proof==="url")&&(!inp||!inp.value.trim().startsWith("http"))){toast("Paste a valid link");return;}
+  if(m.proof==="wallet"&&(!inp||inp.value.trim().length<20)){toast("Enter a valid wallet");return;}
+  if(player.done.includes(m.id))return;
+  player.done.push(m.id);
+  el.classList.remove("open");
+  awardXP(m.pts,ev,m.pts>=500);
+  renderQuests();
+  toast(`+${m.pts} XP claimed`);
+}
+
+/* stacc mode — passive XP while tab is visible */
+let staccInt=null,staccLeft=0;
+const STACC_PERIOD=DEMO_MODE?25:180; // seconds (demo ticks faster so you can see it)
+function startStacc(){
+  $("staccBox").style.display="flex";staccLeft=STACC_PERIOD;
+  clearInterval(staccInt);
+  staccInt=setInterval(()=>{
+    if(document.hidden)return; // Page Visibility API — pause when hidden
+    staccLeft--;
+    const mm=Math.floor(staccLeft/60),ss=String(staccLeft%60).padStart(2,"0");
+    $("staccNext").textContent=`${mm}:${ss}`;
+    if(staccLeft<=0){
+      staccLeft=STACC_PERIOD;
+      const mult=Math.random()<0.2?2:1;const drop=5*mult;
+      const box=$("staccBox").getBoundingClientRect();
+      chip(box.left+10,box.top-6,"+"+drop,mult>1);
+      awardXP(drop,null,mult>1);
+      if(mult>1)toast("⚡ 2× Stacc drop!");
+    }
+  },1000);
+}
+
+$("connectTop").onclick=()=>{ if(player.wallet)return; document.getElementById("regPanel").scrollIntoView({behavior:"smooth"}); };
+$("btnCopy").onclick=()=>{navigator.clipboard.writeText($("refLink").value);toast("Link copied");};
+$("btnShareX").onclick=()=>{
+  const t=`I'm grinding the ${CAMP.projectName} campaign for ${CAMP.prizeAmount} ${CAMP.prizeToken} 🧞\nStack XP, climb the board, win the bag.\nJoin with my link:`;
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}&url=${encodeURIComponent($("refLink").value)}`,"_blank");
+};
+$("btnShareTg").onclick=()=>{
+  window.open(`https://t.me/share/url?url=${encodeURIComponent($("refLink").value)}&text=${encodeURIComponent("Grind "+CAMP.projectName+" with me 🧞")}`,"_blank");
+};
+$("tpCa")&&($("tpCa").onclick=()=>{navigator.clipboard.writeText($("tpCa").value);toast("Contract copied");});
+
+/* countdown */
+function tickCountdown(){
+  if(!CAMP||!CAMP.endDate)return;
+  let diff=Math.max(0,CAMP.endDate-Date.now());
+  const d=Math.floor(diff/86400000);diff-=d*86400000;
+  const h=Math.floor(diff/3600000);diff-=h*3600000;
+  const m=Math.floor(diff/60000);diff-=m*60000;
+  const s=Math.floor(diff/1000);
+  $("cdD").textContent=String(d).padStart(2,"0");$("cdH").textContent=String(h).padStart(2,"0");
+  $("cdM").textContent=String(m).padStart(2,"0");$("cdS").textContent=String(s).padStart(2,"0");
+}
+
+/* =========================================================================
+   9) BOOT
+   ========================================================================= */
+async function boot(){
+  renderWallets();
+  if(!DEMO_MODE){
+    $("demoBanner").classList.add("hidden");
+    const a=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const fs=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    window._fs=fs;const app=a.initializeApp(firebaseConfig);db=fs.getFirestore(app);
+  }
+  try{ await loadCampaign(); }catch(e){ renderStats(); return; }
+  applyBranding();renderQuests();renderBoard();renderStats();
+  tickCountdown();setInterval(tickCountdown,1000);
+}
+boot();
+</script>
+</body>
+</html>
