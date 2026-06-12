@@ -282,6 +282,16 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   font-size:14px;
 }
 
+/* CAMPAIGN TYPE CARDS */
+.type-card{
+  background:var(--ink-3);border:2px solid var(--line);
+  border-radius:var(--r-sm);padding:16px;cursor:pointer;
+  transition:border-color .18s,background .18s;
+}
+.type-card:hover{border-color:var(--line-2)}
+.type-card.active{border-color:var(--accent);background:rgba(138,91,255,.07)}
+.type-card.active-fud{border-color:var(--bad);background:rgba(255,92,92,.07)}
+
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:6px;height:6px}
 ::-webkit-scrollbar-track{background:var(--ink)}
@@ -372,6 +382,31 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
       <div class="field" style="margin-top:20px">
         <label>End Date &amp; Time <span class="req">*</span></label>
         <input type="datetime-local" id="endDate" class="input" />
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="field" style="margin-bottom:0">
+        <label>Campaign Type</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px" id="typeCards">
+          <div class="type-card active" id="typeStandard" onclick="setCampaignType('standard')">
+            <div style="font-size:22px;margin-bottom:4px">🚀</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px">Growth Campaign</div>
+            <div style="font-size:12px;color:var(--dim);margin-top:3px">Players earn XP by completing quests that grow your community.</div>
+          </div>
+          <div class="type-card" id="typeFud" onclick="setCampaignType('fudfund')">
+            <div style="font-size:22px;margin-bottom:4px">💀</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px">FUD FUND</div>
+            <div style="font-size:12px;color:var(--dim);margin-top:3px">Sponsor a FUD campaign. Players earn XP for dunking on a target project.</div>
+          </div>
+        </div>
+        <div id="fudTargetWrap" style="display:none;margin-top:14px">
+          <div class="field" style="margin-bottom:0">
+            <label>FUD Target <span class="req">*</span></label>
+            <input type="text" id="fudTarget" class="input" placeholder="e.g. @CopiumLabs or $COPE" autocomplete="off"/>
+            <p style="font-size:12px;color:var(--dim-2);margin-top:5px">The project or community being FUD'd. Shown to players.</p>
+          </div>
+        </div>
       </div>
 
       <div class="nav-buttons">
@@ -586,6 +621,7 @@ let editId       = null;
 let currentStep  = 1;
 let quests       = [];
 let editQuestIdx = null;
+let campaignType = 'standard'; // 'standard' | 'fudfund'
 
 // ── URL params ──────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
@@ -649,6 +685,11 @@ async function loadCampaign(id) {
     // Settings
     setVal('numWinners',    camp.numWinners    || 1);
     setVal('referralBonus', camp.referralBonus || 0);
+    // Campaign type
+    if (camp.campaignType === 'fudfund') {
+      setCampaignType('fudfund');
+      setVal('fudTarget', camp.fudTarget || '');
+    }
 
     // Load missions
     const ms = await databases.listDocuments(DB, 'missions', [
@@ -726,6 +767,7 @@ function validateStep(step) {
     if (!v('prizeAmount'))  { toast('Prize Amount is required', 'error'); return false; }
     if (!v('prizeToken'))   { toast('Prize Token is required', 'error'); return false; }
     if (!v('endDate'))      { toast('End Date is required', 'error'); return false; }
+    if (campaignType === 'fudfund' && !v('fudTarget')) { toast('Set a FUD target', 'error'); return false; }
   }
   if (step === 3) {
     if (quests.length === 0) { toast('Add at least one quest', 'error'); return false; }
@@ -774,6 +816,22 @@ function openTokenSection() {
   document.getElementById('tokenToggle').classList.add('open');
 }
 
+// ── Campaign type ────────────────────────────────────────────────
+window.setCampaignType = function(type) {
+  campaignType = type;
+  const isFud = type === 'fudfund';
+  document.getElementById('typeStandard').classList.toggle('active', !isFud);
+  document.getElementById('typeStandard').classList.remove('active-fud');
+  document.getElementById('typeFud').classList.toggle('active-fud', isFud);
+  document.getElementById('typeFud').classList.toggle('active', false);
+  document.getElementById('fudTargetWrap').style.display = isFud ? 'block' : 'none';
+  // swap quest templates
+  renderTemplates();
+  // tint page accent for FUD mode
+  document.documentElement.style.setProperty('--accent', isFud ? '#FF5C5C' : '#8A5BFF');
+  document.documentElement.style.setProperty('--accent-2', isFud ? '#FF9000' : '#FF4D9D');
+};
+
 // ── Quest templates ─────────────────────────────────────────────
 const TEMPLATES = [
   { name:'Follow on X',      icon:'🐦',  pts:50,   type:'follow',   proof:'text',   daily:false, min:0 },
@@ -790,10 +848,26 @@ const TEMPLATES = [
   { name:'Custom quest',     icon:'➕',  pts:null, type:'custom',   proof:'text',   daily:false, min:0, custom:true },
 ];
 
+const FUD_TEMPLATES = [
+  { name:'Post FUD thread',    icon:'🔥',  pts:150,  type:'fud_post',    proof:'url',  daily:false, min:0, desc:'Write a FUD thread about the target and drop the link' },
+  { name:'Ratio their tweet',  icon:'💀',  pts:100,  type:'fud_ratio',   proof:'url',  daily:true,  min:0, desc:'Ratio the target\'s latest tweet — post the link' },
+  { name:'Daily FUD post',     icon:'📉',  pts:80,   type:'fud_daily',   proof:'url',  daily:true,  min:0, desc:'Post daily FUD — fresh content each day' },
+  { name:'Make a FUD meme',    icon:'😂',  pts:120,  type:'fud_meme',    proof:'url',  daily:true,  min:0, desc:'Original FUD meme — no recycled content' },
+  { name:'Write a hit piece',  icon:'✍️', pts:500,  type:'fud_written',  proof:'text', daily:false, min:200, desc:'Long-form FUD article or thread, min 200 chars' },
+  { name:'Host FUD Space',     icon:'📢',  pts:800,  type:'fud_space',   proof:'url',  daily:false, min:0, desc:'Host a Space roasting the target — MEGA XP' },
+  { name:'Convert a believer', icon:'🧠',  pts:300,  type:'fud_convert',  proof:'text', daily:false, min:150, desc:'Share a screenshot/proof of convincing someone to sell' },
+  { name:'Start a cope thread',icon:'😭',  pts:90,   type:'fud_cope',    proof:'url',  daily:true,  min:0, desc:'Quote-tweet their hopium and reply with facts' },
+  { name:'Spread to a server', icon:'💣',  pts:200,  type:'fud_spread',  proof:'url',  daily:false, min:0, desc:'Post FUD in a Discord or Telegram — screenshot it' },
+  { name:'Make a TikTok FUD',  icon:'🎵',  pts:180,  type:'fud_tiktok',  proof:'url',  daily:true,  min:0, desc:'TikTok video exposing the target' },
+  { name:'VC leak expose',     icon:'🕵️', pts:600,  type:'fud_expose',  proof:'url',  daily:false, min:0, desc:'Post receipts — wallet dumps, insider leaks, rugs' },
+  { name:'Custom quest',       icon:'➕',  pts:null, type:'custom',      proof:'text', daily:false, min:0, custom:true },
+];
+
 function renderTemplates() {
   const grid = document.getElementById('templatesGrid');
   grid.innerHTML = '';
-  TEMPLATES.forEach((tpl, idx) => {
+  const list = campaignType === 'fudfund' ? FUD_TEMPLATES : TEMPLATES;
+  list.forEach((tpl, idx) => {
     const card = document.createElement('div');
     card.className = 'tpl-card';
     card.innerHTML = `
@@ -1028,6 +1102,8 @@ window.saveCampaign = async function() {
   const campaignData = {
     slug:          v('slug'),
     clientId:      user.$id,
+    campaignType:  campaignType,
+    fudTarget:     campaignType === 'fudfund' ? (v('fudTarget') || '') : '',
     projectName:   v('projectName'),
     title:         v('projectName'),
     tag:           v('tagline'),

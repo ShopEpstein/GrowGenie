@@ -613,8 +613,10 @@ function applyBranding(){
   $("brandName").textContent=CAMP.projectName||"GrowthGenie";
   $("brandSlug").textContent=(CAMP.slug||"")+" · live";
   document.title=`${CAMP.projectName||"GrowthGenie"} — Campaign`;
+  const isFud=CAMP.campaignType==="fudfund";
   $("campTitle").innerHTML=`<span class="glow">${esc(CAMP.title||CAMP.projectName||"Campaign")}</span>`;
-  $("campTag").textContent=CAMP.tag||"Grind the quests. Stack XP. Top the board.";
+  $("campTag").textContent=CAMP.tag||(isFud?"FUD hard. Get paid. No mercy.":"Grind the quests. Stack XP. Top the board.");
+  $("heroEyebrow").textContent=isFud?`💀 FUD FUND · targeting ${esc(CAMP.fudTarget||"the enemy")}`:"Quest campaign · live now";
   $("prizeAmt").textContent=CAMP.prizeAmount||"0";
   $("prizeTok").textContent=CAMP.prizeToken||"";
   $("numWinners").textContent=CAMP.numWinners||1;
