@@ -2,6 +2,11 @@ name: Push Appwrite Collections
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - appwrite.config.json
 
 jobs:
   push-collections:
