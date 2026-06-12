@@ -11,29 +11,211 @@ on:
 jobs:
   push-collections:
     runs-on: ubuntu-latest
+    env:
+      BASE: https://nyc.cloud.appwrite.io/v1
+      PROJECT: 6a2bc15c00065b3c91a0
+      DB: growthgenie
+      KEY: ${{ secrets.APPWRITE_API_KEY }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Appwrite CLI
-        run: npm install -g appwrite-cli
-
-      - name: Configure CLI
+      - name: Create database
         run: |
-          appwrite client \
-            --endpoint https://nyc.cloud.appwrite.io/v1 \
-            --project-id 6a2bc15c00065b3c91a0 \
-            --key ${{ secrets.APPWRITE_API_KEY }}
+          curl -sf -X POST "$BASE/databases" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"databaseId":"growthgenie","name":"growthgenie","enabled":true}' \
+            && echo "✅ Database created" || echo "ℹ️  Database already exists"
 
-      - name: Create database (idempotent)
+      # ── campaigns ────────────────────────────────────────────────────────────
+
+      - name: Create campaigns collection
         run: |
-          appwrite databases create \
-            --database-id growthgenie \
-            --name growthgenie \
-            --enabled true || echo "Database may already exist, continuing..."
+          curl -sf -X POST "$BASE/databases/$DB/collections" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "collectionId":"campaigns","name":"campaigns","enabled":true,
+              "documentSecurity":true,
+              "permissions":["read(\"any\")","create(\"users\")"]
+            }' && echo "✅ campaigns created" || echo "ℹ️  campaigns exists"
 
-      - name: Push collections
-        run: appwrite push collections --all --force
+      - name: campaigns attributes
+        run: |
+          post_str() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/attributes/string" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_bool() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/attributes/boolean" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_int() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/attributes/integer" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_str '{"key":"slug","size":64,"required":true}'
+          post_str '{"key":"clientId","size":64,"required":true}'
+          post_str '{"key":"projectName","size":128,"required":true}'
+          post_str '{"key":"title","size":256,"required":false}'
+          post_str '{"key":"tag","size":512,"required":false}'
+          post_str '{"key":"logo","size":64,"required":false}'
+          post_str '{"key":"accentColor","size":16,"required":false}'
+          post_str '{"key":"prizeAmount","size":64,"required":false}'
+          post_str '{"key":"prizeToken","size":32,"required":false}'
+          post_int '{"key":"numWinners","required":false,"min":1,"max":100}'
+          post_int '{"key":"referralBonus","required":false,"min":0,"max":99999}'
+          post_int '{"key":"endDate","required":false}'
+          post_str '{"key":"tokenName","size":32,"required":false}'
+          post_str '{"key":"tokenPrice","size":32,"required":false}'
+          post_str '{"key":"tokenChange","size":16,"required":false}'
+          post_str '{"key":"tokenCa","size":128,"required":false}'
+          post_str '{"key":"tokenBuyUrl","size":2048,"required":false}'
+          post_str '{"key":"tokenSiteUrl","size":2048,"required":false}'
+          post_bool '{"key":"active","required":false}'
+          post_str '{"key":"campaignType","size":32,"required":false}'
+          post_str '{"key":"fudTarget","size":128,"required":false}'
+          echo "✅ campaigns attributes done"
+
+      - name: campaigns indexes
+        run: |
+          sleep 5
+          curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_slug","type":"key","attributes":["slug"],"orders":["ASC"]}' || true
+          curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_clientId","type":"key","attributes":["clientId"],"orders":["ASC"]}' || true
+          echo "✅ campaigns indexes done"
+
+      # ── missions ─────────────────────────────────────────────────────────────
+
+      - name: Create missions collection
+        run: |
+          curl -sf -X POST "$BASE/databases/$DB/collections" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "collectionId":"missions","name":"missions","enabled":true,
+              "documentSecurity":false,
+              "permissions":["read(\"any\")","create(\"users\")"]
+            }' && echo "✅ missions created" || echo "ℹ️  missions exists"
+
+      - name: missions attributes
+        run: |
+          post_str() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/missions/attributes/string" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_bool() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/missions/attributes/boolean" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_int() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/missions/attributes/integer" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_str '{"key":"campaignId","size":64,"required":true}'
+          post_str '{"key":"name","size":256,"required":true}'
+          post_str '{"key":"desc","size":512,"required":false}'
+          post_str '{"key":"icon","size":16,"required":false}'
+          post_int '{"key":"pts","required":true,"min":0,"max":999999}'
+          post_str '{"key":"type","size":32,"required":false}'
+          post_str '{"key":"proof","size":32,"required":false}'
+          post_bool '{"key":"daily","required":false}'
+          post_int '{"key":"min","required":false,"min":0,"max":9999}'
+          post_int '{"key":"lockHrs","required":false,"min":0,"max":8760}'
+          post_int '{"key":"order","required":false,"min":0,"max":9999}'
+          post_str '{"key":"q","size":8,"required":false}'
+          post_bool '{"key":"active","required":false}'
+          echo "✅ missions attributes done"
+
+      - name: missions indexes
+        run: |
+          sleep 5
+          curl -sf -X POST "$BASE/databases/$DB/collections/missions/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_campaignId","type":"key","attributes":["campaignId"],"orders":["ASC"]}' || true
+          curl -sf -X POST "$BASE/databases/$DB/collections/missions/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_order","type":"key","attributes":["campaignId","order"],"orders":["ASC","ASC"]}' || true
+          echo "✅ missions indexes done"
+
+      # ── entries ──────────────────────────────────────────────────────────────
+
+      - name: Create entries collection
+        run: |
+          curl -sf -X POST "$BASE/databases/$DB/collections" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "collectionId":"entries","name":"entries","enabled":true,
+              "documentSecurity":true,
+              "permissions":["read(\"any\")","create(\"any\")"]
+            }' && echo "✅ entries created" || echo "ℹ️  entries exists"
+
+      - name: entries attributes
+        run: |
+          post_str() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/entries/attributes/string" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_bool() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/entries/attributes/boolean" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_int() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/entries/attributes/integer" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_str '{"key":"campaignId","size":64,"required":true}'
+          post_str '{"key":"name","size":128,"required":false}'
+          post_str '{"key":"email","size":256,"required":false}'
+          post_str '{"key":"wallet","size":64,"required":false}'
+          post_str '{"key":"walletFull","size":256,"required":false}'
+          post_str '{"key":"x","size":64,"required":false}'
+          post_int '{"key":"pts","required":false,"min":0,"max":9999999}'
+          post_str '{"key":"completedMissions","size":4096,"required":false}'
+          post_str '{"key":"refCode","size":16,"required":false}'
+          post_str '{"key":"referredBy","size":16,"required":false}'
+          post_bool '{"key":"flagged","required":false}'
+          post_int '{"key":"timestamp","required":false}'
+          echo "✅ entries attributes done"
+
+      - name: entries indexes
+        run: |
+          sleep 5
+          curl -sf -X POST "$BASE/databases/$DB/collections/entries/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_campaignId","type":"key","attributes":["campaignId"],"orders":["ASC"]}' || true
+          curl -sf -X POST "$BASE/databases/$DB/collections/entries/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_pts","type":"key","attributes":["campaignId","pts"],"orders":["ASC","DESC"]}' || true
+          curl -sf -X POST "$BASE/databases/$DB/collections/entries/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_refCode","type":"key","attributes":["refCode"],"orders":["ASC"]}' || true
+          echo "✅ entries indexes done"
+
+      - name: Done
+        run: echo "🎉 All collections provisioned"
