@@ -1,0 +1,38 @@
+name: Configure Appwrite Auth & Platform
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable email/password auth
+        run: |
+          curl -sf -X PATCH \
+            https://nyc.cloud.appwrite.io/v1/projects/6a2bc15c00065b3c91a0/auth/email-password \
+            -H 'Content-Type: application/json' \
+            -H 'X-Appwrite-Key: ${{ secrets.APPWRITE_API_KEY }}' \
+            -d '{"enabled": true}' \
+            && echo "✅ Email/password auth enabled" \
+            || echo "⚠️  Auth update failed (may need projects.write scope)"
+
+      - name: Add Vercel platform
+        run: |
+          curl -sf -X POST \
+            https://nyc.cloud.appwrite.io/v1/projects/6a2bc15c00065b3c91a0/platforms \
+            -H 'Content-Type: application/json' \
+            -H 'X-Appwrite-Key: ${{ secrets.APPWRITE_API_KEY }}' \
+            -d '{"type": "web", "name": "Vercel", "hostname": "grow-genie-xi.vercel.app"}' \
+            && echo "✅ Vercel platform added" \
+            || echo "⚠️  Platform add failed (may need projects.write scope)"
+
+      - name: Add localhost platform
+        run: |
+          curl -sf -X POST \
+            https://nyc.cloud.appwrite.io/v1/projects/6a2bc15c00065b3c91a0/platforms \
+            -H 'Content-Type: application/json' \
+            -H 'X-Appwrite-Key: ${{ secrets.APPWRITE_API_KEY }}' \
+            -d '{"type": "web", "name": "Localhost", "hostname": "localhost"}' \
+            && echo "✅ Localhost platform added" \
+            || echo "⚠️  Platform add failed (already exists or missing scope)"
