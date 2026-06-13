@@ -291,6 +291,7 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .type-card:hover{border-color:var(--line-2)}
 .type-card.active{border-color:var(--accent);background:rgba(138,91,255,.07)}
 .type-card.active-fud{border-color:var(--bad);background:rgba(255,92,92,.07)}
+.type-card.active-smear{border-color:#F59E0B;background:rgba(245,158,11,.07)}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:6px;height:6px}
@@ -399,12 +400,24 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
             <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px">FUD FUND</div>
             <div style="font-size:12px;color:var(--dim);margin-top:3px">Sponsor a FUD campaign. Players earn XP for dunking on a target project.</div>
           </div>
+          <div class="type-card" id="typeSmear" onclick="setCampaignType('smear')" style="grid-column:1/-1">
+            <div style="font-size:22px;margin-bottom:4px">🗡️</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px">Smear Campaign</div>
+            <div style="font-size:12px;color:var(--dim);margin-top:3px">Target a political rival or opponent. Players earn XP for spreading attack content.</div>
+          </div>
         </div>
         <div id="fudTargetWrap" style="display:none;margin-top:14px">
           <div class="field" style="margin-bottom:0">
             <label>FUD Target <span class="req">*</span></label>
             <input type="text" id="fudTarget" class="input" placeholder="e.g. @CopiumLabs or $COPE" autocomplete="off"/>
             <p style="font-size:12px;color:var(--dim-2);margin-top:5px">The project or community being FUD'd. Shown to players.</p>
+          </div>
+        </div>
+        <div id="smearTargetWrap" style="display:none;margin-top:14px">
+          <div class="field" style="margin-bottom:0">
+            <label>Smear Target <span class="req">*</span></label>
+            <input type="text" id="smearTarget" class="input" placeholder="e.g. @RivalCandidate or Opponent Party" autocomplete="off"/>
+            <p style="font-size:12px;color:var(--dim-2);margin-top:5px">The political rival or opponent being targeted. Shown to players.</p>
           </div>
         </div>
       </div>
@@ -621,7 +634,7 @@ let editId       = null;
 let currentStep  = 1;
 let quests       = [];
 let editQuestIdx = null;
-let campaignType = 'standard'; // 'standard' | 'fudfund'
+let campaignType = 'standard'; // 'standard' | 'fudfund' | 'smear'
 
 // ── URL params ──────────────────────────────────────────────────
 const params = new URLSearchParams(location.search);
@@ -689,6 +702,9 @@ async function loadCampaign(id) {
     if (camp.campaignType === 'fudfund') {
       setCampaignType('fudfund');
       setVal('fudTarget', camp.fudTarget || '');
+    } else if (camp.campaignType === 'smear') {
+      setCampaignType('smear');
+      setVal('smearTarget', camp.smearTarget || '');
     }
 
     // Load missions
@@ -767,7 +783,8 @@ function validateStep(step) {
     if (!v('prizeAmount'))  { toast('Prize Amount is required', 'error'); return false; }
     if (!v('prizeToken'))   { toast('Prize Token is required', 'error'); return false; }
     if (!v('endDate'))      { toast('End Date is required', 'error'); return false; }
-    if (campaignType === 'fudfund' && !v('fudTarget')) { toast('Set a FUD target', 'error'); return false; }
+    if (campaignType === 'fudfund' && !v('fudTarget'))  { toast('Set a FUD target', 'error'); return false; }
+    if (campaignType === 'smear'   && !v('smearTarget')) { toast('Set a Smear target', 'error'); return false; }
   }
   if (step === 3) {
     if (quests.length === 0) { toast('Add at least one quest', 'error'); return false; }
@@ -819,17 +836,20 @@ function openTokenSection() {
 // ── Campaign type ────────────────────────────────────────────────
 window.setCampaignType = function(type) {
   campaignType = type;
-  const isFud = type === 'fudfund';
-  document.getElementById('typeStandard').classList.toggle('active', !isFud);
-  document.getElementById('typeStandard').classList.remove('active-fud');
-  document.getElementById('typeFud').classList.toggle('active-fud', isFud);
-  document.getElementById('typeFud').classList.toggle('active', false);
-  document.getElementById('fudTargetWrap').style.display = isFud ? 'block' : 'none';
+  const isFud   = type === 'fudfund';
+  const isSmear = type === 'smear';
+  document.getElementById('typeStandard').className = 'type-card' + (type === 'standard' ? ' active' : '');
+  document.getElementById('typeFud').className      = 'type-card' + (isFud   ? ' active-fud'   : '');
+  document.getElementById('typeSmear').className    = 'type-card' + (isSmear ? ' active-smear'  : '');
+  document.getElementById('fudTargetWrap').style.display   = isFud   ? 'block' : 'none';
+  document.getElementById('smearTargetWrap').style.display = isSmear ? 'block' : 'none';
   // swap quest templates
   renderTemplates();
-  // tint page accent for FUD mode
-  document.documentElement.style.setProperty('--accent', isFud ? '#FF5C5C' : '#8A5BFF');
-  document.documentElement.style.setProperty('--accent-2', isFud ? '#FF9000' : '#FF4D9D');
+  // tint page accent per campaign mode
+  document.documentElement.style.setProperty('--accent',
+    isFud ? '#FF5C5C' : isSmear ? '#F59E0B' : '#8A5BFF');
+  document.documentElement.style.setProperty('--accent-2',
+    isFud ? '#FF9000' : isSmear ? '#D97706' : '#FF4D9D');
 };
 
 // ── Quest templates ─────────────────────────────────────────────
@@ -863,10 +883,25 @@ const FUD_TEMPLATES = [
   { name:'Custom quest',       icon:'➕',  pts:null, type:'custom',      proof:'text', daily:false, min:0, custom:true },
 ];
 
+const SMEAR_TEMPLATES = [
+  { name:'Post attack thread',  icon:'🎯',  pts:150,  type:'smear_post',    proof:'url',  daily:false, min:0,   desc:'Write an attack thread targeting the opponent — post the link' },
+  { name:'Daily smear post',    icon:'📣',  pts:80,   type:'smear_daily',   proof:'url',  daily:true,  min:0,   desc:'Post fresh negative content about the target every day' },
+  { name:'Dig up receipts',     icon:'🗂️', pts:400,  type:'smear_expose',  proof:'url',  daily:false, min:0,   desc:'Find and share damaging info or records about the target' },
+  { name:'Make a hit meme',     icon:'🎨',  pts:120,  type:'smear_meme',    proof:'url',  daily:true,  min:0,   desc:'Original attack meme mocking the opponent' },
+  { name:'Write a hit piece',   icon:'✍️', pts:500,  type:'smear_written', proof:'text', daily:false, min:200, desc:'Long-form takedown article or attack thread, min 200 chars' },
+  { name:'Ratio their post',    icon:'💬',  pts:100,  type:'smear_ratio',   proof:'url',  daily:true,  min:0,   desc:'Ratio the target\'s post with a damaging reply' },
+  { name:'Spread to a server',  icon:'💣',  pts:200,  type:'smear_spread',  proof:'url',  daily:false, min:0,   desc:'Share attack content in a community — screenshot it' },
+  { name:'Mock debate clip',    icon:'🎙️', pts:300,  type:'smear_debate',  proof:'url',  daily:false, min:0,   desc:'Post a clip or thread mocking the target\'s public statements' },
+  { name:'Recruit an ally',     icon:'🤝',  pts:250,  type:'smear_recruit', proof:'text', daily:false, min:0,   desc:'Get someone else to join the campaign against the target' },
+  { name:'TikTok attack video', icon:'🎵',  pts:180,  type:'smear_tiktok',  proof:'url',  daily:true,  min:0,   desc:'TikTok video exposing or mocking the target' },
+  { name:'Leak a document',     icon:'📄',  pts:600,  type:'smear_leak',    proof:'url',  daily:false, min:0,   desc:'Share a damaging document or screenshot — post the receipts' },
+  { name:'Custom quest',        icon:'➕',  pts:null, type:'custom',        proof:'text', daily:false, min:0,   custom:true },
+];
+
 function renderTemplates() {
   const grid = document.getElementById('templatesGrid');
   grid.innerHTML = '';
-  const list = campaignType === 'fudfund' ? FUD_TEMPLATES : TEMPLATES;
+  const list = campaignType === 'fudfund' ? FUD_TEMPLATES : campaignType === 'smear' ? SMEAR_TEMPLATES : TEMPLATES;
   list.forEach((tpl, idx) => {
     const card = document.createElement('div');
     card.className = 'tpl-card';
@@ -1103,7 +1138,8 @@ window.saveCampaign = async function() {
     slug:          v('slug'),
     clientId:      user.$id,
     campaignType:  campaignType,
-    fudTarget:     campaignType === 'fudfund' ? (v('fudTarget') || '') : '',
+    fudTarget:     campaignType === 'fudfund' ? (v('fudTarget')   || '') : '',
+    smearTarget:   campaignType === 'smear'   ? (v('smearTarget') || '') : '',
     projectName:   v('projectName'),
     title:         v('projectName'),
     tag:           v('tagline'),
