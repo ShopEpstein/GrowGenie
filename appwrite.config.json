@@ -1,6 +1,7 @@
 {
   "projectId": "6a2bc15c00065b3c91a0",
   "endpoint": "https://nyc.cloud.appwrite.io/v1",
+  "_note": "smearTarget attribute added to campaigns collection",
   "collections": [
     {
       "$id": "campaigns",

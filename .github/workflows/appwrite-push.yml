@@ -81,6 +81,7 @@ jobs:
           post_bool '{"key":"active","required":false}'
           post_str '{"key":"campaignType","size":32,"required":false}'
           post_str '{"key":"fudTarget","size":128,"required":false}'
+          post_str '{"key":"smearTarget","size":128,"required":false}'
           echo "✅ campaigns attributes done"
 
       - name: campaigns indexes
