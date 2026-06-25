@@ -34,7 +34,8 @@
         { "key": "active",        "type": "boolean", "required": false },
         { "key": "campaignType",  "type": "string",  "size": 32,   "required": false },
         { "key": "fudTarget",     "type": "string",  "size": 128,  "required": false },
-        { "key": "smearTarget",   "type": "string",  "size": 128,  "required": false }
+        { "key": "smearTarget",   "type": "string",  "size": 128,  "required": false },
+        { "key": "txSignature",   "type": "string",  "size": 128,  "required": false }
       ],
       "indexes": [
         { "key": "idx_slug",     "type": "key", "attributes": ["slug"],     "orders": ["ASC"] },
