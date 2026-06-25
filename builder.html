@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/@solana/web3.js@1.95.4/lib/index.iife.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -292,6 +293,22 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
 .type-card.active{border-color:var(--accent);background:rgba(138,91,255,.07)}
 .type-card.active-fud{border-color:var(--bad);background:rgba(255,92,92,.07)}
 .type-card.active-smear{border-color:#F59E0B;background:rgba(245,158,11,.07)}
+
+/* PAYMENT MODAL */
+#payModal{position:fixed;inset:0;background:rgba(11,12,19,.96);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+#payModal.hidden{display:none}
+.pay-box{background:var(--ink-2);border:1px solid var(--line-2);border-radius:20px;padding:28px;max-width:420px;width:100%}
+.pay-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;margin-bottom:4px}
+.pay-sub{font-size:13px;color:var(--dim);margin-bottom:22px}
+.pay-cur-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.pay-cur-btn{padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--ink-3);color:var(--text);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;transition:border-color .18s,background .18s}
+.pay-cur-btn.sel{border-color:var(--accent);background:rgba(138,91,255,.12)}
+.pay-amount-box{text-align:center;padding:18px;background:var(--ink-3);border-radius:12px;margin-bottom:18px}
+.pay-amount-big{font-family:'Space Mono',monospace;font-size:30px;font-weight:700}
+.pay-amount-note{font-size:12px;color:var(--dim);margin-top:4px}
+.pay-wallet-box{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--ink-3);border-radius:10px;margin-bottom:14px;font-size:13px;color:var(--dim)}
+.pay-wallet-addr{font-family:'Space Mono',monospace;font-size:11px;color:var(--text);margin-left:auto}
+.pay-status{font-size:13px;color:var(--dim);text-align:center;min-height:18px;margin-bottom:10px}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:6px;height:6px}
@@ -611,6 +628,38 @@ select.input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xml
   </div>
 
 </main>
+
+<!-- PAYMENT MODAL -->
+<div id="payModal" class="hidden">
+  <div class="pay-box">
+    <div class="pay-title">⚡ Activate Campaign</div>
+    <div class="pay-sub" id="paySubtitle">Pay once to go live on Solana</div>
+
+    <div class="pay-cur-row">
+      <button class="pay-cur-btn sel" id="payCurSOL" onclick="paySelectCurrency('SOL')">◎ SOL</button>
+      <button class="pay-cur-btn"     id="payCurUSDC" onclick="paySelectCurrency('USDC')">$ USDC</button>
+    </div>
+
+    <div class="pay-amount-box">
+      <div class="pay-amount-big" id="payAmountBig">0.5 SOL</div>
+      <div class="pay-amount-note">one-time · campaign goes live immediately</div>
+    </div>
+
+    <div class="pay-wallet-box" id="payWalletBox" style="display:none">
+      <span>🟢 Connected</span>
+      <span class="pay-wallet-addr" id="payWalletAddr"></span>
+    </div>
+
+    <div class="pay-status" id="payStatus"></div>
+
+    <button class="btn btn-primary" style="width:100%;margin-bottom:10px" id="payActionBtn" onclick="payAction()">
+      🔌 Connect Wallet
+    </button>
+    <button class="btn btn-ghost" style="width:100%;font-size:13px" onclick="paySkip()">
+      Save as draft — pay later
+    </button>
+  </div>
+</div>
 
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
@@ -1156,8 +1205,8 @@ window.saveCampaign = async function() {
     tokenCa:       v('tokenCa'),
     tokenBuyUrl:   v('tokenBuyUrl'),
     tokenSiteUrl:  v('tokenSiteUrl'),
-    active:        true,
   };
+  if (!editId) campaignData.active = false;
 
   const perms = [
     Permission.read(Role.any()),
@@ -1171,7 +1220,6 @@ window.saveCampaign = async function() {
     if (editId) {
       await databases.updateDocument(DB, 'campaigns', editId, campaignData);
       campId = editId;
-      toast('Campaign updated!', 'success');
     } else {
       const camp = await databases.createDocument(DB, 'campaigns', ID.unique(), campaignData, perms);
       campId = camp.$id;
@@ -1214,8 +1262,12 @@ window.saveCampaign = async function() {
       ]);
     }
 
-    if (!editId) toast('🚀 Campaign launched!', 'success');
-    setTimeout(() => { location.href = 'dashboard.html'; }, 1400);
+    if (editId) {
+      toast('Campaign updated!', 'success');
+      setTimeout(() => { location.href = 'dashboard.html'; }, 1400);
+    } else {
+      showPayModal(campId, v('projectName'));
+    }
 
   } catch (e) {
     console.error(e);
@@ -1238,6 +1290,167 @@ window.toast = function(msg, type = 'info') {
     el.addEventListener('animationend', () => el.remove());
   }, 3800);
 };
+
+// ── Solana payment ───────────────────────────────────────────────
+const PAY_TREASURY = 'YOUR_TREASURY_WALLET_ADDRESS'; // ← replace with your Solana wallet
+const PAY_PRICE_SOL  = 0.5;
+const PAY_PRICE_USDC = 50;
+const USDC_MINT_PK   = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const TOKEN_PROGRAM  = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+const ATA_PROGRAM    = 'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1bRW';
+
+let payState = { currency: 'SOL', walletPubkey: null, campaignId: null, connected: false };
+
+window.showPayModal = function(campaignId, name) {
+  payState.campaignId = campaignId;
+  payState.connected  = false;
+  payState.walletPubkey = null;
+  document.getElementById('paySubtitle').textContent = `"${name}" · pay once to go live`;
+  document.getElementById('payWalletBox').style.display = 'none';
+  document.getElementById('payActionBtn').textContent   = '🔌 Connect Wallet';
+  document.getElementById('payStatus').textContent = '';
+  paySelectCurrency('SOL');
+  document.getElementById('payModal').classList.remove('hidden');
+};
+
+window.paySelectCurrency = function(cur) {
+  payState.currency = cur;
+  document.getElementById('payCurSOL').classList.toggle('sel',  cur === 'SOL');
+  document.getElementById('payCurUSDC').classList.toggle('sel', cur === 'USDC');
+  document.getElementById('payAmountBig').textContent =
+    cur === 'SOL' ? `${PAY_PRICE_SOL} SOL` : `${PAY_PRICE_USDC} USDC`;
+};
+
+window.paySkip = function() {
+  document.getElementById('payModal').classList.add('hidden');
+  toast('Saved as draft — activate from dashboard when ready', 'info');
+  setTimeout(() => { location.href = 'dashboard.html'; }, 1800);
+};
+
+function paySetStatus(msg) {
+  document.getElementById('payStatus').textContent = msg;
+}
+
+window.payAction = async function() {
+  if (!payState.connected) {
+    await payConnectWallet();
+  } else {
+    await payExecute();
+  }
+};
+
+async function payConnectWallet() {
+  const sol = window.solana || window.solflare;
+  if (!sol) {
+    paySetStatus('No Solana wallet found — install Phantom or Solflare');
+    return;
+  }
+  try {
+    paySetStatus('Connecting wallet…');
+    await sol.connect();
+    payState.walletPubkey = sol.publicKey;
+    payState.connected    = true;
+    const addr = sol.publicKey.toBase58();
+    document.getElementById('payWalletAddr').textContent = addr.slice(0,4)+'…'+addr.slice(-4);
+    document.getElementById('payWalletBox').style.display = 'flex';
+    document.getElementById('payActionBtn').textContent   =
+      payState.currency === 'SOL' ? `⚡ Pay ${PAY_PRICE_SOL} SOL` : `⚡ Pay ${PAY_PRICE_USDC} USDC`;
+    paySetStatus('');
+  } catch (e) {
+    paySetStatus('Wallet connection cancelled');
+  }
+}
+
+async function payExecute() {
+  const sol = window.solana || window.solflare;
+  if (!sol?.publicKey) { paySetStatus('Wallet not connected'); return; }
+
+  const btn = document.getElementById('payActionBtn');
+  btn.disabled = true;
+  paySetStatus('Building transaction…');
+
+  try {
+    const w3 = window.solanaWeb3;
+    const rpc = 'https://api.mainnet-beta.solana.com';
+    const connection   = new w3.Connection(rpc, 'confirmed');
+    const senderPubkey = sol.publicKey;
+    const treasury     = new w3.PublicKey(PAY_TREASURY);
+    const { blockhash } = await connection.getLatestBlockhash('confirmed');
+    const tx = new w3.Transaction({ recentBlockhash: blockhash, feePayer: senderPubkey });
+
+    if (payState.currency === 'SOL') {
+      tx.add(w3.SystemProgram.transfer({
+        fromPubkey: senderPubkey,
+        toPubkey:   treasury,
+        lamports:   Math.floor(PAY_PRICE_SOL * w3.LAMPORTS_PER_SOL),
+      }));
+    } else {
+      // USDC SPL transfer
+      const mintPk       = new w3.PublicKey(USDC_MINT_PK);
+      const tokenProgram = new w3.PublicKey(TOKEN_PROGRAM);
+      const ataProgramPk = new w3.PublicKey(ATA_PROGRAM);
+
+      const [senderATA]   = w3.PublicKey.findProgramAddressSync(
+        [senderPubkey.toBuffer(), tokenProgram.toBuffer(), mintPk.toBuffer()], ataProgramPk);
+      const [treasuryATA] = w3.PublicKey.findProgramAddressSync(
+        [treasury.toBuffer(), tokenProgram.toBuffer(), mintPk.toBuffer()], ataProgramPk);
+
+      // Create treasury ATA if needed (idempotent)
+      const ataInfo = await connection.getAccountInfo(treasuryATA);
+      if (!ataInfo) {
+        tx.add(new w3.TransactionInstruction({
+          keys: [
+            { pubkey: senderPubkey,  isSigner: true,  isWritable: true  },
+            { pubkey: treasuryATA,   isSigner: false, isWritable: true  },
+            { pubkey: treasury,      isSigner: false, isWritable: false },
+            { pubkey: mintPk,        isSigner: false, isWritable: false },
+            { pubkey: w3.SystemProgram.programId, isSigner: false, isWritable: false },
+            { pubkey: tokenProgram,  isSigner: false, isWritable: false },
+          ],
+          programId: ataProgramPk,
+          data: Uint8Array.from([1]), // CreateIdempotent
+        }));
+      }
+
+      // SPL Transfer instruction
+      const amountMicro = Math.floor(PAY_PRICE_USDC * 1_000_000);
+      const data = new Uint8Array(9);
+      new DataView(data.buffer).setUint8(0, 3); // Transfer
+      new DataView(data.buffer).setBigUint64(1, BigInt(amountMicro), true);
+      tx.add(new w3.TransactionInstruction({
+        keys: [
+          { pubkey: senderATA,    isSigner: false, isWritable: true  },
+          { pubkey: treasuryATA,  isSigner: false, isWritable: true  },
+          { pubkey: senderPubkey, isSigner: true,  isWritable: false },
+        ],
+        programId: tokenProgram,
+        data,
+      }));
+    }
+
+    paySetStatus('Waiting for wallet approval…');
+    const { signature } = await sol.signAndSendTransaction(tx);
+    paySetStatus('Confirming on-chain…');
+    await connection.confirmTransaction(signature, 'confirmed');
+
+    paySetStatus('Verifying payment…');
+    const resp = await fetch('/api/verify-payment', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ signature, campaignId: payState.campaignId }),
+    });
+    const data2 = await resp.json();
+    if (!resp.ok) throw new Error(data2.error || 'Verification failed');
+
+    document.getElementById('payModal').classList.add('hidden');
+    toast('🚀 Campaign is live!', 'success');
+    setTimeout(() => { location.href = 'dashboard.html'; }, 1600);
+
+  } catch (e) {
+    paySetStatus('Error: ' + (e.message || 'Payment failed'));
+    btn.disabled = false;
+  }
+}
 
 // ── Init ─────────────────────────────────────────────────────────
 renderTemplates();
