@@ -1,7 +1,6 @@
 {
   "projectId": "6a2bc15c00065b3c91a0",
   "endpoint": "https://nyc.cloud.appwrite.io/v1",
-  "_note": "smearTarget attribute added to campaigns collection",
   "collections": [
     {
       "$id": "campaigns",
@@ -35,6 +34,8 @@
         { "key": "campaignType",  "type": "string",  "size": 32,   "required": false },
         { "key": "fudTarget",     "type": "string",  "size": 128,  "required": false },
         { "key": "smearTarget",   "type": "string",  "size": 128,  "required": false },
+        { "key": "fudCategory",   "type": "string",  "size": 32,   "required": false },
+        { "key": "tipWallet",     "type": "string",  "size": 128,  "required": false },
         { "key": "txSignature",   "type": "string",  "size": 128,  "required": false }
       ],
       "indexes": [
@@ -98,6 +99,28 @@
         { "key": "idx_campaignId", "type": "key", "attributes": ["campaignId"],        "orders": ["ASC"] },
         { "key": "idx_pts",        "type": "key", "attributes": ["campaignId", "pts"], "orders": ["ASC", "DESC"] },
         { "key": "idx_refCode",    "type": "key", "attributes": ["refCode"],            "orders": ["ASC"] }
+      ]
+    },
+    {
+      "$id": "tips",
+      "databaseId": "growthgenie",
+      "name": "tips",
+      "documentSecurity": false,
+      "$permissions": [
+        "read(\"any\")",
+        "create(\"users\")"
+      ],
+      "attributes": [
+        { "key": "campaignId",  "type": "string",  "size": 64,   "required": true  },
+        { "key": "fromUserId",  "type": "string",  "size": 64,   "required": false },
+        { "key": "toWallet",    "type": "string",  "size": 128,  "required": false },
+        { "key": "amount",      "type": "string",  "size": 32,   "required": true  },
+        { "key": "token",       "type": "string",  "size": 16,   "required": false },
+        { "key": "txSignature", "type": "string",  "size": 128,  "required": true  },
+        { "key": "timestamp",   "type": "integer", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_tips_campaign", "type": "key", "attributes": ["campaignId"], "orders": ["ASC"] }
       ]
     }
   ]

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GrowthGenie — Dashboard</title>
+<title>FudFun.xyz — My Campaigns</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
 <style>
 /* =========================================================================
-   GROWTHGENIE — DASHBOARD
+   FUDFUN.XYZ — DASHBOARD
    Self-contained, vanilla JS, Appwrite Web SDK v17 via CDN ESM
    ========================================================================= */
 
@@ -241,9 +241,9 @@ a{color:inherit;text-decoration:none}
 <!-- Topbar -->
 <header class="topbar">
   <div class="wrap row">
-    <a class="brand" href="dashboard.html">
-      <div class="logo">🧞</div>
-      GrowthGenie
+    <a class="brand" href="fud.html">
+      <div class="logo">💀</div>
+      FudFun.xyz
     </a>
     <div class="spacer"></div>
     <span class="user-email" id="userEmail"></span>
@@ -254,8 +254,9 @@ a{color:inherit;text-decoration:none}
 <!-- Main content -->
 <main class="wrap">
   <div class="page-header">
-    <h1 class="grotesk">Your Campaigns</h1>
-    <a href="builder.html" class="btn">+ Create campaign</a>
+    <h1 class="grotesk">My FUD Campaigns</h1>
+    <a href="fud.html" class="btn ghost sm">← FUD Feed</a>
+    <a href="submit.html" class="btn">🔥 Start a FUD</a>
   </div>
 
   <div id="content">
@@ -323,11 +324,11 @@ function renderCampaigns(docs) {
   if (!docs.length) {
     content.innerHTML = `
       <div class="empty">
-        <div class="empty-art">🧞</div>
-        <h2>No campaigns yet</h2>
-        <p>Launch your first referral campaign and start growing your audience.</p>
-        <a href="builder.html" class="btn" style="margin-top:6px">
-          Create your first campaign →
+        <div class="empty-art">💀</div>
+        <h2>No FUD campaigns yet</h2>
+        <p>Pick a target and start your first FUD campaign. The internet is waiting.</p>
+        <a href="submit.html" class="btn" style="margin-top:6px">
+          Launch your first FUD →
         </a>
       </div>`;
     return;
@@ -362,7 +363,7 @@ function renderCampaigns(docs) {
           <span class="badge">🏆 ${winnersLabel}</span>
         </div>
         <div class="card-actions">
-          <a href="index.html?c=${encodeURIComponent(slug)}" target="_blank" rel="noopener"
+          <a href="campaign.html?c=${encodeURIComponent(slug)}" target="_blank" rel="noopener"
              class="btn ghost sm">View</a>
           <a href="builder.html?id=${encodeURIComponent(esc(doc.$id))}"
              class="btn ghost sm">Edit</a>
