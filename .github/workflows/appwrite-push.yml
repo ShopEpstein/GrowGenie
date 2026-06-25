@@ -85,6 +85,10 @@ jobs:
           post_str '{"key":"fudCategory","size":32,"required":false}'
           post_str '{"key":"tipWallet","size":128,"required":false}'
           post_str '{"key":"txSignature","size":128,"required":false}'
+          post_str '{"key":"socialLink","size":2048,"required":false}'
+          post_str '{"key":"socialPreviewName","size":128,"required":false}'
+          post_str '{"key":"socialPreviewThumb","size":2048,"required":false}'
+          post_str '{"key":"socialPreviewPlatform","size":32,"required":false}'
           echo "✅ campaigns attributes done"
 
       - name: campaigns indexes

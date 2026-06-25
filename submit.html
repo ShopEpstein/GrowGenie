@@ -442,6 +442,103 @@
       text-transform: uppercase;
       margin-bottom: 24px;
     }
+
+    /* ---- link preview card ---- */
+    .preview-card {
+      display: none;
+      margin-top: 12px;
+      background: var(--ink-3);
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+
+    .preview-card.visible { display: block; }
+
+    .preview-card-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .preview-thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--ink-2);
+    }
+
+    .preview-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .preview-platform {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .preview-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview-title {
+      font-size: 12px;
+      color: var(--dim);
+      margin-top: 3px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .preview-remove {
+      background: none;
+      border: none;
+      color: var(--dim-2);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 0;
+      margin-left: 4px;
+      flex-shrink: 0;
+      transition: color .15s;
+    }
+
+    .preview-remove:hover { color: var(--bad); }
+
+    .preview-loading {
+      display: none;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--dim-2);
+      font-style: italic;
+    }
+
+    .preview-loading.visible { display: block; }
+
+    .preview-error {
+      display: none;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--bad);
+    }
+
+    .preview-error.visible { display: block; }
   </style>
 </head>
 <body>
@@ -520,6 +617,32 @@
             ></textarea>
           </div>
 
+          <!-- social link -->
+          <div class="field">
+            <label for="social-link">Target's X / TikTok Profile (optional)</label>
+            <input
+              id="social-link"
+              type="url"
+              placeholder="https://x.com/their_handle or https://tiktok.com/@their_handle"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <p class="field-helper">Paste a link to their X or TikTok. A preview will appear in your FUD campaign.</p>
+            <div class="preview-loading" id="preview-loading">Loading preview…</div>
+            <div class="preview-error" id="preview-error"></div>
+            <div class="preview-card" id="preview-card">
+              <div class="preview-card-inner">
+                <img class="preview-thumb" id="preview-thumb" src="" alt="" />
+                <div class="preview-info">
+                  <div class="preview-platform" id="preview-platform"></div>
+                  <div class="preview-name" id="preview-name"></div>
+                  <div class="preview-title" id="preview-title"></div>
+                </div>
+                <button type="button" class="preview-remove" id="preview-remove" title="Remove link">×</button>
+              </div>
+            </div>
+          </div>
+
           <div class="divider"></div>
 
           <!-- tip wallet -->
@@ -566,6 +689,7 @@
 
     let user = null;
     let selectedCategory = 'hate';
+    let socialPreviewData = null;  // stores fetched oEmbed result
 
     // auth gate
     (async () => {
@@ -587,6 +711,97 @@
       selectedCategory = pill.dataset.value;
     });
 
+    // ── Link preview ───────────────────────────────────────────────
+    const socialInput   = document.getElementById('social-link');
+    const previewCard   = document.getElementById('preview-card');
+    const previewLoading = document.getElementById('preview-loading');
+    const previewError  = document.getElementById('preview-error');
+    const previewThumb  = document.getElementById('preview-thumb');
+    const previewPlatform = document.getElementById('preview-platform');
+    const previewName   = document.getElementById('preview-name');
+    const previewTitle  = document.getElementById('preview-title');
+    const previewRemove = document.getElementById('preview-remove');
+
+    function clearPreview() {
+      previewCard.classList.remove('visible');
+      previewLoading.classList.remove('visible');
+      previewError.classList.remove('visible');
+      previewError.textContent = '';
+      socialPreviewData = null;
+    }
+
+    function showPreview(data) {
+      socialPreviewData = data;
+      previewPlatform.textContent = data.platform === 'twitter' ? '𝕏  Twitter / X' : 'TikTok';
+      previewName.textContent     = data.authorName || '(unknown)';
+      previewTitle.textContent    = data.title      || '';
+      if (data.thumbnailUrl) {
+        previewThumb.src   = data.thumbnailUrl;
+        previewThumb.style.display = 'block';
+      } else {
+        previewThumb.style.display = 'none';
+      }
+      previewCard.classList.add('visible');
+    }
+
+    previewRemove.addEventListener('click', () => {
+      clearPreview();
+      socialInput.value = '';
+    });
+
+    let previewDebounce;
+    socialInput.addEventListener('input', () => {
+      clearPreview();
+      const url = socialInput.value.trim();
+      if (!url) return;
+
+      clearTimeout(previewDebounce);
+      previewDebounce = setTimeout(async () => {
+        const trimmed = socialInput.value.trim();
+        if (!trimmed) return;
+
+        // only attempt if looks like X or TikTok
+        if (!/x\.com|twitter\.com|tiktok\.com/i.test(trimmed)) {
+          previewError.textContent = 'Only X/Twitter and TikTok links are supported.';
+          previewError.classList.add('visible');
+          return;
+        }
+
+        previewLoading.classList.add('visible');
+        try {
+          const resp = await fetch(`/api/link-preview?url=${encodeURIComponent(trimmed)}`);
+          const data = await resp.json();
+          previewLoading.classList.remove('visible');
+          if (!resp.ok || data.error) {
+            previewError.textContent = data.error || 'Could not load preview.';
+            previewError.classList.add('visible');
+          } else {
+            showPreview(data);
+          }
+        } catch {
+          previewLoading.classList.remove('visible');
+          previewError.textContent = 'Network error fetching preview.';
+          previewError.classList.add('visible');
+        }
+      }, 700);
+    });
+
+    // ── Moderation ─────────────────────────────────────────────────
+    async function checkModeration(targetName, reason, category) {
+      try {
+        const resp = await fetch('/api/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetName, reason, category }),
+        });
+        if (!resp.ok) return { allowed: true };
+        return await resp.json();
+      } catch {
+        return { allowed: true };
+      }
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────
     function makeSlug(name) {
       return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
         + '-' + Date.now().toString(36)
@@ -610,8 +825,9 @@
       clearError();
 
       const targetName = document.getElementById('target-name').value.trim();
-      const why = document.getElementById('why').value.trim();
-      const tipWallet = document.getElementById('tip-wallet').value.trim();
+      const why        = document.getElementById('why').value.trim();
+      const tipWallet  = document.getElementById('tip-wallet').value.trim();
+      const socialLink = socialInput.value.trim();
 
       if (!targetName) { showError('Give us a target. Who are we FUDing?'); return; }
       if (!selectedCategory) { showError('Pick a reason. Why does this person deserve it?'); return; }
@@ -619,12 +835,24 @@
 
       const btn = document.getElementById('submit-btn');
       btn.disabled = true;
+      btn.textContent = 'Checking…';
+
+      // AI moderation check
+      const modResult = await checkModeration(targetName, why, selectedCategory);
+      if (!modResult.allowed) {
+        const reason = modResult.reason || 'This content violates our community guidelines.';
+        showError(`Content blocked: ${reason}`);
+        btn.disabled = false;
+        btn.textContent = 'Launch the FUD 🔥';
+        return;
+      }
+
       btn.textContent = 'Launching…';
 
       const slug = makeSlug(targetName);
 
       try {
-        await databases.createDocument(DB, COL, ID.unique(), {
+        const doc = {
           slug,
           clientId: user.$id,
           projectName: targetName,
@@ -637,7 +865,16 @@
           tipWallet: tipWallet || null,
           active: true,
           accentColor: '#FF3D00'
-        });
+        };
+
+        if (socialLink) doc.socialLink = socialLink;
+        if (socialPreviewData) {
+          doc.socialPreviewName      = socialPreviewData.authorName  || null;
+          doc.socialPreviewThumb     = socialPreviewData.thumbnailUrl || null;
+          doc.socialPreviewPlatform  = socialPreviewData.platform    || null;
+        }
+
+        await databases.createDocument(DB, COL, ID.unique(), doc);
 
         document.getElementById('view-campaign-btn').href = `campaign.html?c=${encodeURIComponent(slug)}`;
         document.getElementById('success-overlay').classList.add('visible');
