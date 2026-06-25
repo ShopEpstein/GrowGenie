@@ -81,6 +81,10 @@ jobs:
           post_bool '{"key":"active","required":false}'
           post_str '{"key":"campaignType","size":32,"required":false}'
           post_str '{"key":"fudTarget","size":128,"required":false}'
+          post_str '{"key":"smearTarget","size":128,"required":false}'
+          post_str '{"key":"fudCategory","size":32,"required":false}'
+          post_str '{"key":"tipWallet","size":128,"required":false}'
+          post_str '{"key":"txSignature","size":128,"required":false}'
           echo "✅ campaigns attributes done"
 
       - name: campaigns indexes
@@ -216,6 +220,50 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"key":"idx_refCode","type":"key","attributes":["refCode"],"orders":["ASC"]}' || true
           echo "✅ entries indexes done"
+
+      # ── tips ─────────────────────────────────────────────────────────────────
+
+      - name: Create tips collection
+        run: |
+          curl -sf -X POST "$BASE/databases/$DB/collections" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "collectionId":"tips","name":"tips","enabled":true,
+              "documentSecurity":false,
+              "permissions":["read(\"any\")","create(\"users\")"]
+            }' && echo "✅ tips created" || echo "ℹ️  tips exists"
+
+      - name: tips attributes
+        run: |
+          post_str() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/tips/attributes/string" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_int() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/tips/attributes/integer" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_str '{"key":"campaignId","size":64,"required":true}'
+          post_str '{"key":"fromUserId","size":64,"required":false}'
+          post_str '{"key":"toWallet","size":128,"required":false}'
+          post_str '{"key":"amount","size":32,"required":true}'
+          post_str '{"key":"token","size":16,"required":false}'
+          post_str '{"key":"txSignature","size":128,"required":true}'
+          post_int '{"key":"timestamp","required":false}'
+          echo "✅ tips attributes done"
+
+      - name: tips indexes
+        run: |
+          sleep 5
+          curl -sf -X POST "$BASE/databases/$DB/collections/tips/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_tips_campaign","type":"key","attributes":["campaignId"],"orders":["ASC"]}' || true
+          echo "✅ tips indexes done"
 
       - name: Done
         run: echo "🎉 All collections provisioned"

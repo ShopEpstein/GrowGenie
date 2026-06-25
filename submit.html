@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit a FUD — FudFun.xyz 💀</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0B0C13;
+      --ink-2: #101220;
+      --ink-3: #171a2b;
+      --line: rgba(255,255,255,.08);
+      --line-2: rgba(255,255,255,.14);
+      --text: #ECEDF5;
+      --dim: #8A8DA3;
+      --dim-2: #5d6075;
+      --accent: #FF3D00;
+      --accent-2: #FF9100;
+      --gold: #FFC53D;
+      --good: #2BD576;
+      --bad: #FF5C5C;
+      --r: 16px;
+      --r-sm: 11px;
+    }
+
+    html, body {
+      min-height: 100%;
+    }
+
+    body {
+      background: var(--ink);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 15% 0%, rgba(255,61,0,.15) 0%, transparent 60%),
+        radial-gradient(ellipse 55% 40% at 85% 90%, rgba(255,145,0,.10) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 60% at 50% 50%, rgba(255,61,0,.05) 0%, transparent 60%);
+      opacity: .7;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ---- spinner overlay ---- */
+    #auth-spinner {
+      position: fixed;
+      inset: 0;
+      background: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--line-2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .75s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- topbar ---- */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 12, 19, .85);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+      padding: 0 20px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .topbar-brand {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -.01em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .topbar-brand:hover { opacity: .85; }
+
+    .topbar-center {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--dim);
+      letter-spacing: .01em;
+      text-align: center;
+    }
+
+    .topbar-back {
+      font-size: 13px;
+      color: var(--dim);
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      padding: 6px 14px;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+
+    .topbar-back:hover {
+      color: var(--text);
+      border-color: var(--line-2);
+    }
+
+    /* ---- page body ---- */
+    .page {
+      position: relative;
+      z-index: 1;
+      padding: 40px 20px 80px;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* ---- form card ---- */
+    .card {
+      background: var(--ink-2);
+      border: 1px solid var(--line);
+      border-radius: var(--r);
+      padding: 36px 32px;
+    }
+
+    @media (max-width: 520px) {
+      .card { padding: 24px 18px; }
+    }
+
+    /* ---- section header ---- */
+    .section-heading {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .section-sub {
+      font-size: 13px;
+      color: var(--dim);
+      margin-bottom: 32px;
+    }
+
+    /* ---- field ---- */
+    .field {
+      margin-bottom: 24px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 8px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      background: var(--ink-3);
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      padding: 12px 16px;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+      resize: vertical;
+    }
+
+    .field input::placeholder,
+    .field textarea::placeholder {
+      color: var(--dim-2);
+    }
+
+    .field input:focus,
+    .field textarea:focus {
+      border-color: rgba(255, 61, 0, .5);
+      box-shadow: 0 0 0 3px rgba(255, 61, 0, .12);
+    }
+
+    .field input.large {
+      font-size: 18px;
+      padding: 14px 18px;
+      font-weight: 500;
+    }
+
+    .field-helper {
+      margin-top: 7px;
+      font-size: 12px;
+      color: var(--dim-2);
+      line-height: 1.5;
+    }
+
+    /* ---- pills ---- */
+    .pills-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 10px;
+      font-family: 'Space Mono', monospace;
+      display: block;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .pill {
+      cursor: pointer;
+      border: 1px solid var(--line-2);
+      border-radius: 100px;
+      background: var(--ink-3);
+      color: var(--dim);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 16px;
+      user-select: none;
+      transition: background .15s, color .15s, border-color .15s, box-shadow .15s, transform .1s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .pill:hover {
+      border-color: rgba(255,61,0,.35);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .pill.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(255, 61, 0, .35);
+    }
+
+    /* ---- submit button ---- */
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
+      border-radius: var(--r-sm);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.01em;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 6px 24px rgba(255, 61, 0, .35);
+      margin-top: 8px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      opacity: .92;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 32px rgba(255, 61, 0, .45);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    /* ---- inline error ---- */
+    .form-error {
+      display: none;
+      background: rgba(255, 92, 92, .1);
+      border: 1px solid rgba(255, 92, 92, .3);
+      border-radius: var(--r-sm);
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--bad);
+      margin-top: 16px;
+    }
+
+    .form-error.visible { display: block; }
+
+    /* ---- divider ---- */
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 28px 0;
+    }
+
+    /* ---- success overlay ---- */
+    #success-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 12, 19, .92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    #success-overlay.visible { display: flex; }
+
+    .success-card {
+      background: var(--ink-2);
+      border: 1px solid var(--line-2);
+      border-radius: var(--r);
+      padding: 40px 36px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .success-skull {
+      font-size: 56px;
+      line-height: 1;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 24px rgba(255,61,0,.5));
+    }
+
+    .success-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .success-sub {
+      font-size: 14px;
+      color: var(--dim);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .success-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
+      border-radius: var(--r-sm);
+      color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      transition: opacity .15s, transform .1s;
+    }
+
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+
+    .btn-ghost {
+      padding: 12px 20px;
+      background: transparent;
+      border: 1px solid var(--line-2);
+      border-radius: var(--r-sm);
+      color: var(--dim);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      transition: color .15s, border-color .15s;
+    }
+
+    .btn-ghost:hover { color: var(--text); border-color: var(--line-2); }
+
+    /* ---- free badge ---- */
+    .free-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(43, 213, 118, .12);
+      border: 1px solid rgba(43, 213, 118, .25);
+      border-radius: 100px;
+      padding: 5px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--good);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- auth spinner -->
+  <div id="auth-spinner"><div class="spinner"></div></div>
+
+  <!-- success overlay -->
+  <div id="success-overlay">
+    <div class="success-card">
+      <div class="success-skull">💀</div>
+      <div class="success-title">FUD Launched!</div>
+      <p class="success-sub">Your campaign is live. Share it with the internet and let the community do the rest.</p>
+      <div class="success-actions">
+        <a id="view-campaign-btn" href="#" class="btn-primary">View Campaign →</a>
+        <a href="fud.html" class="btn-ghost">Back to Feed →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- topbar -->
+  <header class="topbar">
+    <a href="/" class="topbar-brand">💀 FudFun.xyz</a>
+    <span class="topbar-center">Submit a FUD</span>
+    <a href="fud.html" class="topbar-back">← Back to Feed</a>
+  </header>
+
+  <!-- page -->
+  <main class="page">
+    <div class="container">
+      <div class="card">
+
+        <div class="free-badge">✓ Free to launch — goes live instantly</div>
+
+        <h1 class="section-heading">Who do you want to FUD?</h1>
+        <p class="section-sub">No mercy. No cost. Full internet firepower.</p>
+
+        <form id="fud-form" novalidate>
+
+          <!-- target name -->
+          <div class="field">
+            <label for="target-name">Target</label>
+            <input
+              id="target-name"
+              type="text"
+              class="large"
+              placeholder="Their name, @handle, or title..."
+              autocomplete="off"
+              required
+            />
+          </div>
+
+          <!-- category pills -->
+          <div>
+            <span class="pills-label">Reason</span>
+            <div class="pills" id="category-pills">
+              <div class="pill" data-value="ex">💔 Ex</div>
+              <div class="pill" data-value="boss">😤 Boss</div>
+              <div class="pill" data-value="family">👴 Family</div>
+              <div class="pill active" data-value="hate">🔥 Hate</div>
+              <div class="pill" data-value="profit">💰 Profit</div>
+              <div class="pill" data-value="boredom">😴 Boredom</div>
+              <div class="pill" data-value="fun">😂 Fun</div>
+              <div class="pill" data-value="coin">🎯 Coin</div>
+            </div>
+          </div>
+
+          <!-- why -->
+          <div class="field">
+            <label for="why">The Grievance</label>
+            <textarea
+              id="why"
+              rows="4"
+              placeholder="Give the community ammunition. The more specific, the better the FUD campaign. What did they do? Why do they deserve this? Don't hold back."
+              required
+            ></textarea>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- tip wallet -->
+          <div class="field">
+            <label for="tip-wallet">Your Solana Wallet (for receiving tips)</label>
+            <input
+              id="tip-wallet"
+              type="text"
+              placeholder="Your wallet address — contributors will tip you here"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <p class="field-helper">Optional. If you set this, community members can tip you for running this FUD.</p>
+          </div>
+
+          <!-- error -->
+          <div class="form-error" id="form-error"></div>
+
+          <!-- submit -->
+          <button type="submit" class="btn-submit" id="submit-btn">Launch the FUD 🔥</button>
+
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { Client, Account, Databases, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@17/src/index.js';
+
+    const client = new Client()
+      .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+      .setProject('6a2bc15c00065b3c91a0');
+
+    const account = new Account(client);
+    const databases = new Databases(client);
+
+    const DB = 'growthgenie';
+    const COL = 'campaigns';
+
+    const PILL_EMOJIS = {
+      ex: '💔', boss: '😤', family: '👴', hate: '🔥',
+      profit: '💰', boredom: '😴', fun: '😂', coin: '🎯'
+    };
+
+    let user = null;
+    let selectedCategory = 'hate';
+
+    // auth gate
+    (async () => {
+      try {
+        user = await account.get();
+      } catch {
+        window.location.replace('login.html');
+        return;
+      }
+      document.getElementById('auth-spinner').style.display = 'none';
+    })();
+
+    // pill selection
+    document.getElementById('category-pills').addEventListener('click', e => {
+      const pill = e.target.closest('.pill');
+      if (!pill) return;
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      selectedCategory = pill.dataset.value;
+    });
+
+    function makeSlug(name) {
+      return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        + '-' + Date.now().toString(36)
+        + Math.random().toString(36).slice(2, 6);
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('form-error');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    function clearError() {
+      const el = document.getElementById('form-error');
+      el.textContent = '';
+      el.classList.remove('visible');
+    }
+
+    document.getElementById('fud-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      clearError();
+
+      const targetName = document.getElementById('target-name').value.trim();
+      const why = document.getElementById('why').value.trim();
+      const tipWallet = document.getElementById('tip-wallet').value.trim();
+
+      if (!targetName) { showError('Give us a target. Who are we FUDing?'); return; }
+      if (!selectedCategory) { showError('Pick a reason. Why does this person deserve it?'); return; }
+      if (!why) { showError('The Grievance is empty. Tell us what they did.'); return; }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Launching…';
+
+      const slug = makeSlug(targetName);
+
+      try {
+        await databases.createDocument(DB, COL, ID.unique(), {
+          slug,
+          clientId: user.$id,
+          projectName: targetName,
+          title: `FUD: ${targetName}`,
+          tag: why,
+          logo: PILL_EMOJIS[selectedCategory] ?? '💀',
+          campaignType: 'fudfund',
+          fudTarget: targetName,
+          fudCategory: selectedCategory,
+          tipWallet: tipWallet || null,
+          active: true,
+          accentColor: '#FF3D00'
+        });
+
+        document.getElementById('view-campaign-btn').href = `campaign.html?c=${encodeURIComponent(slug)}`;
+        document.getElementById('success-overlay').classList.add('visible');
+
+      } catch (err) {
+        const msg = err?.message || 'Something went wrong. Try again.';
+        showError(msg);
+        btn.disabled = false;
+        btn.textContent = 'Launch the FUD 🔥';
+      }
+    });
+  </script>
+</body>
+</html>
