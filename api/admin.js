@@ -1,0 +1,117 @@
+const { Client, Account, Databases, Users, Query } = require('node-appwrite');
+
+const ENDPOINT = process.env.APPWRITE_ENDPOINT    || 'https://nyc.cloud.appwrite.io/v1';
+const PROJECT  = process.env.APPWRITE_PROJECT_ID  || '6a2bc15c00065b3c91a0';
+const API_KEY  = process.env.APPWRITE_API_KEY     || '';
+const DB       = 'growthgenie';
+
+function adminClient() {
+  return new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
+}
+
+// Verify the incoming JWT belongs to a user with the 'admin' label
+async function verifyAdmin(req) {
+  const auth = req.headers['authorization'] || '';
+  const jwt  = auth.replace(/^Bearer\s+/i, '').trim();
+  if (!jwt) throw Object.assign(new Error('Missing auth token'), { status: 401 });
+
+  const sessionClient = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setJWT(jwt);
+  const account = new Account(sessionClient);
+  const user = await account.get().catch(() => null);
+  if (!user) throw Object.assign(new Error('Invalid session'), { status: 401 });
+  if (!user.labels?.includes('admin')) throw Object.assign(new Error('Not an admin'), { status: 403 });
+  return user;
+}
+
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin',  '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  try {
+    await verifyAdmin(req);
+  } catch (e) {
+    return res.status(e.status || 401).json({ error: e.message });
+  }
+
+  const adm = adminClient();
+  const dbs = new Databases(adm);
+  const usr = new Users(adm);
+
+  // ── GET requests ────────────────────────────────────────────────
+  if (req.method === 'GET') {
+    const { action, cursor } = req.query;
+
+    if (action === 'campaigns') {
+      const queries = [Query.orderDesc('$createdAt'), Query.limit(100)];
+      if (cursor) queries.push(Query.cursorAfter(cursor));
+      const r = await dbs.listDocuments(DB, 'campaigns', queries);
+      return res.status(200).json(r);
+    }
+
+    if (action === 'users') {
+      const queries = [Query.orderDesc('$createdAt'), Query.limit(100)];
+      if (cursor) queries.push(Query.cursorAfter(cursor));
+      const r = await usr.list(queries);
+      // Strip sensitive fields before returning
+      const sanitized = r.users.map(u => ({
+        $id: u.$id, name: u.name, email: u.email,
+        status: u.status, labels: u.labels,
+        $createdAt: u.$createdAt,
+      }));
+      return res.status(200).json({ total: r.total, users: sanitized });
+    }
+
+    if (action === 'stats') {
+      const [camps, allUsers] = await Promise.all([
+        dbs.listDocuments(DB, 'campaigns', [Query.limit(1)]),
+        usr.list([Query.limit(1)]),
+      ]);
+      const active = await dbs.listDocuments(DB, 'campaigns', [
+        Query.equal('active', true), Query.limit(1),
+      ]);
+      return res.status(200).json({
+        totalCampaigns: camps.total,
+        activeCampaigns: active.total,
+        totalUsers: allUsers.total,
+      });
+    }
+
+    return res.status(400).json({ error: 'Unknown action' });
+  }
+
+  // ── POST requests ───────────────────────────────────────────────
+  if (req.method === 'POST') {
+    const { action, campaignId, userId } = req.body || {};
+
+    if (action === 'delete-campaign') {
+      if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
+      await dbs.deleteDocument(DB, 'campaigns', campaignId);
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === 'toggle-campaign') {
+      if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
+      const doc = await dbs.getDocument(DB, 'campaigns', campaignId);
+      await dbs.updateDocument(DB, 'campaigns', campaignId, { active: !doc.active });
+      return res.status(200).json({ success: true, active: !doc.active });
+    }
+
+    if (action === 'ban-user') {
+      if (!userId) return res.status(400).json({ error: 'Missing userId' });
+      await usr.updateStatus(userId, false);
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === 'unban-user') {
+      if (!userId) return res.status(400).json({ error: 'Missing userId' });
+      await usr.updateStatus(userId, true);
+      return res.status(200).json({ success: true });
+    }
+
+    return res.status(400).json({ error: 'Unknown action' });
+  }
+
+  return res.status(405).end();
+};
