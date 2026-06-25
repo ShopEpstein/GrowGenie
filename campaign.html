@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GrowthGenie — Campaign</title>
+<title>FudFun.xyz — Campaign</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
@@ -295,9 +295,9 @@ footer a:hover{color:var(--text)}
 <header class="topbar">
   <div class="wrap row">
     <div class="brand">
-      <div class="logo" id="brandLogo">🧞</div>
+      <div class="logo" id="brandLogo">💀</div>
       <div>
-        <span id="brandName">GrowthGenie</span>
+        <span id="brandName">FudFun.xyz</span>
         <small id="brandSlug">live campaign</small>
       </div>
     </div>
@@ -444,9 +444,9 @@ footer a:hover{color:var(--text)}
 
 <footer>
   <div class="wrap row">
-    <div class="brand" style="font-size:15px"><div class="logo" style="width:28px;height:28px;font-size:15px">🧞</div> GrowthGenie</div>
+    <div class="brand" style="font-size:15px"><div class="logo" style="width:28px;height:28px;font-size:15px">💀</div> FudFun.xyz</div>
     <div class="spacer"></div>
-    <span class="pill">Powered by GrowthGenie</span>
+    <span class="pill">Powered by FudFun.xyz</span>
     <a href="#" id="footProv">Provably fair</a>
     <a href="login.html">Creator login</a>
   </div>
@@ -610,10 +610,10 @@ async function persistEntry(){
    ========================================================================= */
 function applyBranding(){
   setAccent(CAMP.accentColor||"#8A5BFF");
-  $("brandLogo").textContent=CAMP.logo||"🧞";
-  $("brandName").textContent=CAMP.projectName||"GrowthGenie";
+  $("brandLogo").textContent=CAMP.logo||"💀";
+  $("brandName").textContent=CAMP.projectName||"FudFun.xyz";
   $("brandSlug").textContent=(CAMP.slug||"")+" · live";
-  document.title=`${CAMP.projectName||"GrowthGenie"} — Campaign`;
+  document.title=`${CAMP.projectName||"FudFun.xyz"} — Campaign`;
   const isFud=CAMP.campaignType==="fudfund";
   const isSmear=CAMP.campaignType==="smear";
   $("campTitle").innerHTML=`<span class="glow">${esc(CAMP.title||CAMP.projectName||"Campaign")}</span>`;
@@ -827,11 +827,11 @@ function startStacc(){
 $("connectTop").onclick=()=>{ if(player.wallet)return; document.getElementById("regPanel").scrollIntoView({behavior:"smooth"}); };
 $("btnCopy").onclick=()=>{navigator.clipboard.writeText($("refLink").value);toast("Link copied");};
 $("btnShareX").onclick=()=>{
-  const t=`I'm grinding the ${CAMP.projectName} campaign for ${CAMP.prizeAmount} ${CAMP.prizeToken} 🧞\nStack XP, climb the board, win the bag.\nJoin with my link:`;
+  const t=`I'm grinding the ${CAMP.projectName} campaign for ${CAMP.prizeAmount} ${CAMP.prizeToken} 💀\nStack XP, climb the board, win the bag.\nJoin with my link:`;
   window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(t)}&url=${encodeURIComponent($("refLink").value)}`,"_blank");
 };
 $("btnShareTg").onclick=()=>{
-  window.open(`https://t.me/share/url?url=${encodeURIComponent($("refLink").value)}&text=${encodeURIComponent("Grind "+CAMP.projectName+" with me 🧞")}`,"_blank");
+  window.open(`https://t.me/share/url?url=${encodeURIComponent($("refLink").value)}&text=${encodeURIComponent("Grind "+CAMP.projectName+" with me 💀 via FudFun.xyz")}`,"_blank");
 };
 $("tpCa")&&($("tpCa").onclick=()=>{navigator.clipboard.writeText($("tpCa").value);toast("Contract copied");});
 
