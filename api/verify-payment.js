@@ -1,7 +1,7 @@
 const { Connection, PublicKey, LAMPORTS_PER_SOL } = require('@solana/web3.js');
 const { Client, Databases, Query } = require('node-appwrite');
 
-const TREASURY    = process.env.TREASURY_WALLET   || '';
+const TREASURY    = process.env.TREASURY_WALLET   || '3U8zuHiQqiXGKwrvrXzWtmWg2y3NSYnreyXpwTyioDPa';
 const PRICE_SOL   = parseFloat(process.env.PRICE_SOL  || '0.5');
 const PRICE_USDC  = parseFloat(process.env.PRICE_USDC || '50');
 const USDC_MINT   = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
