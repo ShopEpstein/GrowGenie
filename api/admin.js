@@ -98,6 +98,16 @@ module.exports = async (req, res) => {
       return res.status(200).json({ success: true, active: !doc.active });
     }
 
+    if (action === 'update-campaign') {
+      if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
+      const { updates } = req.body;
+      if (!updates || typeof updates !== 'object') return res.status(400).json({ error: 'Missing updates' });
+      const allowed = ['fudTarget', 'smearTarget', 'projectName', 'title', 'tag', 'fudCategory', 'active', 'tipWallet', 'accentColor'];
+      const safe = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)));
+      await dbs.updateDocument(DB, 'campaigns', campaignId, safe);
+      return res.status(200).json({ success: true });
+    }
+
     if (action === 'ban-user') {
       if (!userId) return res.status(400).json({ error: 'Missing userId' });
       await usr.updateStatus(userId, false);
