@@ -68,6 +68,10 @@ async function main() {
   await addStr('reviewStatus', 32);
   await addStr('bannerUrl', 2048);
   await addBool('active');
+  // Reactions
+  await req('POST', `/databases/${DB}/collections/campaigns/attributes/integer`, { key: 'reactFire',  required: false, min: 0, max: 9999999 }); await sleep(400);
+  await req('POST', `/databases/${DB}/collections/campaigns/attributes/integer`, { key: 'reactSkull', required: false, min: 0, max: 9999999 }); await sleep(400);
+  await req('POST', `/databases/${DB}/collections/campaigns/attributes/integer`, { key: 'reactLaugh', required: false, min: 0, max: 9999999 }); await sleep(400);
   console.log('\nDone! Attributes may take ~30s to become available in Appwrite.');
 }
 

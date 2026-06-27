@@ -6,275 +6,327 @@
 <title>FudFun.xyz — FUD is Fun</title>
 <meta name="description" content="Launch a FUD campaign in seconds. The internet does the rest."/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#060709;--bg2:#0e0f14;--bg3:#14161d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.14);
-  --text:#ECEDF5;--dim:#8A8DA3;--dim2:#5d6075;
-  --red:#FF3D00;--orange:#FF9100;--gold:#FFC53D;--green:#2BD576;
-  --r:13px;
+  --bg:#04050a;--bg2:#09090f;--bg3:#0f1018;--bg4:#141622;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);--border3:rgba(255,255,255,.2);
+  --text:#F0F1FA;--dim:#7A7D96;--dim2:#4a4d62;
+  --red:#FF3D00;--orange:#FF8C00;--gold:#FFD700;--neon:#00FF87;--purple:#A855F7;--blue:#00D4FF;
+  --r:14px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
+
+/* ── SCANLINE FX ─────────────────── */
+body::after{
+  content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.03) 0px,rgba(0,0,0,.03) 1px,transparent 1px,transparent 2px);
+}
 
 /* ── NAV ─────────────────────────── */
 nav{
   position:sticky;top:0;z-index:300;
-  background:rgba(6,7,9,.92);backdrop-filter:blur(18px);
-  border-bottom:1px solid var(--border);
-  height:54px;display:flex;align-items:center;padding:0 14px;gap:10px;
+  background:rgba(4,5,10,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);
+  height:52px;display:flex;align-items:center;padding:0 14px;gap:10px;
 }
-.logo{font-family:'Space Grotesk';font-weight:700;font-size:18px;letter-spacing:-.02em;flex-shrink:0}
-.tabs{display:flex;gap:2px;flex:1;justify-content:center}
+.logo{
+  font-family:'Space Grotesk';font-weight:800;font-size:18px;letter-spacing:-.03em;flex-shrink:0;
+  text-shadow:0 0 20px rgba(255,61,0,.6),0 0 40px rgba(255,61,0,.3);
+  color:#fff;
+}
+.tabs{display:flex;gap:3px;flex:1;justify-content:center}
 .tab{
   font-family:'Space Grotesk';font-size:13px;font-weight:600;
-  padding:6px 13px;border-radius:99px;border:none;cursor:pointer;
+  padding:5px 12px;border-radius:99px;border:none;cursor:pointer;
   background:transparent;color:var(--dim);transition:all .15s;
 }
-.tab.active{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.tab.active{background:var(--bg4);color:var(--text);border:1px solid var(--border2)}
 .tab:not(.active):hover{color:var(--text)}
 .btn-launch{
-  font-family:'Space Grotesk';font-weight:700;font-size:14px;
-  padding:9px 18px;border-radius:99px;border:none;cursor:pointer;
+  font-family:'Space Grotesk';font-weight:800;font-size:13px;letter-spacing:.01em;
+  padding:8px 16px;border-radius:99px;border:none;cursor:pointer;
   background:linear-gradient(135deg,var(--red),var(--orange));
-  color:#fff;flex-shrink:0;
-  box-shadow:0 4px 18px -8px var(--red);
+  color:#fff;flex-shrink:0;white-space:nowrap;
+  box-shadow:0 0 20px rgba(255,61,0,.4),0 4px 16px rgba(255,61,0,.3);
   transition:transform .12s,box-shadow .12s;
 }
-.btn-launch:hover{transform:translateY(-1px);box-shadow:0 8px 22px -8px var(--red)}
-@media(max-width:500px){.tabs{display:none}}
+.btn-launch:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(255,61,0,.6),0 8px 20px rgba(255,61,0,.4)}
+@media(max-width:480px){.tabs{display:none}}
 
 /* ── TICKER ──────────────────────── */
 .ticker{
   background:var(--bg2);border-bottom:1px solid var(--border);
-  overflow:hidden;height:32px;display:flex;align-items:center;
-  font-family:'Space Mono';font-size:11px;color:var(--dim);
-  user-select:none;
+  overflow:hidden;height:30px;display:flex;align-items:center;
+  font-family:'Space Mono';font-size:11px;color:var(--dim);user-select:none;
 }
-.ticker-inner{white-space:nowrap;display:inline-block;animation:scroll 28s linear infinite}
+.ticker-inner{white-space:nowrap;display:inline-block;animation:tickroll 32s linear infinite}
 .ticker:hover .ticker-inner{animation-play-state:paused}
-@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.t-item{display:inline;padding:0 20px}
-.t-skull{color:var(--red)}
-.t-amt{color:var(--gold)}
+@keyframes tickroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk{display:inline;padding:0 18px}
+.tk-skull{color:var(--red)}
+.tk-fire{color:var(--orange)}
+.tk-tip{color:var(--gold)}
 
-/* ── GRID ────────────────────────── */
-.main{max-width:1300px;margin:0 auto;padding:18px 14px 60px}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
-  gap:12px;
+/* ── STATS BAR ───────────────────── */
+.stats-bar{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;gap:24px;
+  padding:8px 16px;flex-wrap:wrap;
 }
-@media(max-width:580px){.grid{grid-template-columns:1fr 1fr;gap:8px}}
-@media(max-width:360px){.grid{grid-template-columns:1fr}}
+.stat{display:flex;align-items:center;gap:6px;font-family:'Space Mono';font-size:11px;color:var(--dim)}
+.stat-val{font-weight:700;color:var(--text)}
+.stat-dot{width:7px;height:7px;border-radius:50%;background:var(--neon);animation:blink 1.8s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 6px var(--neon)}50%{opacity:.3;box-shadow:none}}
 
-/* skeleton */
-.skel{
-  border-radius:var(--r);height:260px;
-  background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);
-  background-size:200% 100%;animation:shimmer 1.5s linear infinite;
-}
+/* ── MAIN / GRID ─────────────────── */
+.main{max-width:1300px;margin:0 auto;padding:16px 12px 60px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+@media(max-width:560px){.grid{grid-template-columns:1fr 1fr;gap:8px}}
+@media(max-width:340px){.grid{grid-template-columns:1fr}}
+
+.skel{border-radius:var(--r);height:280px;background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite}
 @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 
 /* ── CARD ────────────────────────── */
 .card{
   background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
-  overflow:hidden;display:flex;flex-direction:column;
-  cursor:pointer;position:relative;
+  overflow:hidden;display:flex;flex-direction:column;cursor:pointer;position:relative;
   transition:border-color .15s,transform .15s,box-shadow .15s;
 }
-.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 12px 36px -16px rgba(0,0,0,.7)}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 14px 40px -14px rgba(0,0,0,.8)}
+
+/* heat states */
+.card.hot{
+  border-color:rgba(255,61,0,.5);
+  box-shadow:0 0 0 1px rgba(255,61,0,.3),0 0 24px rgba(255,61,0,.12);
+  animation:hotPulse 3s ease-in-out infinite;
+}
+@keyframes hotPulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(255,61,0,.3),0 0 20px rgba(255,61,0,.1)}
+  50%{box-shadow:0 0 0 1px rgba(255,61,0,.6),0 0 36px rgba(255,61,0,.25)}
+}
+.card.jackpot{
+  border-color:rgba(255,215,0,.6);
+  box-shadow:0 0 0 1px rgba(255,215,0,.3),0 0 32px rgba(255,215,0,.2);
+  animation:jackpotPulse 2s ease-in-out infinite;
+}
+@keyframes jackpotPulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(255,215,0,.4),0 0 24px rgba(255,215,0,.15)}
+  50%{box-shadow:0 0 0 2px rgba(255,215,0,.8),0 0 48px rgba(255,215,0,.4)}
+}
 
 @keyframes flashIn{
-  0%{opacity:0;transform:translateY(-14px)}
-  25%{box-shadow:0 0 0 2px var(--red),0 0 30px -10px var(--red)}
-  70%{box-shadow:0 0 0 1px rgba(255,61,0,.3)}
-  100%{opacity:1;transform:translateY(0);box-shadow:none}
+  0%{opacity:0;transform:translateY(-16px);box-shadow:0 0 0 2px var(--red),0 0 40px rgba(255,61,0,.4)}
+  40%{opacity:1;transform:translateY(2px);box-shadow:0 0 0 2px var(--red),0 0 24px rgba(255,61,0,.3)}
+  70%{box-shadow:0 0 0 1px rgba(255,61,0,.2)}
+  100%{transform:translateY(0);box-shadow:none}
 }
-.card.new{animation:flashIn .55s ease-out both}
+.card.new{animation:flashIn .6s cubic-bezier(.22,1,.36,1) both}
 
-.card-banner{
-  height:120px;position:relative;overflow:hidden;flex-shrink:0;
-  background:linear-gradient(135deg,#1a0800,#0d0012);
+/* banner */
+.card-banner{height:118px;position:relative;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,#1a0600,#08000f)}
+.card-banner img{width:100%;height:100%;object-fit:cover;opacity:.7}
+.card-banner-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.65) 100%)}
+.card-avatar{
+  position:absolute;bottom:-22px;left:12px;
+  width:46px;height:46px;border-radius:50%;
+  border:3px solid var(--bg2);background:var(--bg3);object-fit:cover;
 }
-.card-banner img{width:100%;height:100%;object-fit:cover;opacity:.75}
-.card-banner-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.6) 100%)}
-.card-cat{
+.heat-badge{
   position:absolute;top:8px;left:8px;
-  font-family:'Space Mono';font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
-  padding:2px 8px;border-radius:99px;
-  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);
+  font-family:'Space Mono';font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  padding:2px 8px;border-radius:99px;border:1px solid;
 }
+.heat-badge.hot{color:var(--red);border-color:rgba(255,61,0,.4);background:rgba(255,61,0,.18);animation:flashBadge 1.5s ease-in-out infinite}
+.heat-badge.jackpot{color:var(--gold);border-color:rgba(255,215,0,.5);background:rgba(255,215,0,.15);animation:flashBadge 1s ease-in-out infinite}
+@keyframes flashBadge{0%,100%{opacity:1}50%{opacity:.6}}
+.heat-badge.warm{color:var(--orange);border-color:rgba(255,140,0,.4);background:rgba(255,140,0,.1)}
+.heat-badge.cold{color:var(--dim2);border-color:rgba(74,77,98,.4);background:rgba(74,77,98,.1)}
 .card-age{
   position:absolute;top:8px;right:8px;
   font-family:'Space Mono';font-size:9px;color:var(--dim);
-  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
-  padding:2px 7px;border-radius:99px;border:1px solid rgba(255,255,255,.07);
-}
-.card-avatar{
-  position:absolute;bottom:-20px;left:12px;
-  width:44px;height:44px;border-radius:50%;
-  border:3px solid var(--bg2);background:var(--bg3);object-fit:cover;flex-shrink:0;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+  padding:2px 7px;border-radius:99px;border:1px solid rgba(255,255,255,.06);
 }
 
-.card-body{padding:28px 12px 12px;flex:1;display:flex;flex-direction:column;gap:6px}
-.card-name{font-family:'Space Grotesk';font-weight:700;font-size:15px;letter-spacing:-.01em}
-.card-why{
-  font-size:12px;color:var(--dim);line-height:1.5;flex:1;
-  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
-}
-.card-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
-.card-tip-total{font-family:'Space Mono';font-size:11px;color:var(--gold)}
-.btn-tip{
-  font-family:'Space Grotesk';font-size:12px;font-weight:600;
-  padding:5px 12px;border-radius:99px;border:1px solid var(--border2);
-  background:transparent;color:var(--dim);cursor:pointer;transition:all .13s;
-}
-.btn-tip:hover{background:rgba(255,197,61,.1);color:var(--gold);border-color:rgba(255,197,61,.3)}
-.no-wallet{font-size:11px;color:var(--dim2)}
+/* card body */
+.card-body{padding:28px 12px 0;flex:1;display:flex;flex-direction:column;gap:5px}
+.card-name{font-family:'Space Grotesk';font-weight:700;font-size:14px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-why{font-size:12px;color:var(--dim);line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;flex:1}
 
-.empty{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--dim)}
-.empty h3{font-family:'Space Grotesk';font-size:20px;color:var(--text);margin-bottom:8px}
+/* reactions */
+.card-reactions{
+  display:flex;align-items:center;gap:4px;padding:10px 12px 0;
+}
+.react-btn{
+  background:var(--bg3);border:1px solid var(--border);border-radius:99px;
+  font-size:12px;padding:4px 9px;cursor:pointer;
+  display:flex;align-items:center;gap:4px;
+  transition:all .13s;color:var(--dim);font-family:'Space Mono';
+  user-select:none;
+}
+.react-btn:hover{border-color:var(--border2);background:var(--bg4);color:var(--text)}
+.react-btn.reacted{border-color:rgba(168,85,247,.5);background:rgba(168,85,247,.1);color:var(--purple)}
+.react-btn .cnt{font-size:11px}
+.react-share{
+  margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:99px;
+  color:var(--dim);font-size:11px;padding:4px 9px;cursor:pointer;
+  transition:all .13s;font-family:'Space Mono';display:flex;align-items:center;gap:4px;
+}
+.react-share:hover{border-color:rgba(0,212,255,.4);color:var(--blue)}
 
-/* ── OVERLAY / MODAL ─────────────── */
+/* card footer */
+.card-foot{display:flex;align-items:center;gap:6px;padding:8px 12px 12px}
+.btn-tip-card{
+  flex:1;font-family:'Space Grotesk';font-size:12px;font-weight:700;
+  padding:7px 12px;border-radius:10px;border:1px solid rgba(255,215,0,.25);
+  background:rgba(255,215,0,.07);color:var(--gold);cursor:pointer;
+  transition:all .13s;text-align:center;
+}
+.btn-tip-card:hover{background:rgba(255,215,0,.14);border-color:rgba(255,215,0,.5);box-shadow:0 0 16px rgba(255,215,0,.15)}
+.no-tip-wallet{font-size:10px;color:var(--dim2);font-family:'Space Mono';padding:7px 0}
+
+.empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--dim)}
+.empty h3{font-family:'Space Grotesk';font-size:22px;color:var(--text);margin-bottom:10px}
+
+/* ── SLOT MACHINE OVERLAY ─────────── */
+#slot-overlay{
+  display:none;position:fixed;inset:0;z-index:700;
+  background:rgba(4,5,10,.97);backdrop-filter:blur(20px);
+  flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+#slot-overlay.open{display:flex}
+.slot-label{font-family:'Space Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.slot-reels{display:flex;align-items:center;gap:10px}
+.slot-reel{
+  width:72px;height:88px;border-radius:12px;
+  background:var(--bg2);border:1px solid var(--border2);
+  display:grid;place-items:center;font-size:40px;
+  overflow:hidden;position:relative;
+}
+.slot-reel.spinning .reel-face{animation:reelSpin .12s linear infinite}
+@keyframes reelSpin{0%{transform:translateY(0)}50%{transform:translateY(-20px)}100%{transform:translateY(0)}}
+.slot-sep{font-family:'Space Mono';font-size:22px;color:var(--border2)}
+.slot-result{
+  font-family:'Space Grotesk';font-weight:800;font-size:28px;letter-spacing:-.02em;
+  opacity:0;transition:opacity .3s;text-align:center;
+}
+.slot-result.show{opacity:1}
+.slot-result.win{color:var(--neon);text-shadow:0 0 20px rgba(0,255,135,.5)}
+
+/* ── MODAL / OVERLAY ─────────────── */
 .overlay{
   display:none;position:fixed;inset:0;z-index:500;
-  background:rgba(6,7,9,.88);backdrop-filter:blur(14px);
+  background:rgba(4,5,10,.9);backdrop-filter:blur(16px);
   align-items:center;justify-content:center;padding:12px;
 }
 .overlay.open{display:flex}
 .modal{
   background:var(--bg2);border:1px solid var(--border2);border-radius:20px;
-  padding:26px;width:100%;max-width:510px;max-height:92vh;
-  overflow-y:auto;position:relative;
+  padding:24px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;position:relative;
   scrollbar-width:thin;scrollbar-color:var(--bg3) transparent;
 }
 .modal::-webkit-scrollbar{width:4px}
-.modal::-webkit-scrollbar-track{background:transparent}
 .modal::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:4px}
 .m-close{
-  position:absolute;top:14px;right:14px;background:var(--bg3);border:none;
-  color:var(--dim);width:30px;height:30px;border-radius:50%;font-size:17px;
-  cursor:pointer;display:grid;place-items:center;transition:color .13s;
-  line-height:1;
+  position:absolute;top:14px;right:14px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--dim);width:30px;height:30px;border-radius:50%;font-size:16px;
+  cursor:pointer;display:grid;place-items:center;transition:all .13s;
 }
-.m-close:hover{color:var(--text)}
+.m-close:hover{color:var(--text);border-color:var(--border2)}
 
-/* launch form */
+/* form elements */
 .m-title{
-  font-family:'Space Grotesk';font-weight:700;font-size:23px;letter-spacing:-.02em;
+  font-family:'Space Grotesk';font-weight:800;font-size:22px;letter-spacing:-.03em;
   background:linear-gradient(90deg,var(--red),var(--orange));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  margin-bottom:4px;padding-right:36px;
+  margin-bottom:3px;padding-right:36px;
 }
-.m-sub{font-size:13px;color:var(--dim);margin-bottom:22px}
-.field{margin-bottom:16px}
+.m-sub{font-size:12px;color:var(--dim);margin-bottom:20px}
+.field{margin-bottom:14px}
 .field label{
   display:block;font-family:'Space Mono';font-size:10px;font-weight:700;
   letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;
 }
 .field input,.field textarea{
-  width:100%;background:var(--bg3);border:1px solid var(--border2);
-  border-radius:10px;color:var(--text);font-family:'Inter';font-size:14px;
-  padding:10px 13px;outline:none;resize:none;
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:'Inter';font-size:14px;padding:10px 13px;outline:none;resize:none;
   transition:border-color .13s,box-shadow .13s;
 }
 .field input::placeholder,.field textarea::placeholder{color:var(--dim2)}
-.field input:focus,.field textarea:focus{
-  border-color:rgba(255,61,0,.5);box-shadow:0 0 0 3px rgba(255,61,0,.1);
-}
+.field input:focus,.field textarea:focus{border-color:rgba(255,61,0,.45);box-shadow:0 0 0 3px rgba(255,61,0,.08)}
 .field-hint{font-size:11px;color:var(--dim2);margin-top:5px}
-
-.pills-label{
-  display:block;font-family:'Space Mono';font-size:10px;font-weight:700;
-  letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;
-}
-.pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
-.pill{
-  cursor:pointer;border:1px solid var(--border2);border-radius:99px;
-  background:var(--bg3);color:var(--dim);font-size:13px;font-weight:500;
-  padding:6px 12px;user-select:none;transition:all .13s;
-}
+.pills-label{display:block;font-family:'Space Mono';font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:7px}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.pill{cursor:pointer;border:1px solid var(--border2);border-radius:99px;background:var(--bg3);color:var(--dim);font-size:12px;font-weight:500;padding:5px 11px;user-select:none;transition:all .12s}
 .pill:hover{color:var(--text)}
-.pill.on{background:linear-gradient(135deg,var(--red),var(--orange));border-color:transparent;color:#fff}
+.pill.on{background:linear-gradient(135deg,var(--red),var(--orange));border-color:transparent;color:#fff;box-shadow:0 3px 12px rgba(255,61,0,.3)}
 
-.preview-box{
-  display:none;margin-top:8px;background:var(--bg3);border:1px solid var(--border2);
-  border-radius:10px;padding:11px;align-items:center;gap:10px;
-}
+.preview-box{display:none;margin-top:7px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:10px;align-items:center;gap:10px}
 .preview-box.show{display:flex}
-.preview-box img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg2)}
-.pplatform{font-family:'Space Mono';font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.06em}
-.pname{font-size:14px;font-weight:600;margin-top:2px}
+.preview-box img{width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0}
+.pplatform{font-family:'Space Mono';font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:.06em}
+.pname{font-size:13px;font-weight:600;margin-top:2px}
 
-.m-error{
-  display:none;margin-top:10px;padding:10px 13px;border-radius:10px;
-  background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);
-  font-size:13px;color:#FF5C5C;
-}
+.m-error{display:none;margin-top:10px;padding:10px 13px;border-radius:10px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);font-size:13px;color:#FF5C5C}
 .m-error.show{display:block}
+
 .btn-main{
   width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;
-  background:linear-gradient(135deg,var(--red),var(--orange));
-  color:#fff;font-family:'Space Grotesk';font-size:16px;font-weight:700;
-  box-shadow:0 6px 22px -8px var(--red);transition:transform .12s,opacity .12s;
-  margin-top:6px;
+  background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;
+  font-family:'Space Grotesk';font-size:16px;font-weight:800;letter-spacing:-.01em;
+  box-shadow:0 0 24px rgba(255,61,0,.3),0 6px 20px rgba(255,61,0,.2);
+  transition:transform .12s,box-shadow .12s;margin-top:4px;
 }
-.btn-main:hover:not(:disabled){transform:translateY(-1px)}
-.btn-main:disabled{opacity:.5;cursor:not-allowed}
+.btn-main:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 32px rgba(255,61,0,.5),0 8px 24px rgba(255,61,0,.3)}
+.btn-main:disabled{opacity:.45;cursor:not-allowed}
 
-/* success state */
-.success-wrap{display:none;text-align:center;padding:20px 0}
-.s-skull{font-size:52px;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(255,61,0,.45))}
-.s-title{font-family:'Space Grotesk';font-weight:700;font-size:26px;margin-bottom:8px}
-.s-sub{font-size:14px;color:var(--dim);line-height:1.6;margin-bottom:24px}
-.btn-back{
-  display:inline-block;padding:13px 30px;border:none;border-radius:99px;cursor:pointer;
-  background:linear-gradient(135deg,var(--red),var(--orange));
-  color:#fff;font-family:'Space Grotesk';font-size:15px;font-weight:700;
-}
+.success-wrap{display:none;text-align:center;padding:16px 0}
+.s-skull{font-size:52px;margin-bottom:12px;filter:drop-shadow(0 0 24px rgba(0,255,135,.6))}
+.s-title{font-family:'Space Grotesk';font-weight:800;font-size:26px;color:var(--neon);text-shadow:0 0 20px rgba(0,255,135,.4);margin-bottom:8px}
+.s-sub{font-size:13px;color:var(--dim);line-height:1.65;margin-bottom:22px}
+.btn-back{display:inline-block;padding:12px 28px;border:none;border-radius:99px;cursor:pointer;background:linear-gradient(135deg,var(--red),var(--orange));color:#fff;font-family:'Space Grotesk';font-size:15px;font-weight:700}
 
 /* ── TIP MODAL ───────────────────── */
-.tip-target{font-family:'Space Grotesk';font-weight:700;font-size:21px;text-align:center;margin-bottom:4px;padding-right:36px}
-.tip-sub{font-size:13px;color:var(--dim);text-align:center;margin-bottom:20px}
-.tip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}
-.tip-btn{
+.tip-target{font-family:'Space Grotesk';font-weight:800;font-size:20px;text-align:center;margin-bottom:3px;padding-right:36px;letter-spacing:-.02em}
+.tip-sub{font-size:12px;color:var(--dim);text-align:center;margin-bottom:18px}
+.tip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.tip-amt-btn{
   background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
   font-family:'Space Mono';font-size:12px;color:var(--dim);
   padding:11px 6px;cursor:pointer;text-align:center;transition:all .13s;
 }
-.tip-btn:hover,.tip-btn.on{
-  background:rgba(255,197,61,.12);border-color:rgba(255,197,61,.4);color:var(--gold);
-}
-.tip-custom{
-  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
-  color:var(--text);font-family:'Space Mono';font-size:14px;
-  padding:10px 13px;outline:none;text-align:center;margin-bottom:14px;
-  transition:border-color .13s;
-}
-.tip-custom:focus{border-color:rgba(255,197,61,.4)}
+.tip-amt-btn:hover,.tip-amt-btn.on{background:rgba(255,215,0,.1);border-color:rgba(255,215,0,.45);color:var(--gold);box-shadow:0 0 12px rgba(255,215,0,.1)}
+.tip-lucky-row{display:flex;gap:6px;margin-bottom:12px}
+.tip-custom{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'Space Mono';font-size:13px;padding:9px 12px;outline:none;text-align:center;transition:border-color .13s}
+.tip-custom:focus{border-color:rgba(255,215,0,.4)}
 .tip-custom::placeholder{color:var(--dim2)}
-.btn-tip-send{
-  width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;
-  background:linear-gradient(135deg,var(--gold),var(--orange));
-  color:#0a0a0f;font-family:'Space Grotesk';font-size:16px;font-weight:700;
-  transition:transform .12s,opacity .12s;
+.btn-lucky{
+  background:var(--bg4);border:1px solid var(--border2);border-radius:10px;
+  color:var(--dim);font-size:18px;cursor:pointer;padding:9px 14px;
+  transition:all .13s;
 }
-.btn-tip-send:hover:not(:disabled){transform:translateY(-1px)}
-.btn-tip-send:disabled{opacity:.5;cursor:not-allowed}
+.btn-lucky:hover{border-color:rgba(168,85,247,.5);color:var(--purple);background:rgba(168,85,247,.1)}
+.btn-lucky.rolling{animation:diceRoll .4s ease-in-out}
+@keyframes diceRoll{0%,100%{transform:rotate(0)}25%{transform:rotate(-15deg)}75%{transform:rotate(15deg)}}
+.btn-tip-send{width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;background:linear-gradient(135deg,var(--gold),var(--orange));color:#09090f;font-family:'Space Grotesk';font-size:16px;font-weight:800;transition:transform .12s,box-shadow .12s}
+.btn-tip-send:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 24px rgba(255,215,0,.3)}
+.btn-tip-send:disabled{opacity:.45;cursor:not-allowed}
 
 /* ── TOAST ───────────────────────── */
 #toast{
-  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(60px);
-  z-index:900;
-  background:var(--bg2);border:1px solid var(--border2);border-radius:99px;
-  padding:11px 20px;font-family:'Space Grotesk';font-size:14px;font-weight:600;
-  white-space:nowrap;opacity:0;pointer-events:none;
-  transition:opacity .25s,transform .25s;
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  z-index:900;background:var(--bg3);border:1px solid var(--border3);border-radius:99px;
+  padding:10px 20px;font-family:'Space Grotesk';font-size:13px;font-weight:700;
+  white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.win{border-color:rgba(0,255,135,.5);color:var(--neon);box-shadow:0 0 20px rgba(0,255,135,.2)}
+#toast.tip{border-color:rgba(255,215,0,.5);color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.2)}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -283,7 +335,7 @@ nav{
 
 <!-- NAV -->
 <nav>
-  <a href="/" class="logo">💀 FudFun</a>
+  <div class="logo">💀 FudFun</div>
   <div class="tabs">
     <button class="tab active" data-sort="new">🆕 New</button>
     <button class="tab" data-sort="hot">🔥 Hot</button>
@@ -292,7 +344,14 @@ nav{
 </nav>
 
 <!-- TICKER -->
-<div class="ticker"><span class="ticker-inner" id="ticker-inner"><span class="t-item">💀 FudFun.xyz — the internet cooks them</span></span></div>
+<div class="ticker"><span class="ticker-inner" id="ticker-inner"><span class="tk"><span class="tk-skull">💀</span> FudFun.xyz — launch a campaign in seconds</span></span></div>
+
+<!-- STATS BAR -->
+<div class="stats-bar" id="stats-bar">
+  <div class="stat"><div class="stat-dot"></div> LIVE <span class="stat-val" id="st-live">—</span></div>
+  <div class="stat">💀 <span class="stat-val" id="st-total">—</span> campaigns</div>
+  <div class="stat">🔥 <span class="stat-val" id="st-reactions">—</span> reactions</div>
+</div>
 
 <!-- FEED -->
 <main class="main">
@@ -302,6 +361,19 @@ nav{
   </div>
 </main>
 
+<!-- SLOT MACHINE -->
+<div id="slot-overlay">
+  <div class="slot-label">Launching your FUD</div>
+  <div class="slot-reels">
+    <div class="slot-reel" id="sr1"><span class="reel-face" id="rf1">💀</span></div>
+    <div class="slot-sep">·</div>
+    <div class="slot-reel" id="sr2"><span class="reel-face" id="rf2">🔥</span></div>
+    <div class="slot-sep">·</div>
+    <div class="slot-reel" id="sr3"><span class="reel-face" id="rf3">💀</span></div>
+  </div>
+  <div class="slot-result" id="slot-result"></div>
+</div>
+
 <!-- LAUNCH MODAL -->
 <div class="overlay" id="launch-overlay">
   <div class="modal">
@@ -310,7 +382,6 @@ nav{
     <div id="lc-form-wrap">
       <div class="m-title">Launch a FUD 💀</div>
       <p class="m-sub">Free. Instant. The internet does the rest.</p>
-
       <form id="lc-form" novalidate>
         <div class="field">
           <label for="lf-target">Who's getting FUD'd?</label>
@@ -335,40 +406,35 @@ nav{
         </div>
 
         <div class="field">
-          <label for="lf-social">Target's X / TikTok profile (optional)</label>
+          <label for="lf-social">Target's X / TikTok (optional)</label>
           <input id="lf-social" type="url" placeholder="https://x.com/their_handle" spellcheck="false"/>
-          <p class="field-hint">We'll pull their avatar for the campaign card.</p>
+          <p class="field-hint">Pulls their profile pic for the campaign card.</p>
           <div class="preview-box" id="lf-preview">
             <img id="lf-pthumb" src="" alt=""/>
-            <div>
-              <div class="pplatform" id="lf-pplatform"></div>
-              <div class="pname" id="lf-pname"></div>
-            </div>
+            <div><div class="pplatform" id="lf-pplatform"></div><div class="pname" id="lf-pname"></div></div>
           </div>
         </div>
 
         <div class="field">
-          <label for="lf-banner">Campaign banner image URL (optional)</label>
-          <input id="lf-banner" type="url" placeholder="https://… a meme, screenshot, whatever" spellcheck="false"/>
-          <p class="field-hint">Shows as the card background. Paste any image URL.</p>
+          <label for="lf-banner">Campaign banner URL (optional)</label>
+          <input id="lf-banner" type="url" placeholder="https://… any image, meme, screenshot" spellcheck="false"/>
         </div>
 
         <div class="field">
           <label for="lf-wallet">Your Solana wallet (optional — to receive tips)</label>
-          <input id="lf-wallet" type="text" placeholder="SOL address" spellcheck="false"/>
-          <p class="field-hint">Community tips go here. Skip if you don't want tips.</p>
+          <input id="lf-wallet" type="text" placeholder="SOL address — community tips go here" spellcheck="false"/>
         </div>
 
         <div class="m-error" id="lf-err"></div>
-        <button type="submit" class="btn-main" id="lf-submit">Launch Campaign 💀</button>
+        <button type="submit" class="btn-main" id="lf-submit">🎰 Launch Campaign</button>
       </form>
     </div>
 
     <div class="success-wrap" id="lc-success">
       <div class="s-skull">💀</div>
-      <div class="s-title">FUD Launched!</div>
-      <p class="s-sub">Your campaign is live on the feed right now.<br/>The internet will handle the rest.</p>
-      <button class="btn-back" id="lc-done">Back to Feed</button>
+      <div class="s-title">FUD IS LIVE!</div>
+      <p class="s-sub">Your campaign is on the feed right now.<br/>Share it — tag your target — watch the internet work.</p>
+      <button class="btn-back" id="lc-done">Back to Feed 🔥</button>
     </div>
   </div>
 </div>
@@ -378,16 +444,19 @@ nav{
   <div class="modal" style="max-width:360px">
     <button class="m-close" id="tp-close">×</button>
     <div class="tip-target" id="tp-name">Target</div>
-    <p class="tip-sub">Support this campaign with SOL</p>
+    <p class="tip-sub">Fire SOL at this campaign 💸</p>
     <div class="tip-grid">
-      <button class="tip-btn" data-sol="0.05">◎ 0.05</button>
-      <button class="tip-btn" data-sol="0.1">◎ 0.1</button>
-      <button class="tip-btn on" data-sol="0.5">◎ 0.5</button>
-      <button class="tip-btn" data-sol="1">◎ 1</button>
+      <button class="tip-amt-btn" data-sol="0.05">◎ 0.05</button>
+      <button class="tip-amt-btn" data-sol="0.1">◎ 0.1</button>
+      <button class="tip-amt-btn on" data-sol="0.5">◎ 0.5</button>
+      <button class="tip-amt-btn" data-sol="1">◎ 1</button>
     </div>
-    <input class="tip-custom" id="tp-custom" type="number" placeholder="Custom SOL amount" min="0.001" step="0.01"/>
+    <div class="tip-lucky-row">
+      <input class="tip-custom" id="tp-custom" type="number" placeholder="Custom SOL" min="0.001" step="0.01"/>
+      <button class="btn-lucky" id="tp-lucky" title="Lucky spin">🎲</button>
+    </div>
     <button class="btn-tip-send" id="tp-send">Send Tip 💸</button>
-    <div class="m-error" id="tp-err"></div>
+    <div class="m-error" id="tp-err" style="margin-top:10px"></div>
   </div>
 </div>
 
@@ -402,20 +471,22 @@ const PROJECT  = '6a2bc15c00065b3c91a0';
 const DB       = 'growthgenie';
 const COLL     = 'campaigns';
 
-const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT);
+const client  = new Client().setEndpoint(ENDPOINT).setProject(PROJECT);
 const account = new Account(client);
 const dbs     = new Databases(client);
 
 // ── State ──────────────────────────
-let user        = null;
-let sortMode    = 'new';
-let seenIds     = new Set();
-let selectedCat = 'hate';
-let previewData = null;
-let tipTargetWallet = null;
-let tipTargetName   = '';
-let selectedTipAmt  = 0.5;
-let solanaWeb3      = null;
+let user           = null;
+let sortMode       = 'new';
+let seenIds        = new Set();
+let allDocs        = [];
+let selectedCat    = 'hate';
+let previewData    = null;
+let tipWallet      = null;
+let tipTargetLabel = '';
+let selectedTipAmt = 0.5;
+let solanaWeb3     = null;
+let reactedIds     = new Set(JSON.parse(localStorage.getItem('fud_reacted') || '[]'));
 
 // ── Auth (silent) ─────────────────
 account.get().then(u => { user = u; }).catch(() => {});
@@ -431,98 +502,164 @@ function ago(iso) {
   return `${Math.floor(s/86400)}d`;
 }
 
+function heat(iso) {
+  const m = (Date.now() - new Date(iso)) / 60000;
+  if (m < 5)  return 'jackpot';
+  if (m < 30) return 'hot';
+  if (m < 180) return 'warm';
+  return 'cold';
+}
+
+function heatLabel(h) {
+  return {jackpot:'🎰 JACKPOT', hot:'🔥 HOT', warm:'☀️ WARM', cold:'❄️ COLD'}[h] || '';
+}
+
 const EMOJI = {hate:'🔥',ex:'💔',boss:'😤',family:'👴',profit:'💰',boredom:'😴',fun:'😂',coin:'🎯'};
 const GRAD  = {
-  hate:'135deg,#2a0800,#0d0018',ex:'135deg,#1e061a,#060010',
-  boss:'135deg,#141400,#060800',profit:'135deg,#001a00,#000d04',
-  boredom:'135deg,#080814,#030308',fun:'135deg,#1a0a00,#050200',
-  family:'135deg,#141000,#060400',coin:'135deg,#0c0020,#030008',
+  hate:'135deg,#2a0500,#0d0015',ex:'135deg,#1e0616,#040010',
+  boss:'135deg,#141200,#050800',profit:'135deg,#001800,#000a04',
+  boredom:'135deg,#060812,#030308',fun:'135deg,#180900,#050200',
+  family:'135deg,#120e00,#060300',coin:'135deg,#0b0020,#030008',
 };
 
 function tgt(doc) { return doc.fudTarget || doc.smearTarget || doc.projectName || '???'; }
 
+function totalReacts(doc) {
+  return (doc.reactFire || 0) + (doc.reactSkull || 0) + (doc.reactLaugh || 0);
+}
+
 function makeCard(doc, flash) {
   const name   = esc(tgt(doc));
-  const why    = esc((doc.tag || '').slice(0, 250));
+  const why    = esc((doc.tag || '').slice(0, 280));
   const cat    = (doc.fudCategory || '').toLowerCase();
   const emoji  = EMOJI[cat] || '💀';
-  const label  = cat ? emoji + ' ' + cat.charAt(0).toUpperCase() + cat.slice(1) : '💀 FUD';
-  // banner: custom banner first, then social thumb, then gradient
+  const ht     = heat(doc.$createdAt);
   const banner = doc.bannerUrl || doc.socialPreviewThumb || '';
   const thumb  = doc.socialPreviewThumb || doc.bannerUrl || '';
   const bg     = banner ? '' : `background:linear-gradient(${GRAD[cat]||GRAD.hate})`;
   const tw     = esc(doc.tipWallet || '');
+  const rFire  = doc.reactFire  || 0;
+  const rSkull = doc.reactSkull || 0;
+  const rLaugh = doc.reactLaugh || 0;
+  const hasReacted = reactedIds.has(doc.$id);
 
-  const d = document.createElement('div');
-  d.className = 'card' + (flash ? ' new' : '');
-  d.dataset.id = doc.$id;
-  d.innerHTML = `
+  const el = document.createElement('div');
+  el.className = `card ${ht}` + (flash ? ' new' : '');
+  el.dataset.id = doc.$id;
+  el.innerHTML = `
     <div class="card-banner" style="${bg}">
       ${banner ? `<img src="${esc(banner)}" alt="" loading="lazy"/>` : ''}
       <div class="card-banner-grad"></div>
-      <span class="card-cat">${label}</span>
+      <span class="heat-badge ${ht}">${heatLabel(ht)}</span>
       <span class="card-age">${ago(doc.$createdAt)}</span>
       ${thumb ? `<img class="card-avatar" src="${esc(thumb)}" alt=""/>` : ''}
     </div>
     <div class="card-body">
       <div class="card-name">💀 ${name}</div>
       <div class="card-why">${why}</div>
-      <div class="card-foot">
-        <span class="card-tip-total">${tw ? '◎ tip' : ''}</span>
-        ${tw
-          ? `<button class="btn-tip" data-wallet="${tw}" data-name="${name}">💸 Tip</button>`
-          : `<span class="no-wallet">no tip wallet</span>`
-        }
-      </div>
+    </div>
+    <div class="card-reactions">
+      <button class="react-btn${hasReacted?' reacted':''}" data-reaction="fire" data-id="${esc(doc.$id)}">🔥 <span class="cnt">${rFire||''}</span></button>
+      <button class="react-btn" data-reaction="skull" data-id="${esc(doc.$id)}">💀 <span class="cnt">${rSkull||''}</span></button>
+      <button class="react-btn" data-reaction="laugh" data-id="${esc(doc.$id)}">😂 <span class="cnt">${rLaugh||''}</span></button>
+      <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}">𝕏 share</button>
+    </div>
+    <div class="card-foot">
+      ${tw
+        ? `<button class="btn-tip-card" data-wallet="${tw}" data-name="${name}">💸 Tip SOL</button>`
+        : `<span class="no-tip-wallet">no tip wallet set</span>`
+      }
     </div>`;
-  return d;
+  return el;
 }
 
 // ── Feed ───────────────────────────
 async function loadFeed(flash) {
   try {
-    const queries = [Query.equal('active', true), Query.limit(60), Query.orderDesc('$createdAt')];
-    const res = await dbs.listDocuments(DB, COLL, queries);
-    let docs = res.documents;
+    const res  = await dbs.listDocuments(DB, COLL, [Query.equal('active', true), Query.limit(80), Query.orderDesc('$createdAt')]);
+    let docs   = res.documents;
 
-    // "hot" = most tips first (tip wallet campaigns at top, otherwise newest)
     if (sortMode === 'hot') {
-      docs = [...docs].sort((a, b) => (b.tipWallet ? 1 : 0) - (a.tipWallet ? 1 : 0));
+      docs = [...docs].sort((a, b) => totalReacts(b) - totalReacts(a));
     }
 
+    allDocs = docs;
     const grid = document.getElementById('grid');
 
     if (!docs.length) {
-      grid.innerHTML = `<div class="empty"><h3>No FUD yet 💀</h3><p>Be the first. Hit "Launch FUD" above.</p></div>`;
+      grid.innerHTML = `<div class="empty"><h3>No FUD yet 💀</h3><p>Be the first to launch a campaign.</p></div>`;
+      updateStats(0, 0);
       return;
     }
 
     if (flash) {
       const fresh = docs.filter(d => !seenIds.has(d.$id));
-      fresh.forEach(d => {
-        grid.insertBefore(makeCard(d, true), grid.firstChild);
-        seenIds.add(d.$id);
-      });
+      fresh.forEach(d => { grid.insertBefore(makeCard(d, true), grid.firstChild); seenIds.add(d.$id); });
     } else {
       grid.innerHTML = '';
       docs.forEach(d => { grid.appendChild(makeCard(d, false)); seenIds.add(d.$id); });
     }
 
-    updateTicker(docs.slice(0, 10));
+    updateStats(docs.length, docs.reduce((s, d) => s + totalReacts(d), 0));
+    updateTicker(docs.slice(0, 12));
     bindCards();
   } catch (err) { console.error(err); }
 }
 
+function updateStats(campaigns, reactions) {
+  document.getElementById('st-live').textContent    = campaigns;
+  document.getElementById('st-total').textContent   = campaigns;
+  document.getElementById('st-reactions').textContent = reactions.toLocaleString();
+}
+
 function bindCards() {
-  document.querySelectorAll('.btn-tip').forEach(btn => {
+  // react buttons
+  document.querySelectorAll('.react-btn').forEach(btn => {
+    btn.onclick = async e => {
+      e.stopPropagation();
+      const id  = btn.dataset.id;
+      const rxn = btn.dataset.reaction;
+      // optimistic update
+      const cnt = btn.querySelector('.cnt');
+      const was = parseInt(cnt.textContent) || 0;
+      cnt.textContent = was + 1;
+      btn.classList.add('reacted');
+      reactedIds.add(id);
+      localStorage.setItem('fud_reacted', JSON.stringify([...reactedIds]));
+      // API call
+      try {
+        await fetch('/api/react', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ campaignId: id, reaction: rxn }),
+        });
+      } catch {}
+    };
+  });
+
+  // share buttons
+  document.querySelectorAll('.react-share').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      const name = btn.dataset.name;
+      const id   = btn.dataset.id;
+      const url  = `${location.origin}/campaign.html?c=${id}`;
+      const text = `💀 ${decodeURIComponent(name)} is getting roasted on FudFun.xyz 🔥`;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=560,height=420');
+    };
+  });
+
+  // tip buttons
+  document.querySelectorAll('.btn-tip-card').forEach(btn => {
     btn.onclick = e => {
       e.stopPropagation();
       openTipModal(btn.dataset.wallet, btn.dataset.name);
     };
   });
+
+  // card click → campaign page
   document.querySelectorAll('.card').forEach(card => {
     card.onclick = e => {
-      if (e.target.closest('.btn-tip')) return;
+      if (e.target.closest('.react-btn,.react-share,.btn-tip-card')) return;
       window.location.href = `campaign.html?c=${card.dataset.id}`;
     };
   });
@@ -531,16 +668,14 @@ function bindCards() {
 // ── Ticker ─────────────────────────
 function updateTicker(docs) {
   if (!docs.length) return;
+  const items = docs.map(d => {
+    const h = heat(d.$createdAt);
+    const icon = h === 'jackpot' ? '<span class="tk-tip">🎰</span>' : h === 'hot' ? '<span class="tk-fire">🔥</span>' : '<span class="tk-skull">💀</span>';
+    return `<span class="tk">${icon} ${esc(tgt(d))} · ${ago(d.$createdAt)} ago</span>`;
+  }).join('');
   const inner = document.getElementById('ticker-inner');
-  const items = docs.map(d =>
-    `<span class="t-item"><span class="t-skull">💀</span> ${esc(tgt(d))} <span style="color:var(--border2)">·</span> ${ago(d.$createdAt)} ago</span>`
-  ).join('');
   inner.innerHTML = items + items;
 }
-
-// ── Auto-refresh ───────────────────
-loadFeed(false);
-setInterval(() => loadFeed(true), 10000);
 
 // ── Sort tabs ──────────────────────
 document.querySelectorAll('.tab').forEach(t => {
@@ -554,19 +689,65 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
+// ── Auto-refresh ───────────────────
+loadFeed(false);
+setInterval(() => loadFeed(true), 10000);
+
 // ── Toast ──────────────────────────
-function toast(msg, ms = 3200) {
+function toast(msg, type = '') {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), ms);
+  t.className = 'show' + (type ? ` ${type}` : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.className = '', 3200);
+}
+
+// ── Slot machine ───────────────────
+const SYMBOLS = ['💀','🔥','😈','👀','💸','🎯','😤','💣','🩸','🫡'];
+function runSlotMachine() {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('slot-overlay');
+    const result  = document.getElementById('slot-result');
+    overlay.classList.add('open');
+    result.className = 'slot-result';
+    result.textContent = '';
+
+    const reelIds = ['rf1','rf2','rf3'];
+    const srIds   = ['sr1','sr2','sr3'];
+    const finals  = ['💀','💀','💀'];
+
+    reelIds.forEach((rfId, i) => {
+      const rf = document.getElementById(rfId);
+      const sr = document.getElementById(srIds[i]);
+      sr.classList.add('spinning');
+
+      let frame = 0;
+      const iv = setInterval(() => { rf.textContent = SYMBOLS[frame++ % SYMBOLS.length]; }, 70);
+
+      setTimeout(() => {
+        clearInterval(iv);
+        rf.textContent = finals[i];
+        sr.classList.remove('spinning');
+        if (i === 2) {
+          setTimeout(() => {
+            result.textContent = '💀 FUD IS LIVE 💀';
+            result.className = 'slot-result show win';
+            setTimeout(() => {
+              overlay.classList.remove('open');
+              resolve();
+            }, 900);
+          }, 300);
+        }
+      }, 500 + i * 280);
+    });
+  });
 }
 
 // ── Launch modal ───────────────────
 document.getElementById('launch-btn').addEventListener('click', () => {
   document.getElementById('launch-overlay').classList.add('open');
 });
-document.getElementById('lc-close').addEventListener('click', () => closeLaunch());
+document.getElementById('lc-close').addEventListener('click', closeLaunch);
 document.getElementById('launch-overlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeLaunch();
 });
@@ -575,7 +756,6 @@ function closeLaunch() {
   document.getElementById('launch-overlay').classList.remove('open');
 }
 
-// pill selection
 document.getElementById('lf-pills').addEventListener('click', e => {
   const p = e.target.closest('.pill');
   if (!p) return;
@@ -584,7 +764,6 @@ document.getElementById('lf-pills').addEventListener('click', e => {
   selectedCat = p.dataset.v;
 });
 
-// social preview debounce
 let prevDebounce;
 document.getElementById('lf-social').addEventListener('input', e => {
   const url = e.target.value.trim();
@@ -606,7 +785,7 @@ document.getElementById('lf-social').addEventListener('input', e => {
   }, 650);
 });
 
-function makeSlug(name) {
+function slug(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
     + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 }
@@ -615,14 +794,11 @@ function lfErr(msg) {
   const el = document.getElementById('lf-err');
   el.textContent = msg; el.classList.add('show');
 }
-function lfClearErr() {
-  const el = document.getElementById('lf-err');
-  el.textContent = ''; el.classList.remove('show');
-}
 
 document.getElementById('lc-form').addEventListener('submit', async e => {
   e.preventDefault();
-  lfClearErr();
+  document.getElementById('lf-err').classList.remove('show');
+
   const target = document.getElementById('lf-target').value.trim();
   const why    = document.getElementById('lf-why').value.trim();
   const social = document.getElementById('lf-social').value.trim();
@@ -641,105 +817,117 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
   }
 
   const btn = document.getElementById('lf-submit');
-  btn.disabled = true; btn.textContent = 'Checking content…';
+  btn.disabled = true; btn.textContent = '🎰 Loading…';
 
-  // AI moderation
+  // AI mod
   try {
     const mr = await fetch('/api/moderate', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ targetName: target, reason: why, category: selectedCat }),
     });
     const md = await mr.json();
     if (!md.allowed) {
       lfErr(md.reason || 'Content violates guidelines.');
-      btn.disabled = false; btn.textContent = 'Launch Campaign 💀';
+      btn.disabled = false; btn.textContent = '🎰 Launch Campaign';
       return;
     }
   } catch {}
 
-  btn.textContent = 'Launching…';
-
   const doc = {
-    slug:         makeSlug(target),
-    clientId:     user.$id,
-    projectName:  target,
-    title:        `FUD: ${target}`,
-    tag:          why,
-    logo:         EMOJI[selectedCat] || '💀',
-    campaignType: 'fudfund',
-    fudTarget:    target,
-    fudCategory:  selectedCat,
-    tipWallet:    wallet || null,
-    active:       true,
-    accentColor:  '#FF3D00',
+    slug:          slug(target),
+    clientId:      user.$id,
+    projectName:   target,
+    title:         `FUD: ${target}`,
+    tag:           why,
+    logo:          EMOJI[selectedCat] || '💀',
+    campaignType:  'fudfund',
+    fudTarget:     target,
+    fudCategory:   selectedCat,
+    tipWallet:     wallet || null,
+    active:        true,
+    accentColor:   '#FF3D00',
   };
-  if (social)        doc.socialLink           = social;
-  if (previewData)   doc.socialPreviewName    = previewData.authorName   || null;
-  if (previewData)   doc.socialPreviewThumb   = previewData.thumbnailUrl || null;
-  if (previewData)   doc.socialPreviewPlatform= previewData.platform     || null;
-  if (banner)        doc.bannerUrl            = banner;
+  if (social)      doc.socialLink            = social;
+  if (previewData) doc.socialPreviewName     = previewData.authorName   || null;
+  if (previewData) doc.socialPreviewThumb    = previewData.thumbnailUrl || null;
+  if (previewData) doc.socialPreviewPlatform = previewData.platform     || null;
+  if (banner)      doc.bannerUrl             = banner;
 
-  try {
-    await dbs.createDocument(DB, COLL, ID.unique(), doc);
-    document.getElementById('lc-form-wrap').style.display = 'none';
-    document.getElementById('lc-success').style.display   = 'block';
-    seenIds.clear();
-    loadFeed(false);
-  } catch (err) {
-    lfErr(err?.message || 'Failed to launch. Try again.');
-    btn.disabled = false; btn.textContent = 'Launch Campaign 💀';
+  // Run slot + create in parallel
+  const [, created] = await Promise.allSettled([
+    runSlotMachine(),
+    dbs.createDocument(DB, COLL, ID.unique(), doc),
+  ]);
+
+  if (created.status === 'rejected') {
+    lfErr(created.reason?.message || 'Failed to launch. Try again.');
+    btn.disabled = false; btn.textContent = '🎰 Launch Campaign';
+    return;
   }
+
+  document.getElementById('lc-form-wrap').style.display = 'none';
+  document.getElementById('lc-success').style.display   = 'block';
+  seenIds.clear();
+  loadFeed(false);
 });
 
 document.getElementById('lc-done').addEventListener('click', () => {
   closeLaunch();
-  document.getElementById('lc-form-wrap').style.display = '';
-  document.getElementById('lc-success').style.display   = 'none';
-  document.getElementById('lc-form').reset();
-  previewData = null;
-  document.getElementById('lf-preview').classList.remove('show');
-  document.getElementById('lf-submit').disabled   = false;
-  document.getElementById('lf-submit').textContent = 'Launch Campaign 💀';
-  selectedCat = 'hate';
-  document.querySelectorAll('#lf-pills .pill').forEach(p => p.classList.remove('on'));
-  document.querySelector('#lf-pills .pill[data-v="hate"]').classList.add('on');
-  lfClearErr();
+  setTimeout(() => {
+    document.getElementById('lc-form-wrap').style.display = '';
+    document.getElementById('lc-success').style.display   = 'none';
+    document.getElementById('lc-form').reset();
+    previewData = null;
+    document.getElementById('lf-preview').classList.remove('show');
+    const btn = document.getElementById('lf-submit');
+    btn.disabled = false; btn.textContent = '🎰 Launch Campaign';
+    selectedCat = 'hate';
+    document.querySelectorAll('#lf-pills .pill').forEach(p => p.classList.remove('on'));
+    document.querySelector('#lf-pills .pill[data-v="hate"]').classList.add('on');
+  }, 300);
 });
 
 // ── Tip modal ──────────────────────
 function openTipModal(wallet, name) {
-  tipTargetWallet = wallet;
-  tipTargetName   = name;
-  selectedTipAmt  = 0.5;
-  document.getElementById('tp-name').innerHTML = '💀 ' + name;
-  document.getElementById('tp-custom').value = '';
-  document.getElementById('tp-err').textContent = '';
+  tipWallet      = wallet;
+  tipTargetLabel = name;
+  selectedTipAmt = 0.5;
+  document.getElementById('tp-name').textContent = '💀 ' + decodeURIComponent(name);
+  document.getElementById('tp-custom').value     = '';
   document.getElementById('tp-err').classList.remove('show');
-  document.getElementById('tp-send').disabled = false;
+  document.getElementById('tp-send').disabled    = false;
   document.getElementById('tp-send').textContent = 'Send Tip 💸';
-  document.querySelectorAll('.tip-btn').forEach(b => b.classList.toggle('on', b.dataset.sol === '0.5'));
+  document.querySelectorAll('.tip-amt-btn').forEach(b => b.classList.toggle('on', b.dataset.sol === '0.5'));
   document.getElementById('tip-overlay').classList.add('open');
 }
 
-document.getElementById('tp-close').addEventListener('click', () => {
-  document.getElementById('tip-overlay').classList.remove('open');
-});
-document.getElementById('tip-overlay').addEventListener('click', e => {
-  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-});
+document.getElementById('tp-close').addEventListener('click', () => document.getElementById('tip-overlay').classList.remove('open'));
+document.getElementById('tip-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
 
-document.querySelectorAll('.tip-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-    selectedTipAmt = parseFloat(btn.dataset.sol);
+document.querySelectorAll('.tip-amt-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.tip-amt-btn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    selectedTipAmt = parseFloat(b.dataset.sol);
     document.getElementById('tp-custom').value = '';
   });
 });
 
 document.getElementById('tp-custom').addEventListener('input', e => {
-  document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.tip-amt-btn').forEach(b => b.classList.remove('on'));
   selectedTipAmt = parseFloat(e.target.value) || 0;
+});
+
+// Lucky tip 🎲
+const LUCKY_AMOUNTS = [0.05, 0.07, 0.1, 0.15, 0.2, 0.25, 0.33, 0.5, 0.69, 0.75, 1];
+document.getElementById('tp-lucky').addEventListener('click', function() {
+  this.classList.add('rolling');
+  setTimeout(() => this.classList.remove('rolling'), 420);
+  const pick = LUCKY_AMOUNTS[Math.floor(Math.random() * LUCKY_AMOUNTS.length)];
+  document.querySelectorAll('.tip-amt-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('tp-custom').value = pick;
+  selectedTipAmt = pick;
+  toast(`🎲 Lucky spin: ◎ ${pick}`, '');
 });
 
 async function loadSolana() {
@@ -756,16 +944,8 @@ async function loadSolana() {
 
 document.getElementById('tp-send').addEventListener('click', async () => {
   const amt = selectedTipAmt;
-  if (!amt || amt <= 0) {
-    document.getElementById('tp-err').textContent = 'Pick a tip amount.';
-    document.getElementById('tp-err').classList.add('show');
-    return;
-  }
-  if (!tipTargetWallet) {
-    document.getElementById('tp-err').textContent = 'No tip wallet set.';
-    document.getElementById('tp-err').classList.add('show');
-    return;
-  }
+  if (!amt || amt <= 0) { showTipErr('Pick a tip amount.'); return; }
+  if (!tipWallet)       { showTipErr('No tip wallet set.'); return; }
 
   const btn = document.getElementById('tp-send');
   btn.disabled = true; btn.textContent = 'Opening wallet…';
@@ -774,27 +954,31 @@ document.getElementById('tp-send').addEventListener('click', async () => {
   try {
     const sw3      = await loadSolana();
     const provider = window.phantom?.solana || window.solana;
-    if (!provider?.isPhantom) throw new Error('Phantom wallet not found. Install at phantom.app');
+    if (!provider?.isPhantom) throw new Error('Phantom not found — install at phantom.app');
 
     await provider.connect();
     const from     = new sw3.PublicKey(provider.publicKey.toString());
-    const to       = new sw3.PublicKey(tipTargetWallet);
+    const to       = new sw3.PublicKey(tipWallet);
     const lamports = BigInt(Math.floor(amt * 1_000_000_000));
     const conn     = new sw3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
     const { blockhash } = await conn.getLatestBlockhash();
 
     const tx = new sw3.Transaction({ recentBlockhash: blockhash, feePayer: from });
     tx.add(sw3.SystemProgram.transfer({ fromPubkey: from, toPubkey: to, lamports }));
-
     await provider.signAndSendTransaction(tx);
+
     document.getElementById('tip-overlay').classList.remove('open');
-    toast(`💸 Tipped ◎${amt} to ${tipTargetName}!`);
+    toast(`💸 Tipped ◎${amt} SOL to ${tipTargetLabel}!`, 'tip');
   } catch (err) {
-    document.getElementById('tp-err').textContent = err?.message || 'Tip failed.';
-    document.getElementById('tp-err').classList.add('show');
+    showTipErr(err?.message || 'Tip failed.');
     btn.disabled = false; btn.textContent = 'Send Tip 💸';
   }
 });
+
+function showTipErr(msg) {
+  const el = document.getElementById('tp-err');
+  el.textContent = msg; el.classList.add('show');
+}
 </script>
 </body>
 </html>
