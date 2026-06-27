@@ -66,6 +66,7 @@ async function main() {
   await addStr('socialPreviewThumb', 2048);
   await addStr('socialPreviewPlatform', 32);
   await addStr('reviewStatus', 32);
+  await addStr('bannerUrl', 2048);
   await addBool('active');
   console.log('\nDone! Attributes may take ~30s to become available in Appwrite.');
 }

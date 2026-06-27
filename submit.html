@@ -549,11 +549,11 @@
   <!-- success overlay -->
   <div id="success-overlay">
     <div class="success-card">
-      <div class="success-skull">⏳</div>
-      <div class="success-title">Submitted for Review</div>
-      <p class="success-sub">Your 1 SOL payment is confirmed. We'll review your submission within 24 hours. If approved, it goes live on the feed and the internet does the rest.</p>
+      <div class="success-skull">💀</div>
+      <div class="success-title">FUD Launched!</div>
+      <p class="success-sub">Your campaign is live on the feed right now. The internet will handle the rest.</p>
       <div class="success-actions">
-        <a href="fud.html" class="btn-primary">Back to Feed →</a>
+        <a href="/" class="btn-primary">Back to Feed →</a>
       </div>
     </div>
   </div>
@@ -570,10 +570,10 @@
     <div class="container">
       <div class="card">
 
-        <div class="free-badge" style="background:rgba(255,61,0,.12);border-color:rgba(255,61,0,.3);color:var(--accent);">💀 1 SOL to submit · Reviewed within 24hrs</div>
+        <div class="free-badge">💀 Free &amp; instant · Goes live immediately</div>
 
         <h1 class="section-heading">Who do you want to FUD?</h1>
-        <p class="section-sub">Pay 1 SOL. We review. The internet cooks them.</p>
+        <p class="section-sub">Launch a campaign in seconds. The internet does the rest.</p>
 
         <form id="fud-form" novalidate>
 
@@ -661,7 +661,7 @@
           <div class="form-error" id="form-error"></div>
 
           <!-- submit -->
-          <button type="submit" class="btn-submit" id="submit-btn">Pay 1 SOL &amp; Submit 💀</button>
+          <button type="submit" class="btn-submit" id="submit-btn">Launch Campaign 💀</button>
 
         </form>
       </div>
@@ -819,49 +819,6 @@
       el.classList.remove('visible');
     }
 
-    const TREASURY    = '3U8zuHiQqiXGKwrvrXzWtmWg2y3NSYnreyXpwTyioDPa';
-    const PRICE_SOL   = 1.0;
-    const PRICE_LAMPORTS = BigInt(Math.floor(PRICE_SOL * 1_000_000_000));
-
-    let solanaWeb3 = null;
-    async function loadSolana() {
-      if (solanaWeb3) return solanaWeb3;
-      await new Promise((res, rej) => {
-        const s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.4/lib/index.iife.min.js';
-        s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-      solanaWeb3 = window.solanaWeb3;
-      return solanaWeb3;
-    }
-
-    async function payWithPhantom(campaignDocId) {
-      const sw3 = await loadSolana();
-      const provider = window.phantom?.solana || window.solana;
-      if (!provider?.isPhantom) throw new Error('Phantom wallet not found. Install it at phantom.app');
-
-      await provider.connect();
-      const fromPubkey  = new sw3.PublicKey(provider.publicKey.toString());
-      const toPubkey    = new sw3.PublicKey(TREASURY);
-      const connection  = new sw3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-      const { blockhash } = await connection.getLatestBlockhash();
-
-      const tx = new sw3.Transaction({ recentBlockhash: blockhash, feePayer: fromPubkey });
-      tx.add(sw3.SystemProgram.transfer({ fromPubkey, toPubkey, lamports: PRICE_LAMPORTS }));
-
-      const { signature } = await provider.signAndSendTransaction(tx);
-
-      // Poll for confirmation (up to 60s)
-      for (let i = 0; i < 30; i++) {
-        await new Promise(r => setTimeout(r, 2000));
-        const status = await connection.getSignatureStatus(signature);
-        const conf = status?.value?.confirmationStatus;
-        if (conf === 'confirmed' || conf === 'finalized') return signature;
-      }
-      throw new Error('Transaction not confirmed in time. Check your wallet.');
-    }
-
     document.getElementById('fud-form').addEventListener('submit', async e => {
       e.preventDefault();
       clearError();
@@ -884,17 +841,15 @@
       if (!modResult.allowed) {
         showError(`Content blocked: ${modResult.reason || 'Violates community guidelines.'}`);
         btn.disabled = false;
-        btn.textContent = 'Pay 1 SOL & Submit 💀';
+        btn.textContent = 'Launch Campaign 💀';
         return;
       }
 
-      btn.textContent = 'Creating campaign…';
-      const slug = makeSlug(targetName);
-      let campaignDocId;
+      btn.textContent = 'Launching…';
 
       try {
         const doc = {
-          slug,
+          slug:         makeSlug(targetName),
           clientId:     user.$id,
           projectName:  targetName,
           title:        `FUD: ${targetName}`,
@@ -904,8 +859,7 @@
           fudTarget:    targetName,
           fudCategory:  selectedCategory,
           tipWallet:    tipWallet || null,
-          active:       false,
-          reviewStatus: 'pending',
+          active:       true,
           accentColor:  '#FF3D00',
         };
         if (socialLink) doc.socialLink = socialLink;
@@ -914,41 +868,11 @@
           doc.socialPreviewThumb    = socialPreviewData.thumbnailUrl || null;
           doc.socialPreviewPlatform = socialPreviewData.platform     || null;
         }
-        const created = await databases.createDocument(DB, COL, ID.unique(), doc);
-        campaignDocId = created.$id;
+        await databases.createDocument(DB, COL, ID.unique(), doc);
       } catch (err) {
         showError(err?.message || 'Failed to create campaign. Try again.');
         btn.disabled = false;
-        btn.textContent = 'Pay 1 SOL & Submit 💀';
-        return;
-      }
-
-      btn.textContent = 'Waiting for wallet…';
-      let signature;
-      try {
-        signature = await payWithPhantom(campaignDocId);
-      } catch (err) {
-        // Clean up the unpaid draft
-        await databases.deleteDocument(DB, COL, campaignDocId).catch(() => {});
-        showError(err?.message || 'Payment cancelled.');
-        btn.disabled = false;
-        btn.textContent = 'Pay 1 SOL & Submit 💀';
-        return;
-      }
-
-      btn.textContent = 'Verifying payment…';
-      try {
-        const vResp = await fetch('/api/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ signature, campaignId: campaignDocId, type: 'fud' }),
-        });
-        const vData = await vResp.json();
-        if (!vResp.ok) throw new Error(vData.error || 'Payment verification failed');
-      } catch (err) {
-        showError(err?.message || 'Payment sent but verification failed — contact support with your tx signature: ' + signature);
-        btn.disabled = false;
-        btn.textContent = 'Pay 1 SOL & Submit 💀';
+        btn.textContent = 'Launch Campaign 💀';
         return;
       }
 

@@ -1,427 +1,800 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FudFun.xyz — FUD is Fun.</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FudFun.xyz — FUD is Fun</title>
+<meta name="description" content="Launch a FUD campaign in seconds. The internet does the rest."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --ink:#0B0C13;
-  --ink-2:#101220;
-  --ink-3:#171a2b;
-  --line:rgba(255,255,255,.08);
-  --line-2:rgba(255,255,255,.14);
-  --text:#ECEDF5;
-  --dim:#8A8DA3;
-  --dim-2:#5d6075;
-  --accent:#FF3D00;
-  --accent-2:#FF9100;
-  --gold:#FFC53D;
-  --good:#2BD576;
-  --bad:#FF5C5C;
-  --r:16px;
-  --r-sm:11px;
-  --shadow:0 18px 50px -20px rgba(0,0,0,.7);
+  --bg:#060709;--bg2:#0e0f14;--bg3:#14161d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.14);
+  --text:#ECEDF5;--dim:#8A8DA3;--dim2:#5d6075;
+  --red:#FF3D00;--orange:#FF9100;--gold:#FFC53D;--green:#2BD576;
+  --r:13px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{min-height:100%}
-body{
-  background:var(--ink);
-  color:var(--text);
-  font-family:'Inter',system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-  line-height:1.5;
-}
-body::before{
-  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(60% 55% at 75% -5%, color-mix(in srgb,#FF3D00 26%,transparent), transparent 70%),
-    radial-gradient(50% 40% at 10% 5%, color-mix(in srgb,#FF9100 18%,transparent), transparent 65%),
-    radial-gradient(40% 35% at 50% 95%, color-mix(in srgb,#FF3D00 12%,transparent), transparent 65%);
-  opacity:.65;
-}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
-.mono{font-family:'Space Mono',monospace}
-.grotesk{font-family:'Space Grotesk',sans-serif}
-.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 20px}
 
+/* ── NAV ─────────────────────────── */
 nav{
-  position:sticky;top:0;z-index:50;
-  backdrop-filter:blur(14px);
-  background:color-mix(in srgb,var(--ink) 75%,transparent);
-  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:300;
+  background:rgba(6,7,9,.92);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+  height:54px;display:flex;align-items:center;padding:0 14px;gap:10px;
 }
-.nav-row{display:flex;align-items:center;gap:12px;height:64px}
-.wordmark{
-  font-family:'Space Grotesk';font-weight:700;font-size:18px;letter-spacing:-.02em;
-  display:flex;align-items:center;gap:9px;
+.logo{font-family:'Space Grotesk';font-weight:700;font-size:18px;letter-spacing:-.02em;flex-shrink:0}
+.tabs{display:flex;gap:2px;flex:1;justify-content:center}
+.tab{
+  font-family:'Space Grotesk';font-size:13px;font-weight:600;
+  padding:6px 13px;border-radius:99px;border:none;cursor:pointer;
+  background:transparent;color:var(--dim);transition:all .15s;
 }
-.wordmark .skull{font-size:22px;line-height:1}
-.spacer{flex:1}
+.tab.active{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.tab:not(.active):hover{color:var(--text)}
+.btn-launch{
+  font-family:'Space Grotesk';font-weight:700;font-size:14px;
+  padding:9px 18px;border-radius:99px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  color:#fff;flex-shrink:0;
+  box-shadow:0 4px 18px -8px var(--red);
+  transition:transform .12s,box-shadow .12s;
+}
+.btn-launch:hover{transform:translateY(-1px);box-shadow:0 8px 22px -8px var(--red)}
+@media(max-width:500px){.tabs{display:none}}
 
-.btn{
-  font-family:'Space Grotesk';font-weight:600;font-size:14px;
-  border:0;border-radius:999px;padding:10px 20px;cursor:pointer;
-  display:inline-flex;align-items:center;gap:7px;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  color:#0a0a0f;
-  box-shadow:0 8px 22px -10px var(--accent);
-  transition:transform .12s,box-shadow .12s,filter .12s;
-  white-space:nowrap;
-  text-decoration:none;
+/* ── TICKER ──────────────────────── */
+.ticker{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  overflow:hidden;height:32px;display:flex;align-items:center;
+  font-family:'Space Mono';font-size:11px;color:var(--dim);
+  user-select:none;
 }
-.btn:hover{transform:translateY(-1px);box-shadow:0 12px 28px -8px var(--accent);filter:brightness(1.07)}
-.btn:active{transform:translateY(0)}
-.btn.ghost{
-  background:transparent;color:var(--text);
-  border:1px solid var(--line-2);box-shadow:none;
-}
-.btn.ghost:hover{border-color:rgba(255,255,255,.35);filter:none}
-.btn.lg{padding:14px 28px;font-size:16px}
+.ticker-inner{white-space:nowrap;display:inline-block;animation:scroll 28s linear infinite}
+.ticker:hover .ticker-inner{animation-play-state:paused}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.t-item{display:inline;padding:0 20px}
+.t-skull{color:var(--red)}
+.t-amt{color:var(--gold)}
 
-.hero{
-  min-height:92vh;display:flex;align-items:center;justify-content:center;
-  text-align:center;padding:60px 0 50px;
+/* ── GRID ────────────────────────── */
+.main{max-width:1300px;margin:0 auto;padding:18px 14px 60px}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  gap:12px;
 }
-.hero-inner{max-width:780px;margin:0 auto}
-.kicker{
-  display:inline-flex;align-items:center;gap:8px;
-  font-family:'Space Mono';font-size:12px;letter-spacing:.15em;text-transform:uppercase;
-  color:var(--dim);
-  border:1px solid var(--line-2);border-radius:999px;padding:7px 16px;
-  margin-bottom:28px;
-}
-.kicker .skull{font-size:14px}
-.hero h1{
-  font-family:'Space Grotesk';font-weight:700;
-  font-size:clamp(56px,12vw,108px);
-  line-height:.95;letter-spacing:-.04em;
-  margin-bottom:22px;
-}
-.fud-word{
-  background:linear-gradient(100deg,#FF3D00 0%,#FF6B00 40%,#FF9100 70%,#FFC53D 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  display:inline-block;
-}
-.hero-sub{
-  font-size:clamp(15px,2.2vw,18px);color:var(--dim);
-  max-width:600px;margin:0 auto 36px;line-height:1.6;
-}
-.hero-ctas{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+@media(max-width:580px){.grid{grid-template-columns:1fr 1fr;gap:8px}}
+@media(max-width:360px){.grid{grid-template-columns:1fr}}
 
-.section-label{
-  font-family:'Space Mono';font-size:11px;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--dim);margin-bottom:22px;
+/* skeleton */
+.skel{
+  border-radius:var(--r);height:260px;
+  background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s linear infinite;
 }
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 
-.categories{padding:70px 0}
-.cat-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
-}
-@media(max-width:900px){.cat-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:480px){.cat-grid{grid-template-columns:1fr 1fr}}
-
-.cat-card{
-  background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);
-  padding:22px 18px;display:flex;flex-direction:column;gap:10px;
+/* ── CARD ────────────────────────── */
+.card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;display:flex;flex-direction:column;
+  cursor:pointer;position:relative;
   transition:border-color .15s,transform .15s,box-shadow .15s;
-  text-decoration:none;color:inherit;
-  cursor:pointer;
 }
-.cat-card:hover{
-  border-color:var(--accent);transform:translateY(-3px);
-  box-shadow:0 0 0 1px var(--accent), 0 16px 40px -16px color-mix(in srgb,var(--accent) 50%,transparent);
-}
-.cat-icon{font-size:28px;line-height:1}
-.cat-name{font-family:'Space Grotesk';font-weight:600;font-size:15px}
-.cat-desc{font-size:13px;color:var(--dim);line-height:1.5}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 12px 36px -16px rgba(0,0,0,.7)}
 
-.how-section{padding:70px 0}
-.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media(max-width:700px){.how-grid{grid-template-columns:1fr}}
+@keyframes flashIn{
+  0%{opacity:0;transform:translateY(-14px)}
+  25%{box-shadow:0 0 0 2px var(--red),0 0 30px -10px var(--red)}
+  70%{box-shadow:0 0 0 1px rgba(255,61,0,.3)}
+  100%{opacity:1;transform:translateY(0);box-shadow:none}
+}
+.card.new{animation:flashIn .55s ease-out both}
 
-.step-card{
-  background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:28px 22px;
+.card-banner{
+  height:120px;position:relative;overflow:hidden;flex-shrink:0;
+  background:linear-gradient(135deg,#1a0800,#0d0012);
 }
-.step-num{
-  width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
-  font-family:'Space Mono';font-weight:700;font-size:15px;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  color:#0a0a0f;margin-bottom:16px;flex-shrink:0;
+.card-banner img{width:100%;height:100%;object-fit:cover;opacity:.75}
+.card-banner-grad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.6) 100%)}
+.card-cat{
+  position:absolute;top:8px;left:8px;
+  font-family:'Space Mono';font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:2px 8px;border-radius:99px;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);
 }
-.step-card h3{font-family:'Space Grotesk';font-weight:600;font-size:17px;margin-bottom:8px}
-.step-card p{font-size:14px;color:var(--dim);line-height:1.6;margin:0}
+.card-age{
+  position:absolute;top:8px;right:8px;
+  font-family:'Space Mono';font-size:9px;color:var(--dim);
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
+  padding:2px 7px;border-radius:99px;border:1px solid rgba(255,255,255,.07);
+}
+.card-avatar{
+  position:absolute;bottom:-20px;left:12px;
+  width:44px;height:44px;border-radius:50%;
+  border:3px solid var(--bg2);background:var(--bg3);object-fit:cover;flex-shrink:0;
+}
 
-.feed-section{padding:70px 0}
-.feed-header{display:flex;align-items:center;gap:14px;margin-bottom:24px}
-.live-dot{
-  width:8px;height:8px;border-radius:50%;background:var(--accent);
-  box-shadow:0 0 0 0 var(--accent);animation:pulse 2s infinite;
-  flex-shrink:0;
+.card-body{padding:28px 12px 12px;flex:1;display:flex;flex-direction:column;gap:6px}
+.card-name{font-family:'Space Grotesk';font-weight:700;font-size:15px;letter-spacing:-.01em}
+.card-why{
+  font-size:12px;color:var(--dim);line-height:1.5;flex:1;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
 }
-@keyframes pulse{
-  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 70%,transparent)}
-  70%{box-shadow:0 0 0 8px transparent}
-  100%{box-shadow:0 0 0 0 transparent}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
+.card-tip-total{font-family:'Space Mono';font-size:11px;color:var(--gold)}
+.btn-tip{
+  font-family:'Space Grotesk';font-size:12px;font-weight:600;
+  padding:5px 12px;border-radius:99px;border:1px solid var(--border2);
+  background:transparent;color:var(--dim);cursor:pointer;transition:all .13s;
 }
-.feed-title{font-family:'Space Grotesk';font-weight:600;font-size:20px}
+.btn-tip:hover{background:rgba(255,197,61,.1);color:var(--gold);border-color:rgba(255,197,61,.3)}
+.no-wallet{font-size:11px;color:var(--dim2)}
 
-.feed-list{display:grid;gap:10px}
-.feed-item{
-  background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);
-  padding:16px 18px;display:flex;align-items:center;gap:14px;
-  transition:border-color .15s,transform .12s;
-  text-decoration:none;color:inherit;
-}
-.feed-item:hover{border-color:var(--line-2);transform:translateX(3px)}
-.feed-target{font-family:'Space Grotesk';font-weight:600;font-size:15px;min-width:0;flex-shrink:0}
-.feed-reason{font-size:13px;color:var(--dim);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.feed-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.badge{
-  font-family:'Space Mono';font-size:10px;letter-spacing:.07em;text-transform:uppercase;
-  padding:3px 9px;border-radius:99px;border:1px solid;
-}
-.badge-ex{color:#FF5C5C;border-color:rgba(255,92,92,.4);background:rgba(255,92,92,.08)}
-.badge-boss{color:#b388ff;border-color:rgba(179,136,255,.4);background:rgba(179,136,255,.08)}
-.badge-family{color:var(--gold);border-color:rgba(255,197,61,.4);background:rgba(255,197,61,.08)}
-.badge-hate{color:#FF5C5C;border-color:rgba(255,92,92,.4);background:rgba(255,92,92,.08)}
-.badge-profit{color:var(--good);border-color:rgba(43,213,118,.4);background:rgba(43,213,118,.08)}
-.badge-boredom{color:var(--dim);border-color:rgba(138,141,163,.3);background:rgba(138,141,163,.07)}
-.badge-fun{color:#FF9100;border-color:rgba(255,145,0,.4);background:rgba(255,145,0,.08)}
-.badge-coin{color:#FF5C5C;border-color:rgba(255,92,92,.4);background:rgba(255,92,92,.08)}
-.badge-fudfund{color:#FF5C5C;border-color:rgba(255,92,92,.4);background:rgba(255,92,92,.08)}
-.badge-smear{color:#b388ff;border-color:rgba(179,136,255,.4);background:rgba(179,136,255,.08)}
-.badge-default{color:var(--dim);border-color:rgba(138,141,163,.3);background:rgba(138,141,163,.07)}
+.empty{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--dim)}
+.empty h3{font-family:'Space Grotesk';font-size:20px;color:var(--text);margin-bottom:8px}
 
-.tip-amt{font-family:'Space Mono';font-size:12px;color:var(--gold)}
-
-.skeleton{animation:shimmer 1.5s infinite linear;background:linear-gradient(90deg,var(--ink-2) 25%,var(--ink-3) 50%,var(--ink-2) 75%);background-size:200% 100%;border-radius:6px}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skel-row{height:68px;border-radius:var(--r);margin-bottom:10px}
-
-.empty-feed{
-  border:1px dashed var(--line-2);border-radius:var(--r);
-  padding:48px 24px;text-align:center;
+/* ── OVERLAY / MODAL ─────────────── */
+.overlay{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(6,7,9,.88);backdrop-filter:blur(14px);
+  align-items:center;justify-content:center;padding:12px;
 }
-.empty-feed p{color:var(--dim);margin-bottom:18px;font-size:15px}
+.overlay.open{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:20px;
+  padding:26px;width:100%;max-width:510px;max-height:92vh;
+  overflow-y:auto;position:relative;
+  scrollbar-width:thin;scrollbar-color:var(--bg3) transparent;
+}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-track{background:transparent}
+.modal::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:4px}
+.m-close{
+  position:absolute;top:14px;right:14px;background:var(--bg3);border:none;
+  color:var(--dim);width:30px;height:30px;border-radius:50%;font-size:17px;
+  cursor:pointer;display:grid;place-items:center;transition:color .13s;
+  line-height:1;
+}
+.m-close:hover{color:var(--text)}
 
-footer{
-  border-top:1px solid var(--line);padding:48px 0 56px;
-  position:relative;z-index:1;
+/* launch form */
+.m-title{
+  font-family:'Space Grotesk';font-weight:700;font-size:23px;letter-spacing:-.02em;
+  background:linear-gradient(90deg,var(--red),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:4px;padding-right:36px;
 }
-.foot-wordmark{
-  font-family:'Space Grotesk';font-weight:700;font-size:32px;letter-spacing:-.03em;
-  background:linear-gradient(100deg,var(--accent),var(--accent-2));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  margin-bottom:12px;
+.m-sub{font-size:13px;color:var(--dim);margin-bottom:22px}
+.field{margin-bottom:16px}
+.field label{
+  display:block;font-family:'Space Mono';font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;
 }
-.foot-tag{color:var(--dim);font-size:14px}
+.field input,.field textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:10px;color:var(--text);font-family:'Inter';font-size:14px;
+  padding:10px 13px;outline:none;resize:none;
+  transition:border-color .13s,box-shadow .13s;
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--dim2)}
+.field input:focus,.field textarea:focus{
+  border-color:rgba(255,61,0,.5);box-shadow:0 0 0 3px rgba(255,61,0,.1);
+}
+.field-hint{font-size:11px;color:var(--dim2);margin-top:5px}
+
+.pills-label{
+  display:block;font-family:'Space Mono';font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;
+}
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.pill{
+  cursor:pointer;border:1px solid var(--border2);border-radius:99px;
+  background:var(--bg3);color:var(--dim);font-size:13px;font-weight:500;
+  padding:6px 12px;user-select:none;transition:all .13s;
+}
+.pill:hover{color:var(--text)}
+.pill.on{background:linear-gradient(135deg,var(--red),var(--orange));border-color:transparent;color:#fff}
+
+.preview-box{
+  display:none;margin-top:8px;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:10px;padding:11px;align-items:center;gap:10px;
+}
+.preview-box.show{display:flex}
+.preview-box img{width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg2)}
+.pplatform{font-family:'Space Mono';font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.06em}
+.pname{font-size:14px;font-weight:600;margin-top:2px}
+
+.m-error{
+  display:none;margin-top:10px;padding:10px 13px;border-radius:10px;
+  background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);
+  font-size:13px;color:#FF5C5C;
+}
+.m-error.show{display:block}
+.btn-main{
+  width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  color:#fff;font-family:'Space Grotesk';font-size:16px;font-weight:700;
+  box-shadow:0 6px 22px -8px var(--red);transition:transform .12s,opacity .12s;
+  margin-top:6px;
+}
+.btn-main:hover:not(:disabled){transform:translateY(-1px)}
+.btn-main:disabled{opacity:.5;cursor:not-allowed}
+
+/* success state */
+.success-wrap{display:none;text-align:center;padding:20px 0}
+.s-skull{font-size:52px;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(255,61,0,.45))}
+.s-title{font-family:'Space Grotesk';font-weight:700;font-size:26px;margin-bottom:8px}
+.s-sub{font-size:14px;color:var(--dim);line-height:1.6;margin-bottom:24px}
+.btn-back{
+  display:inline-block;padding:13px 30px;border:none;border-radius:99px;cursor:pointer;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  color:#fff;font-family:'Space Grotesk';font-size:15px;font-weight:700;
+}
+
+/* ── TIP MODAL ───────────────────── */
+.tip-target{font-family:'Space Grotesk';font-weight:700;font-size:21px;text-align:center;margin-bottom:4px;padding-right:36px}
+.tip-sub{font-size:13px;color:var(--dim);text-align:center;margin-bottom:20px}
+.tip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}
+.tip-btn{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  font-family:'Space Mono';font-size:12px;color:var(--dim);
+  padding:11px 6px;cursor:pointer;text-align:center;transition:all .13s;
+}
+.tip-btn:hover,.tip-btn.on{
+  background:rgba(255,197,61,.12);border-color:rgba(255,197,61,.4);color:var(--gold);
+}
+.tip-custom{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:'Space Mono';font-size:14px;
+  padding:10px 13px;outline:none;text-align:center;margin-bottom:14px;
+  transition:border-color .13s;
+}
+.tip-custom:focus{border-color:rgba(255,197,61,.4)}
+.tip-custom::placeholder{color:var(--dim2)}
+.btn-tip-send{
+  width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:#0a0a0f;font-family:'Space Grotesk';font-size:16px;font-weight:700;
+  transition:transform .12s,opacity .12s;
+}
+.btn-tip-send:hover:not(:disabled){transform:translateY(-1px)}
+.btn-tip-send:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── TOAST ───────────────────────── */
+#toast{
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(60px);
+  z-index:900;
+  background:var(--bg2);border:1px solid var(--border2);border-radius:99px;
+  padding:11px 20px;font-family:'Space Grotesk';font-size:14px;font-weight:600;
+  white-space:nowrap;opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .25s;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
-  <div class="wrap nav-row">
-    <a href="/" class="wordmark">
-      <span class="skull">💀</span>
-      FudFun.xyz
-    </a>
-    <div class="spacer"></div>
-    <a href="login.html" class="btn ghost" style="padding:9px 18px;font-size:13px">Sign in</a>
-    <a href="signup.html" class="btn" style="padding:9px 18px;font-size:13px">Start FUDding →</a>
+  <a href="/" class="logo">💀 FudFun</a>
+  <div class="tabs">
+    <button class="tab active" data-sort="new">🆕 New</button>
+    <button class="tab" data-sort="hot">🔥 Hot</button>
   </div>
+  <button id="launch-btn" class="btn-launch">Launch FUD 💀</button>
 </nav>
 
-<section class="hero">
-  <div class="wrap hero-inner">
-    <div class="kicker"><span class="skull">💀</span> 1 SOL to start a campaign</div>
-    <h1>
-      <span class="fud-word">FUD</span> IS FUN.
-    </h1>
-    <p class="hero-sub">
-      Pay 1 SOL. Submit your target. We review it. The internet cooks them.
-      Quality submissions only — serious roasts rewarded in SOL.
-    </p>
-    <div class="hero-ctas">
-      <a href="signup.html" class="btn lg">Submit a Target →</a>
-      <a href="login.html" class="btn ghost lg">Sign in</a>
-    </div>
-  </div>
-</section>
+<!-- TICKER -->
+<div class="ticker"><span class="ticker-inner" id="ticker-inner"><span class="t-item">💀 FudFun.xyz — the internet cooks them</span></span></div>
 
-<section class="categories">
-  <div class="wrap">
-    <div class="section-label">Pick your poison</div>
-    <div class="cat-grid">
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">💔</div>
-        <div class="cat-name">FUD Your Ex</div>
-        <div class="cat-desc">They broke your heart. Break their reputation.</div>
-      </a>
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">😤</div>
-        <div class="cat-name">FUD Your Boss</div>
-        <div class="cat-desc">Micromanager? Credit-stealer? Expose them.</div>
-      </a>
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">👴</div>
-        <div class="cat-name">FUD Your Father</div>
-        <div class="cat-desc">Daddy issues? We've got a campaign template for that.</div>
-      </a>
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">🔥</div>
-        <div class="cat-name">FUD for Hate</div>
-        <div class="cat-desc">Pure, unfiltered, justified rage. No explanation needed.</div>
-      </a>
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">💰</div>
-        <div class="cat-name">FUD for Profit</div>
-        <div class="cat-desc">Short a stock? Competing project? Do it for the money.</div>
-      </a>
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">😴</div>
-        <div class="cat-name">FUD for Boredom</div>
-        <div class="cat-desc">Nothing on Netflix. Might as well destroy someone's day.</div>
-      </a>
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">😂</div>
-        <div class="cat-name">FUD for Fun</div>
-        <div class="cat-desc">It's all a joke. (It's never just a joke.)</div>
-      </a>
-      <a href="signup.html" class="cat-card">
-        <div class="cat-icon">🎯</div>
-        <div class="cat-name">FUD a Coin</div>
-        <div class="cat-desc">Crypto project rug? Token going to zero? Do it publicly.</div>
-      </a>
-    </div>
+<!-- FEED -->
+<main class="main">
+  <div class="grid" id="grid">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
   </div>
-</section>
+</main>
 
-<section class="how-section">
-  <div class="wrap">
-    <div class="section-label">How it works</div>
-    <div class="how-grid">
-      <div class="step-card">
-        <div class="step-num">1</div>
-        <h3>Pay 1 SOL &amp; Submit</h3>
-        <p>Name your target, write your grievances, pay 1 SOL. Submission goes into our review queue.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-num">2</div>
-        <h3>We Review &amp; Approve</h3>
-        <p>We check for quality and legality. Approved campaigns go live on the feed within 24hrs.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-num">3</div>
-        <h3>Community Delivers</h3>
-        <p>The internet piles on. Best FUDders get tipped in SOL. Quality roasts get rewarded.</p>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- LAUNCH MODAL -->
+<div class="overlay" id="launch-overlay">
+  <div class="modal">
+    <button class="m-close" id="lc-close">×</button>
 
-<section class="feed-section">
-  <div class="wrap">
-    <div class="feed-header">
-      <div class="live-dot"></div>
-      <div class="feed-title">Live FUD Feed</div>
-    </div>
-    <div class="feed-list" id="feedList">
-      <div class="skeleton skel-row"></div>
-      <div class="skeleton skel-row"></div>
-      <div class="skeleton skel-row"></div>
-    </div>
-  </div>
-</section>
+    <div id="lc-form-wrap">
+      <div class="m-title">Launch a FUD 💀</div>
+      <p class="m-sub">Free. Instant. The internet does the rest.</p>
 
-<footer>
-  <div class="wrap">
-    <div class="foot-wordmark">💀 FudFun.xyz</div>
-    <div class="foot-tag">FUD responsibly. Or don't. We're not your dad (but we can FUD him).</div>
+      <form id="lc-form" novalidate>
+        <div class="field">
+          <label for="lf-target">Who's getting FUD'd?</label>
+          <input id="lf-target" type="text" placeholder="Name or @handle…" required autocomplete="off"/>
+        </div>
+
+        <span class="pills-label">Why</span>
+        <div class="pills" id="lf-pills">
+          <div class="pill on" data-v="hate">🔥 Hate</div>
+          <div class="pill" data-v="ex">💔 Ex</div>
+          <div class="pill" data-v="boss">😤 Boss</div>
+          <div class="pill" data-v="family">👴 Family</div>
+          <div class="pill" data-v="profit">💰 Profit</div>
+          <div class="pill" data-v="boredom">😴 Boredom</div>
+          <div class="pill" data-v="fun">😂 Fun</div>
+          <div class="pill" data-v="coin">🎯 Coin</div>
+        </div>
+
+        <div class="field">
+          <label for="lf-why">The Grievance</label>
+          <textarea id="lf-why" rows="4" placeholder="Give the internet ammunition. The more specific, the better." required></textarea>
+        </div>
+
+        <div class="field">
+          <label for="lf-social">Target's X / TikTok profile (optional)</label>
+          <input id="lf-social" type="url" placeholder="https://x.com/their_handle" spellcheck="false"/>
+          <p class="field-hint">We'll pull their avatar for the campaign card.</p>
+          <div class="preview-box" id="lf-preview">
+            <img id="lf-pthumb" src="" alt=""/>
+            <div>
+              <div class="pplatform" id="lf-pplatform"></div>
+              <div class="pname" id="lf-pname"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="lf-banner">Campaign banner image URL (optional)</label>
+          <input id="lf-banner" type="url" placeholder="https://… a meme, screenshot, whatever" spellcheck="false"/>
+          <p class="field-hint">Shows as the card background. Paste any image URL.</p>
+        </div>
+
+        <div class="field">
+          <label for="lf-wallet">Your Solana wallet (optional — to receive tips)</label>
+          <input id="lf-wallet" type="text" placeholder="SOL address" spellcheck="false"/>
+          <p class="field-hint">Community tips go here. Skip if you don't want tips.</p>
+        </div>
+
+        <div class="m-error" id="lf-err"></div>
+        <button type="submit" class="btn-main" id="lf-submit">Launch Campaign 💀</button>
+      </form>
+    </div>
+
+    <div class="success-wrap" id="lc-success">
+      <div class="s-skull">💀</div>
+      <div class="s-title">FUD Launched!</div>
+      <p class="s-sub">Your campaign is live on the feed right now.<br/>The internet will handle the rest.</p>
+      <button class="btn-back" id="lc-done">Back to Feed</button>
+    </div>
   </div>
-</footer>
+</div>
+
+<!-- TIP MODAL -->
+<div class="overlay" id="tip-overlay">
+  <div class="modal" style="max-width:360px">
+    <button class="m-close" id="tp-close">×</button>
+    <div class="tip-target" id="tp-name">Target</div>
+    <p class="tip-sub">Support this campaign with SOL</p>
+    <div class="tip-grid">
+      <button class="tip-btn" data-sol="0.05">◎ 0.05</button>
+      <button class="tip-btn" data-sol="0.1">◎ 0.1</button>
+      <button class="tip-btn on" data-sol="0.5">◎ 0.5</button>
+      <button class="tip-btn" data-sol="1">◎ 1</button>
+    </div>
+    <input class="tip-custom" id="tp-custom" type="number" placeholder="Custom SOL amount" min="0.001" step="0.01"/>
+    <button class="btn-tip-send" id="tp-send">Send Tip 💸</button>
+    <div class="m-error" id="tp-err"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
 
 <script type="module">
-import { Client, Databases, Query } from
+import { Client, Account, Databases, ID, Query } from
   'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
 
 const ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
 const PROJECT  = '6a2bc15c00065b3c91a0';
 const DB       = 'growthgenie';
+const COLL     = 'campaigns';
 
-const esc = s => (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT);
+const account = new Account(client);
+const dbs     = new Databases(client);
 
-const BADGE_MAP = {
-  ex:'badge-ex', boss:'badge-boss', family:'badge-family',
-  hate:'badge-hate', profit:'badge-profit', boredom:'badge-boredom',
-  fun:'badge-fun', coin:'badge-coin', fudfund:'badge-fudfund',
-  smear:'badge-smear',
+// ── State ──────────────────────────
+let user        = null;
+let sortMode    = 'new';
+let seenIds     = new Set();
+let selectedCat = 'hate';
+let previewData = null;
+let tipTargetWallet = null;
+let tipTargetName   = '';
+let selectedTipAmt  = 0.5;
+let solanaWeb3      = null;
+
+// ── Auth (silent) ─────────────────
+account.get().then(u => { user = u; }).catch(() => {});
+
+// ── Helpers ────────────────────────
+const esc = s => (s||'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
+
+function ago(iso) {
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60)    return `${s}s`;
+  if (s < 3600)  return `${Math.floor(s/60)}m`;
+  if (s < 86400) return `${Math.floor(s/3600)}h`;
+  return `${Math.floor(s/86400)}d`;
+}
+
+const EMOJI = {hate:'🔥',ex:'💔',boss:'😤',family:'👴',profit:'💰',boredom:'😴',fun:'😂',coin:'🎯'};
+const GRAD  = {
+  hate:'135deg,#2a0800,#0d0018',ex:'135deg,#1e061a,#060010',
+  boss:'135deg,#141400,#060800',profit:'135deg,#001a00,#000d04',
+  boredom:'135deg,#080814,#030308',fun:'135deg,#1a0a00,#050200',
+  family:'135deg,#141000,#060400',coin:'135deg,#0c0020,#030008',
 };
 
-function categoryLabel(doc) {
-  const cat = (doc.fudCategory || '').toLowerCase();
-  const type = (doc.campaignType || '').toLowerCase();
-  if (cat) return { key: cat, label: cat.charAt(0).toUpperCase() + cat.slice(1) };
-  if (type === 'fudfund') return { key: 'fudfund', label: 'FUD' };
-  if (type === 'smear') return { key: 'smear', label: 'Smear' };
-  return { key: 'default', label: 'Campaign' };
+function tgt(doc) { return doc.fudTarget || doc.smearTarget || doc.projectName || '???'; }
+
+function makeCard(doc, flash) {
+  const name   = esc(tgt(doc));
+  const why    = esc((doc.tag || '').slice(0, 250));
+  const cat    = (doc.fudCategory || '').toLowerCase();
+  const emoji  = EMOJI[cat] || '💀';
+  const label  = cat ? emoji + ' ' + cat.charAt(0).toUpperCase() + cat.slice(1) : '💀 FUD';
+  // banner: custom banner first, then social thumb, then gradient
+  const banner = doc.bannerUrl || doc.socialPreviewThumb || '';
+  const thumb  = doc.socialPreviewThumb || doc.bannerUrl || '';
+  const bg     = banner ? '' : `background:linear-gradient(${GRAD[cat]||GRAD.hate})`;
+  const tw     = esc(doc.tipWallet || '');
+
+  const d = document.createElement('div');
+  d.className = 'card' + (flash ? ' new' : '');
+  d.dataset.id = doc.$id;
+  d.innerHTML = `
+    <div class="card-banner" style="${bg}">
+      ${banner ? `<img src="${esc(banner)}" alt="" loading="lazy"/>` : ''}
+      <div class="card-banner-grad"></div>
+      <span class="card-cat">${label}</span>
+      <span class="card-age">${ago(doc.$createdAt)}</span>
+      ${thumb ? `<img class="card-avatar" src="${esc(thumb)}" alt=""/>` : ''}
+    </div>
+    <div class="card-body">
+      <div class="card-name">💀 ${name}</div>
+      <div class="card-why">${why}</div>
+      <div class="card-foot">
+        <span class="card-tip-total">${tw ? '◎ tip' : ''}</span>
+        ${tw
+          ? `<button class="btn-tip" data-wallet="${tw}" data-name="${name}">💸 Tip</button>`
+          : `<span class="no-wallet">no tip wallet</span>`
+        }
+      </div>
+    </div>`;
+  return d;
 }
 
-function targetName(doc) {
-  return doc.fudTarget || doc.smearTarget || doc.projectName || 'Unknown';
+// ── Feed ───────────────────────────
+async function loadFeed(flash) {
+  try {
+    const queries = [Query.equal('active', true), Query.limit(60), Query.orderDesc('$createdAt')];
+    const res = await dbs.listDocuments(DB, COLL, queries);
+    let docs = res.documents;
+
+    // "hot" = most tips first (tip wallet campaigns at top, otherwise newest)
+    if (sortMode === 'hot') {
+      docs = [...docs].sort((a, b) => (b.tipWallet ? 1 : 0) - (a.tipWallet ? 1 : 0));
+    }
+
+    const grid = document.getElementById('grid');
+
+    if (!docs.length) {
+      grid.innerHTML = `<div class="empty"><h3>No FUD yet 💀</h3><p>Be the first. Hit "Launch FUD" above.</p></div>`;
+      return;
+    }
+
+    if (flash) {
+      const fresh = docs.filter(d => !seenIds.has(d.$id));
+      fresh.forEach(d => {
+        grid.insertBefore(makeCard(d, true), grid.firstChild);
+        seenIds.add(d.$id);
+      });
+    } else {
+      grid.innerHTML = '';
+      docs.forEach(d => { grid.appendChild(makeCard(d, false)); seenIds.add(d.$id); });
+    }
+
+    updateTicker(docs.slice(0, 10));
+    bindCards();
+  } catch (err) { console.error(err); }
 }
 
-function renderFeed(docs) {
-  const list = document.getElementById('feedList');
-  if (!docs || !docs.length) {
-    list.innerHTML = `
-      <div class="empty-feed">
-        <p>No campaigns yet. Be the first to start a FUD!</p>
-        <a href="signup.html" class="btn">Start a FUD Campaign →</a>
-      </div>`;
+function bindCards() {
+  document.querySelectorAll('.btn-tip').forEach(btn => {
+    btn.onclick = e => {
+      e.stopPropagation();
+      openTipModal(btn.dataset.wallet, btn.dataset.name);
+    };
+  });
+  document.querySelectorAll('.card').forEach(card => {
+    card.onclick = e => {
+      if (e.target.closest('.btn-tip')) return;
+      window.location.href = `campaign.html?c=${card.dataset.id}`;
+    };
+  });
+}
+
+// ── Ticker ─────────────────────────
+function updateTicker(docs) {
+  if (!docs.length) return;
+  const inner = document.getElementById('ticker-inner');
+  const items = docs.map(d =>
+    `<span class="t-item"><span class="t-skull">💀</span> ${esc(tgt(d))} <span style="color:var(--border2)">·</span> ${ago(d.$createdAt)} ago</span>`
+  ).join('');
+  inner.innerHTML = items + items;
+}
+
+// ── Auto-refresh ───────────────────
+loadFeed(false);
+setInterval(() => loadFeed(true), 10000);
+
+// ── Sort tabs ──────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    sortMode = t.dataset.sort;
+    seenIds.clear();
+    document.getElementById('grid').innerHTML = '<div class="skel"></div>'.repeat(6);
+    loadFeed(false);
+  });
+});
+
+// ── Toast ──────────────────────────
+function toast(msg, ms = 3200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+// ── Launch modal ───────────────────
+document.getElementById('launch-btn').addEventListener('click', () => {
+  document.getElementById('launch-overlay').classList.add('open');
+});
+document.getElementById('lc-close').addEventListener('click', () => closeLaunch());
+document.getElementById('launch-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeLaunch();
+});
+
+function closeLaunch() {
+  document.getElementById('launch-overlay').classList.remove('open');
+}
+
+// pill selection
+document.getElementById('lf-pills').addEventListener('click', e => {
+  const p = e.target.closest('.pill');
+  if (!p) return;
+  document.querySelectorAll('#lf-pills .pill').forEach(x => x.classList.remove('on'));
+  p.classList.add('on');
+  selectedCat = p.dataset.v;
+});
+
+// social preview debounce
+let prevDebounce;
+document.getElementById('lf-social').addEventListener('input', e => {
+  const url = e.target.value.trim();
+  clearTimeout(prevDebounce);
+  document.getElementById('lf-preview').classList.remove('show');
+  previewData = null;
+  if (!url || !/x\.com|twitter\.com|tiktok\.com/i.test(url)) return;
+  prevDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`/api/link-preview?url=${encodeURIComponent(url)}`);
+      const d = await r.json();
+      if (!r.ok || !d.authorName) return;
+      document.getElementById('lf-pplatform').textContent = d.platform === 'twitter' ? '𝕏 Twitter / X' : 'TikTok';
+      document.getElementById('lf-pname').textContent = d.authorName;
+      if (d.thumbnailUrl) document.getElementById('lf-pthumb').src = d.thumbnailUrl;
+      previewData = d;
+      document.getElementById('lf-preview').classList.add('show');
+    } catch {}
+  }, 650);
+});
+
+function makeSlug(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+    + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+
+function lfErr(msg) {
+  const el = document.getElementById('lf-err');
+  el.textContent = msg; el.classList.add('show');
+}
+function lfClearErr() {
+  const el = document.getElementById('lf-err');
+  el.textContent = ''; el.classList.remove('show');
+}
+
+document.getElementById('lc-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  lfClearErr();
+  const target = document.getElementById('lf-target').value.trim();
+  const why    = document.getElementById('lf-why').value.trim();
+  const social = document.getElementById('lf-social').value.trim();
+  const banner = document.getElementById('lf-banner').value.trim();
+  const wallet = document.getElementById('lf-wallet').value.trim();
+
+  if (!target) { lfErr('Who are we FUDing?'); return; }
+  if (!why)    { lfErr('Tell us what they did.'); return; }
+
+  if (!user) {
+    try { user = await account.get(); } catch {
+      closeLaunch();
+      window.location.href = 'login.html?next=/';
+      return;
+    }
+  }
+
+  const btn = document.getElementById('lf-submit');
+  btn.disabled = true; btn.textContent = 'Checking content…';
+
+  // AI moderation
+  try {
+    const mr = await fetch('/api/moderate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetName: target, reason: why, category: selectedCat }),
+    });
+    const md = await mr.json();
+    if (!md.allowed) {
+      lfErr(md.reason || 'Content violates guidelines.');
+      btn.disabled = false; btn.textContent = 'Launch Campaign 💀';
+      return;
+    }
+  } catch {}
+
+  btn.textContent = 'Launching…';
+
+  const doc = {
+    slug:         makeSlug(target),
+    clientId:     user.$id,
+    projectName:  target,
+    title:        `FUD: ${target}`,
+    tag:          why,
+    logo:         EMOJI[selectedCat] || '💀',
+    campaignType: 'fudfund',
+    fudTarget:    target,
+    fudCategory:  selectedCat,
+    tipWallet:    wallet || null,
+    active:       true,
+    accentColor:  '#FF3D00',
+  };
+  if (social)        doc.socialLink           = social;
+  if (previewData)   doc.socialPreviewName    = previewData.authorName   || null;
+  if (previewData)   doc.socialPreviewThumb   = previewData.thumbnailUrl || null;
+  if (previewData)   doc.socialPreviewPlatform= previewData.platform     || null;
+  if (banner)        doc.bannerUrl            = banner;
+
+  try {
+    await dbs.createDocument(DB, COLL, ID.unique(), doc);
+    document.getElementById('lc-form-wrap').style.display = 'none';
+    document.getElementById('lc-success').style.display   = 'block';
+    seenIds.clear();
+    loadFeed(false);
+  } catch (err) {
+    lfErr(err?.message || 'Failed to launch. Try again.');
+    btn.disabled = false; btn.textContent = 'Launch Campaign 💀';
+  }
+});
+
+document.getElementById('lc-done').addEventListener('click', () => {
+  closeLaunch();
+  document.getElementById('lc-form-wrap').style.display = '';
+  document.getElementById('lc-success').style.display   = 'none';
+  document.getElementById('lc-form').reset();
+  previewData = null;
+  document.getElementById('lf-preview').classList.remove('show');
+  document.getElementById('lf-submit').disabled   = false;
+  document.getElementById('lf-submit').textContent = 'Launch Campaign 💀';
+  selectedCat = 'hate';
+  document.querySelectorAll('#lf-pills .pill').forEach(p => p.classList.remove('on'));
+  document.querySelector('#lf-pills .pill[data-v="hate"]').classList.add('on');
+  lfClearErr();
+});
+
+// ── Tip modal ──────────────────────
+function openTipModal(wallet, name) {
+  tipTargetWallet = wallet;
+  tipTargetName   = name;
+  selectedTipAmt  = 0.5;
+  document.getElementById('tp-name').innerHTML = '💀 ' + name;
+  document.getElementById('tp-custom').value = '';
+  document.getElementById('tp-err').textContent = '';
+  document.getElementById('tp-err').classList.remove('show');
+  document.getElementById('tp-send').disabled = false;
+  document.getElementById('tp-send').textContent = 'Send Tip 💸';
+  document.querySelectorAll('.tip-btn').forEach(b => b.classList.toggle('on', b.dataset.sol === '0.5'));
+  document.getElementById('tip-overlay').classList.add('open');
+}
+
+document.getElementById('tp-close').addEventListener('click', () => {
+  document.getElementById('tip-overlay').classList.remove('open');
+});
+document.getElementById('tip-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+document.querySelectorAll('.tip-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    selectedTipAmt = parseFloat(btn.dataset.sol);
+    document.getElementById('tp-custom').value = '';
+  });
+});
+
+document.getElementById('tp-custom').addEventListener('input', e => {
+  document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('on'));
+  selectedTipAmt = parseFloat(e.target.value) || 0;
+});
+
+async function loadSolana() {
+  if (solanaWeb3) return solanaWeb3;
+  await new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.4/lib/index.iife.min.js';
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  solanaWeb3 = window.solanaWeb3;
+  return solanaWeb3;
+}
+
+document.getElementById('tp-send').addEventListener('click', async () => {
+  const amt = selectedTipAmt;
+  if (!amt || amt <= 0) {
+    document.getElementById('tp-err').textContent = 'Pick a tip amount.';
+    document.getElementById('tp-err').classList.add('show');
     return;
   }
-  list.innerHTML = docs.map(doc => {
-    const name = esc(targetName(doc));
-    const reason = esc((doc.reason || doc.description || doc.tag || '').slice(0, 120));
-    const { key, label } = categoryLabel(doc);
-    const badgeCls = BADGE_MAP[key] || 'badge-default';
-    const slug = esc(doc.slug || doc.$id);
-    const tipLine = doc.tipAmount ? `<span class="tip-amt">◎ ${esc(String(doc.tipAmount))}</span>` : '';
-    return `
-      <a href="campaign.html?c=${slug}" class="feed-item">
-        <div class="feed-target">${name}</div>
-        <div class="feed-reason">${reason}</div>
-        <div class="feed-right">
-          <span class="badge ${badgeCls}">${label}</span>
-          ${tipLine}
-        </div>
-      </a>`;
-  }).join('');
-}
-
-async function loadFeed() {
-  try {
-    const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT);
-    const db = new Databases(client);
-    const res = await db.listDocuments(DB, 'campaigns', [
-      Query.equal('active', true),
-      Query.orderDesc('$createdAt'),
-      Query.limit(6),
-    ]);
-    renderFeed(res.documents);
-  } catch (err) {
-    renderFeed([]);
+  if (!tipTargetWallet) {
+    document.getElementById('tp-err').textContent = 'No tip wallet set.';
+    document.getElementById('tp-err').classList.add('show');
+    return;
   }
-}
 
-loadFeed();
+  const btn = document.getElementById('tp-send');
+  btn.disabled = true; btn.textContent = 'Opening wallet…';
+  document.getElementById('tp-err').classList.remove('show');
+
+  try {
+    const sw3      = await loadSolana();
+    const provider = window.phantom?.solana || window.solana;
+    if (!provider?.isPhantom) throw new Error('Phantom wallet not found. Install at phantom.app');
+
+    await provider.connect();
+    const from     = new sw3.PublicKey(provider.publicKey.toString());
+    const to       = new sw3.PublicKey(tipTargetWallet);
+    const lamports = BigInt(Math.floor(amt * 1_000_000_000));
+    const conn     = new sw3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+    const { blockhash } = await conn.getLatestBlockhash();
+
+    const tx = new sw3.Transaction({ recentBlockhash: blockhash, feePayer: from });
+    tx.add(sw3.SystemProgram.transfer({ fromPubkey: from, toPubkey: to, lamports }));
+
+    await provider.signAndSendTransaction(tx);
+    document.getElementById('tip-overlay').classList.remove('open');
+    toast(`💸 Tipped ◎${amt} to ${tipTargetName}!`);
+  } catch (err) {
+    document.getElementById('tp-err').textContent = err?.message || 'Tip failed.';
+    document.getElementById('tp-err').classList.add('show');
+    btn.disabled = false; btn.textContent = 'Send Tip 💸';
+  }
+});
 </script>
 </body>
 </html>
