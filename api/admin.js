@@ -94,6 +94,18 @@ module.exports = async (req, res) => {
   if (req.method === 'POST') {
     const { action, campaignId, userId } = req.body || {};
 
+    if (action === 'delete-all-campaigns') {
+      let deleted = 0;
+      let docs;
+      do {
+        const r = await dbs.listDocuments(DB, 'campaigns', [Query.limit(100)]);
+        docs = r.documents;
+        await Promise.all(docs.map(d => dbs.deleteDocument(DB, 'campaigns', d.$id)));
+        deleted += docs.length;
+      } while (docs.length === 100);
+      return res.status(200).json({ deleted });
+    }
+
     if (action === 'delete-campaign') {
       if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
       await dbs.deleteDocument(DB, 'campaigns', campaignId);
