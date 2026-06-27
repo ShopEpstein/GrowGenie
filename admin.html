@@ -151,6 +151,15 @@
     .tab.active { color: var(--text); border-bottom-color: var(--admin); }
     .tab:hover:not(.active) { color: var(--text); }
 
+    .tab-badge {
+      display: inline-block;
+      background: var(--admin); color: #fff;
+      font-size: 10px; font-weight: 700;
+      border-radius: 100px; padding: 1px 6px;
+      margin-left: 4px; vertical-align: middle;
+    }
+    .tab-badge:empty { display: none; }
+
     /* panel */
     .panel { display: none; }
     .panel.active { display: block; }
@@ -310,6 +319,138 @@
       background: transparent; color: var(--dim);
     }
 
+    /* edit modal */
+    #edit-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); backdrop-filter: blur(10px);
+      z-index: 600; align-items: flex-start; justify-content: center;
+      padding: 40px 20px; overflow-y: auto;
+    }
+    #edit-overlay.visible { display: flex; }
+
+    .edit-card {
+      background: var(--ink-2); border: 1px solid var(--line-2);
+      border-radius: var(--r); padding: 28px 28px 24px;
+      max-width: 520px; width: 100%; margin: auto;
+    }
+
+    .edit-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px; font-weight: 700; margin-bottom: 20px;
+    }
+
+    .edit-field { margin-bottom: 18px; }
+
+    .edit-field label {
+      display: block;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--dim); margin-bottom: 7px;
+    }
+
+    .edit-field input,
+    .edit-field textarea {
+      width: 100%;
+      background: var(--ink-3); border: 1px solid var(--line-2);
+      border-radius: var(--r-sm); color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 14px;
+      padding: 10px 14px; outline: none; resize: vertical;
+      transition: border-color .15s;
+    }
+    .edit-field input:focus,
+    .edit-field textarea:focus {
+      border-color: rgba(255,61,0,.5);
+    }
+
+    .edit-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .edit-pill {
+      cursor: pointer; border: 1px solid var(--line-2);
+      border-radius: 100px; background: var(--ink-3);
+      color: var(--dim); font-size: 13px; font-weight: 500;
+      padding: 6px 13px; user-select: none;
+      transition: background .12s, color .12s, border-color .12s;
+    }
+    .edit-pill:hover { border-color: rgba(255,61,0,.35); color: var(--text); }
+    .edit-pill.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent; color: #fff;
+    }
+
+    .edit-active-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .toggle-switch {
+      position: relative; width: 40px; height: 22px; cursor: pointer; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0; background: var(--ink-3);
+      border: 1px solid var(--line-2); border-radius: 100px;
+      transition: background .15s;
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--good); border-color: var(--good); }
+    .toggle-knob {
+      position: absolute; top: 3px; left: 3px;
+      width: 14px; height: 14px; background: var(--dim);
+      border-radius: 50%; transition: transform .15s, background .15s;
+    }
+    .toggle-switch input:checked ~ .toggle-knob { transform: translateX(18px); background: #fff; }
+
+    .edit-btns { display: flex; gap: 8px; margin-top: 4px; }
+
+    .btn-save {
+      flex: 1; padding: 11px; border-radius: var(--r-sm);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none; color: #fff;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-save:hover { opacity: .9; }
+    .btn-save:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-cancel-edit {
+      padding: 11px 18px; border-radius: var(--r-sm);
+      background: transparent; border: 1px solid var(--line-2);
+      color: var(--dim); font-size: 13px; cursor: pointer;
+      transition: color .15s;
+    }
+    .btn-cancel-edit:hover { color: var(--text); }
+
+    .btn-edit {
+      color: #7EB8F7;
+      border-color: rgba(126,184,247,.3);
+    }
+    .btn-edit:hover { background: rgba(126,184,247,.1); }
+
+    .btn-approve {
+      color: var(--good);
+      border-color: rgba(43,213,118,.3);
+      font-weight: 700;
+    }
+    .btn-approve:hover { background: rgba(43,213,118,.12); }
+
+    .btn-reject {
+      color: var(--bad);
+      border-color: rgba(255,92,92,.3);
+    }
+    .btn-reject:hover { background: rgba(255,92,92,.1); }
+
+    .grievance-cell {
+      max-width: 260px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      font-size: 12px;
+      color: var(--dim);
+      line-height: 1.45;
+    }
+
     @media (max-width: 640px) {
       .page { padding: 20px 12px 60px; }
       thead th, tbody td { padding: 10px 10px; }
@@ -332,6 +473,56 @@
     <div class="confirm-btns">
       <button id="confirm-yes">Confirm</button>
       <button id="confirm-no">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- edit modal -->
+<div id="edit-overlay">
+  <div class="edit-card">
+    <h3>Edit Campaign</h3>
+
+    <div class="edit-field">
+      <label>Target Name</label>
+      <input id="edit-target" type="text" placeholder="Name or handle" />
+    </div>
+
+    <div class="edit-field">
+      <label>Category</label>
+      <div class="edit-pills" id="edit-pills">
+        <div class="edit-pill" data-value="ex">💔 Ex</div>
+        <div class="edit-pill" data-value="boss">😤 Boss</div>
+        <div class="edit-pill" data-value="family">👴 Family</div>
+        <div class="edit-pill" data-value="hate">🔥 Hate</div>
+        <div class="edit-pill" data-value="profit">💰 Profit</div>
+        <div class="edit-pill" data-value="boredom">😴 Boredom</div>
+        <div class="edit-pill" data-value="fun">😂 Fun</div>
+        <div class="edit-pill" data-value="coin">🎯 Coin</div>
+      </div>
+    </div>
+
+    <div class="edit-field">
+      <label>Grievance</label>
+      <textarea id="edit-grievance" rows="4" placeholder="The FUD details…"></textarea>
+    </div>
+
+    <div class="edit-field">
+      <label>Tip Wallet (Solana address)</label>
+      <input id="edit-tip-wallet" type="text" placeholder="Optional" spellcheck="false" />
+    </div>
+
+    <div class="edit-active-row">
+      <label class="toggle-switch">
+        <input type="checkbox" id="edit-active" />
+        <div class="toggle-track"></div>
+        <div class="toggle-knob"></div>
+      </label>
+      <span style="font-size:13px;color:var(--dim);">Campaign active (visible on feed)</span>
+    </div>
+
+    <div class="edit-btns">
+      <button class="btn-save" id="edit-save-btn">Save changes</button>
+      <button class="btn-cancel-edit" id="edit-cancel-btn">Cancel</button>
     </div>
   </div>
 </div>
@@ -370,8 +561,29 @@
 
   <!-- tabs -->
   <div class="tabs">
-    <button class="tab active" data-tab="campaigns">Campaigns</button>
+    <button class="tab" data-tab="pending">⏳ Pending <span class="tab-badge" id="pending-count"></span></button>
+    <button class="tab active" data-tab="campaigns">All Campaigns</button>
     <button class="tab" data-tab="users">Users</button>
+  </div>
+
+  <!-- pending panel -->
+  <div class="panel" id="panel-pending">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Target</th>
+            <th>Category</th>
+            <th>Grievance</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="pending-body">
+          <tr class="loading-row"><td colspan="5">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- campaigns panel -->
@@ -467,6 +679,7 @@
 
   // ── Tabs ────────────────────────────────────────────────────────
   let usersLoaded = false;
+  let pendingLoaded = false;
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -474,7 +687,8 @@
       tab.classList.add('active');
       const name = tab.dataset.tab;
       document.getElementById(`panel-${name}`).classList.add('active');
-      if (name === 'users' && !usersLoaded) { usersLoaded = true; loadUsers(); }
+      if (name === 'users'   && !usersLoaded)   { usersLoaded   = true; loadUsers(); }
+      if (name === 'pending' && !pendingLoaded)  { pendingLoaded = true; loadPending(); }
     });
   });
 
@@ -535,12 +749,74 @@
       document.getElementById('stat-total').textContent  = data.totalCampaigns;
       document.getElementById('stat-active').textContent = data.activeCampaigns;
       document.getElementById('stat-users').textContent  = data.totalUsers;
+      if (data.pendingCount > 0) {
+        document.getElementById('pending-count').textContent = data.pendingCount;
+      } else {
+        document.getElementById('pending-count').textContent = '';
+      }
     } catch (e) {
       console.error(e);
     }
   }
 
+  // ── Pending ───────────────────────────────────────────────────────
+  async function loadPending() {
+    const tbody = document.getElementById('pending-body');
+    try {
+      const data = await api('GET', { action: 'pending' });
+      if (!data.documents?.length) {
+        tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="icon">✅</div>No pending submissions.</div></td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.documents.map(c => {
+        const cat = CAT_LABELS[c.fudCategory] || c.fudCategory || '—';
+        const date = c.$createdAt ? new Date(c.$createdAt).toLocaleDateString() : '—';
+        return `<tr>
+          <td class="td-name">
+            <span>${esc(c.fudTarget||c.projectName||'—')}</span>
+            ${c.txSignature ? `<span class="td-dim" title="${esc(c.txSignature)}">tx: ${esc(c.txSignature.slice(0,12))}…</span>` : '<span class="td-dim" style="color:var(--bad)">No tx</span>'}
+          </td>
+          <td class="cat-pill">${esc(cat)}</td>
+          <td><div class="grievance-cell">${esc(c.tag||'—')}</div></td>
+          <td class="td-dim">${date}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-action btn-approve" onclick="approveCampaign('${esc(c.$id)}', '${esc(c.fudTarget||c.projectName||'')}')">✓ Approve</button>
+              <button class="btn-action btn-reject"  onclick="rejectCampaign('${esc(c.$id)}',  '${esc(c.fudTarget||c.projectName||'')}')">✕ Reject</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr class="loading-row"><td colspan="5">Error: ${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  window.approveCampaign = async (id, name) => {
+    const ok = await confirm('Approve campaign?', `"${name}" will go live on the public feed.`);
+    if (!ok) return;
+    try {
+      await api('POST', { action: 'approve-campaign', campaignId: id });
+      toast(`"${name}" approved and live`, 'ok');
+      pendingLoaded = false; loadPending();
+      loadStats();
+    } catch (e) { toast(`Error: ${e.message}`, 'err'); }
+  };
+
+  window.rejectCampaign = async (id, name) => {
+    const ok = await confirm('Reject submission?', `"${name}" will be rejected and removed from the queue.`);
+    if (!ok) return;
+    try {
+      await api('POST', { action: 'reject-campaign', campaignId: id });
+      toast(`"${name}" rejected`, 'ok');
+      pendingLoaded = false; loadPending();
+      loadStats();
+    } catch (e) { toast(`Error: ${e.message}`, 'err'); }
+  };
+
   // ── Campaigns ────────────────────────────────────────────────────
+  const campaignMap = new Map(); // id → doc, for edit modal lookup
+
   async function loadCampaigns() {
     const tbody = document.getElementById('campaigns-body');
     try {
@@ -549,13 +825,18 @@
         tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="icon">💀</div>No campaigns yet.</div></td></tr>';
         return;
       }
+      campaignMap.clear();
+      data.documents.forEach(c => campaignMap.set(c.$id, c));
       tbody.innerHTML = data.documents.map(c => {
         const cat = c.fudCategory || c.campaignType || '—';
         const catLabel = CAT_LABELS[cat] || cat;
-        const status = c.active ? '<span class="badge badge-active">Active</span>' : '<span class="badge badge-inactive">Inactive</span>';
+        const status = c.active
+          ? '<span class="badge badge-active">Active</span>'
+          : '<span class="badge badge-inactive">Cancelled</span>';
         const date = c.$createdAt ? new Date(c.$createdAt).toLocaleDateString() : '—';
         return `<tr data-id="${esc(c.$id)}">
-          <td class="td-name"><span title="${esc(c.fudTarget||c.projectName||'')}">${esc(c.fudTarget||c.projectName||'—')}</span>
+          <td class="td-name">
+            <span title="${esc(c.fudTarget||c.projectName||'')}">${esc(c.fudTarget||c.projectName||'—')}</span>
             ${c.slug ? `<span class="td-dim">/c/${esc(c.slug)}</span>` : ''}
           </td>
           <td class="cat-pill">${esc(catLabel)}</td>
@@ -564,7 +845,8 @@
           <td class="td-dim">${date}</td>
           <td>
             <div class="action-btns">
-              <button class="btn-action btn-toggle" onclick="toggleCampaign('${esc(c.$id)}', ${c.active})">${c.active ? 'Deactivate' : 'Activate'}</button>
+              <button class="btn-action btn-edit" onclick="openEdit('${esc(c.$id)}')">Edit</button>
+              <button class="btn-action btn-toggle" onclick="toggleCampaign('${esc(c.$id)}', ${c.active})">${c.active ? 'Cancel' : 'Restore'}</button>
               <button class="btn-action btn-delete" onclick="deleteCampaign('${esc(c.$id)}', '${esc(c.fudTarget||c.projectName||'')}')">Delete</button>
             </div>
           </td>
@@ -577,13 +859,13 @@
 
   window.toggleCampaign = async (id, currentActive) => {
     const ok = await confirm(
-      currentActive ? 'Deactivate campaign?' : 'Activate campaign?',
-      currentActive ? 'This will hide the campaign from the public feed.' : 'This will make the campaign visible on the feed.'
+      currentActive ? 'Cancel campaign?' : 'Restore campaign?',
+      currentActive ? 'This will hide the campaign from the public feed.' : 'This will make the campaign visible on the feed again.'
     );
     if (!ok) return;
     try {
       const r = await api('POST', { action: 'toggle-campaign', campaignId: id });
-      toast(`Campaign ${r.active ? 'activated' : 'deactivated'}`, 'ok');
+      toast(`Campaign ${r.active ? 'restored' : 'cancelled'}`, 'ok');
       loadCampaigns();
       loadStats();
     } catch (e) {
@@ -606,6 +888,81 @@
       toast(`Error: ${e.message}`, 'err');
     }
   };
+
+  // ── Edit modal ────────────────────────────────────────────────────
+  let editingId = null;
+  let editCategory = 'hate';
+
+  document.getElementById('edit-pills').addEventListener('click', e => {
+    const pill = e.target.closest('.edit-pill');
+    if (!pill) return;
+    document.querySelectorAll('.edit-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    editCategory = pill.dataset.value;
+  });
+
+  document.getElementById('edit-cancel-btn').addEventListener('click', () => {
+    document.getElementById('edit-overlay').classList.remove('visible');
+  });
+
+  window.openEdit = (id) => {
+    const c = campaignMap.get(id);
+    if (!c) return;
+    editingId = id;
+    editCategory = c.fudCategory || 'hate';
+
+    document.getElementById('edit-target').value      = c.fudTarget || c.projectName || '';
+    document.getElementById('edit-grievance').value   = c.tag || '';
+    document.getElementById('edit-tip-wallet').value  = c.tipWallet || '';
+    document.getElementById('edit-active').checked    = !!c.active;
+
+    document.querySelectorAll('.edit-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.value === editCategory);
+    });
+
+    document.getElementById('edit-overlay').classList.add('visible');
+    document.getElementById('edit-target').focus();
+  };
+
+  document.getElementById('edit-save-btn').addEventListener('click', async () => {
+    if (!editingId) return;
+    const c = campaignMap.get(editingId);
+    const targetName = document.getElementById('edit-target').value.trim();
+    const grievance  = document.getElementById('edit-grievance').value.trim();
+    const tipWallet  = document.getElementById('edit-tip-wallet').value.trim();
+    const active     = document.getElementById('edit-active').checked;
+
+    if (!targetName) { toast('Target name is required', 'err'); return; }
+
+    const btn = document.getElementById('edit-save-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    try {
+      await api('POST', {
+        action: 'update-campaign',
+        campaignId: editingId,
+        updates: {
+          fudTarget:   targetName,
+          projectName: targetName,
+          title:       `FUD: ${targetName}`,
+          tag:         grievance,
+          fudCategory: editCategory,
+          tipWallet:   tipWallet || null,
+          active,
+        },
+      });
+      toast('Campaign updated', 'ok');
+      document.getElementById('edit-overlay').classList.remove('visible');
+      loadCampaigns();
+      loadStats();
+    } catch (e) {
+      toast(`Error: ${e.message}`, 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save changes';
+    }
+  });
 
   // ── Users ────────────────────────────────────────────────────────
   async function loadUsers() {
