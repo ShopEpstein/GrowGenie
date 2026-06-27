@@ -274,5 +274,54 @@ jobs:
             -d '{"key":"idx_tips_campaign","type":"key","attributes":["campaignId"],"orders":["ASC"]}' || true
           echo "✅ tips indexes done"
 
+      # ── fud_posts ─────────────────────────────────────────────────────────────
+
+      - name: Create fud_posts collection
+        run: |
+          curl -sf -X POST "$BASE/databases/$DB/collections" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "collectionId":"fud_posts","name":"fud_posts","enabled":true,
+              "documentSecurity":false,
+              "permissions":["read(\"any\")","create(\"any\")"]
+            }' && echo "✅ fud_posts created" || echo "ℹ️  fud_posts exists"
+
+      - name: fud_posts attributes
+        run: |
+          post_str() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/fud_posts/attributes/string" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_int() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/fud_posts/attributes/integer" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_str '{"key":"campaignId","size":64,"required":true}'
+          post_str '{"key":"username","size":32,"required":false}'
+          post_str '{"key":"wallet","size":64,"required":false}'
+          post_str '{"key":"xHandle","size":64,"required":false}'
+          post_str '{"key":"tweetUrl","size":512,"required":false}'
+          post_str '{"key":"tipsReceived","size":32,"required":false}'
+          post_int '{"key":"tipCount","required":false,"min":0,"max":999999}'
+          post_int '{"key":"timestamp","required":false}'
+          echo "✅ fud_posts attributes done"
+
+      - name: fud_posts indexes
+        run: |
+          sleep 5
+          curl -sf -X POST "$BASE/databases/$DB/collections/fud_posts/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_fp_campaign","type":"key","attributes":["campaignId"],"orders":["ASC"]}' || true
+          curl -sf -X POST "$BASE/databases/$DB/collections/fud_posts/indexes" \
+            -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"idx_fp_ts","type":"key","attributes":["campaignId","timestamp"],"orders":["ASC","DESC"]}' || true
+          echo "✅ fud_posts indexes done"
+
       - name: Done
         run: echo "🎉 All collections provisioned"

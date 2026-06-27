@@ -131,6 +131,30 @@
       "indexes": [
         { "key": "idx_tips_campaign", "type": "key", "attributes": ["campaignId"], "orders": ["ASC"] }
       ]
+    },
+    {
+      "$id": "fud_posts",
+      "databaseId": "growthgenie",
+      "name": "fud_posts",
+      "documentSecurity": false,
+      "$permissions": [
+        "read(\"any\")",
+        "create(\"any\")"
+      ],
+      "attributes": [
+        { "key": "campaignId",    "type": "string",  "size": 64,  "required": true  },
+        { "key": "username",      "type": "string",  "size": 32,  "required": false },
+        { "key": "wallet",        "type": "string",  "size": 64,  "required": false },
+        { "key": "xHandle",       "type": "string",  "size": 64,  "required": false },
+        { "key": "tweetUrl",      "type": "string",  "size": 512, "required": false },
+        { "key": "tipsReceived",  "type": "string",  "size": 32,  "required": false },
+        { "key": "tipCount",      "type": "integer", "required": false, "min": 0, "max": 999999 },
+        { "key": "timestamp",     "type": "integer", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_fp_campaign", "type": "key", "attributes": ["campaignId"], "orders": ["ASC"] },
+        { "key": "idx_fp_ts",       "type": "key", "attributes": ["campaignId","timestamp"], "orders": ["ASC","DESC"] }
+      ]
     }
   ]
 }

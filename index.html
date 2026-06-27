@@ -562,7 +562,7 @@ function makeCard(doc, flash) {
       <button class="react-btn${hasReacted?' reacted':''}" data-reaction="fire" data-id="${esc(doc.$id)}">🔥 <span class="cnt">${rFire||''}</span></button>
       <button class="react-btn" data-reaction="skull" data-id="${esc(doc.$id)}">💀 <span class="cnt">${rSkull||''}</span></button>
       <button class="react-btn" data-reaction="laugh" data-id="${esc(doc.$id)}">😂 <span class="cnt">${rLaugh||''}</span></button>
-      <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}">𝕏 share</button>
+      <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}" data-target="${esc(doc.fudTarget||doc.smearTarget||'')}">𝕏 share</button>
     </div>
     <div class="card-foot">
       ${tw
@@ -640,10 +640,11 @@ function bindCards() {
   document.querySelectorAll('.react-share').forEach(btn => {
     btn.onclick = e => {
       e.stopPropagation();
-      const name = btn.dataset.name;
-      const id   = btn.dataset.id;
-      const url  = `${location.origin}/campaign.html?c=${id}`;
-      const text = `💀 ${decodeURIComponent(name)} is getting roasted on FudFun.xyz 🔥`;
+      const name   = btn.dataset.name;
+      const target = btn.dataset.target || name;
+      const id     = btn.dataset.id;
+      const url    = `${location.origin}/campaign.html?c=${id}`;
+      const text   = `💀 ${target} is getting exposed on FudFun.xyz — see the receipts and tip the best FUD 🔥`;
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=560,height=420');
     };
   });
