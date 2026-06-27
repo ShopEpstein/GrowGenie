@@ -588,6 +588,10 @@
 
   <!-- campaigns panel -->
   <div class="panel active" id="panel-campaigns">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.06);">
+      <span style="font-size:13px;color:#8A8DA3;font-family:'Space Mono',monospace;" id="campaigns-count">—</span>
+      <button class="btn-action btn-delete" style="font-size:12px;padding:6px 13px;" onclick="deleteAllCampaigns()">🗑️ Delete All</button>
+    </div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -827,6 +831,7 @@
       }
       campaignMap.clear();
       data.documents.forEach(c => campaignMap.set(c.$id, c));
+      document.getElementById('campaigns-count').textContent = `${data.total ?? data.documents.length} campaign${data.documents.length !== 1 ? 's' : ''}`;
       tbody.innerHTML = data.documents.map(c => {
         const cat = c.fudCategory || c.campaignType || '—';
         const catLabel = CAT_LABELS[cat] || cat;
@@ -866,6 +871,24 @@
     try {
       const r = await api('POST', { action: 'toggle-campaign', campaignId: id });
       toast(`Campaign ${r.active ? 'restored' : 'cancelled'}`, 'ok');
+      loadCampaigns();
+      loadStats();
+    } catch (e) {
+      toast(`Error: ${e.message}`, 'err');
+    }
+  };
+
+  window.deleteAllCampaigns = async () => {
+    const count = campaignMap.size;
+    if (!count) { toast('No campaigns to delete', 'err'); return; }
+    const ok = await confirm(
+      `Delete all ${count} campaigns?`,
+      'This permanently removes every campaign. Cannot be undone.'
+    );
+    if (!ok) return;
+    try {
+      const r = await api('POST', { action: 'delete-all-campaigns' });
+      toast(`Deleted ${r.deleted} campaigns`, 'ok');
       loadCampaigns();
       loadStats();
     } catch (e) {
