@@ -89,6 +89,7 @@ jobs:
           post_str '{"key":"socialPreviewName","size":128,"required":false}'
           post_str '{"key":"socialPreviewThumb","size":2048,"required":false}'
           post_str '{"key":"socialPreviewPlatform","size":32,"required":false}'
+          post_str '{"key":"reviewStatus","size":32,"required":false}'
           echo "✅ campaigns attributes done"
 
       - name: campaigns indexes

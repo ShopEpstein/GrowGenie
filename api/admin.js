@@ -63,18 +63,27 @@ module.exports = async (req, res) => {
       return res.status(200).json({ total: r.total, users: sanitized });
     }
 
+    if (action === 'pending') {
+      const r = await dbs.listDocuments(DB, 'campaigns', [
+        Query.equal('reviewStatus', 'pending'),
+        Query.orderDesc('$createdAt'),
+        Query.limit(100),
+      ]);
+      return res.status(200).json(r);
+    }
+
     if (action === 'stats') {
-      const [camps, allUsers] = await Promise.all([
+      const [camps, allUsers, active, pending] = await Promise.all([
         dbs.listDocuments(DB, 'campaigns', [Query.limit(1)]),
         usr.list([Query.limit(1)]),
-      ]);
-      const active = await dbs.listDocuments(DB, 'campaigns', [
-        Query.equal('active', true), Query.limit(1),
+        dbs.listDocuments(DB, 'campaigns', [Query.equal('active', true), Query.limit(1)]),
+        dbs.listDocuments(DB, 'campaigns', [Query.equal('reviewStatus', 'pending'), Query.limit(1)]).catch(() => ({ total: 0 })),
       ]);
       return res.status(200).json({
-        totalCampaigns: camps.total,
+        totalCampaigns:  camps.total,
         activeCampaigns: active.total,
-        totalUsers: allUsers.total,
+        totalUsers:      allUsers.total,
+        pendingCount:    pending.total,
       });
     }
 
@@ -105,6 +114,18 @@ module.exports = async (req, res) => {
       const allowed = ['fudTarget', 'smearTarget', 'projectName', 'title', 'tag', 'fudCategory', 'active', 'tipWallet', 'accentColor'];
       const safe = Object.fromEntries(Object.entries(updates).filter(([k]) => allowed.includes(k)));
       await dbs.updateDocument(DB, 'campaigns', campaignId, safe);
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === 'approve-campaign') {
+      if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
+      await dbs.updateDocument(DB, 'campaigns', campaignId, { active: true, reviewStatus: 'approved' });
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === 'reject-campaign') {
+      if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
+      await dbs.updateDocument(DB, 'campaigns', campaignId, { active: false, reviewStatus: 'rejected' });
       return res.status(200).json({ success: true });
     }
 
