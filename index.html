@@ -215,6 +215,12 @@ nav{
 }
 .btn-tip-card:hover{background:rgba(255,215,0,.14);border-color:rgba(255,215,0,.5);box-shadow:0 0 16px rgba(255,215,0,.15)}
 .no-tip-wallet{font-size:10px;color:var(--dim2);font-family:'Space Mono';padding:7px 0}
+.btn-delete-card{
+  background:transparent;border:1px solid var(--border);border-radius:10px;
+  color:var(--dim2);font-size:14px;padding:7px 10px;cursor:pointer;
+  transition:all .13s;flex-shrink:0;line-height:1;
+}
+.btn-delete-card:hover{border-color:rgba(255,92,92,.5);color:#FF5C5C;background:rgba(255,92,92,.08)}
 
 .empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--dim)}
 .empty h3{font-family:'Space Grotesk';font-size:22px;color:var(--text);margin-bottom:10px}
@@ -667,6 +673,10 @@ function makeCard(doc, flash) {
         ? `<button class="btn-tip-card" data-wallet="${tw}" data-name="${name}">💸 Tip SOL</button>`
         : `<span class="no-tip-wallet">no tip wallet set</span>`
       }
+      ${user && doc.clientId === user.$id
+        ? `<button class="btn-delete-card" data-id="${esc(doc.$id)}" title="Delete campaign">🗑️</button>`
+        : ''
+      }
     </div>`;
   return el;
 }
@@ -759,10 +769,41 @@ function bindCards() {
     };
   });
 
+  // delete buttons (owner only)
+  document.querySelectorAll('.btn-delete-card').forEach(btn => {
+    btn.onclick = async e => {
+      e.stopPropagation();
+      if (!confirm('Delete this campaign? This cannot be undone.')) return;
+      btn.textContent = '…'; btn.disabled = true;
+      try {
+        const jwt = (await account.createJWT()).jwt;
+        const r = await fetch('/api/campaign-delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
+          body: JSON.stringify({ campaignId: btn.dataset.id }),
+        });
+        if (r.ok) {
+          const card = btn.closest('.card');
+          card.style.transition = 'opacity .3s, transform .3s';
+          card.style.opacity = '0'; card.style.transform = 'scale(.95)';
+          setTimeout(() => card.remove(), 310);
+          toast('🗑️ Campaign deleted', '');
+        } else {
+          const d = await r.json();
+          toast('Error: ' + (d.error || 'delete failed'), '');
+          btn.textContent = '🗑️'; btn.disabled = false;
+        }
+      } catch (err) {
+        toast('Delete failed', '');
+        btn.textContent = '🗑️'; btn.disabled = false;
+      }
+    };
+  });
+
   // card click → campaign page
   document.querySelectorAll('.card').forEach(card => {
     card.onclick = e => {
-      if (e.target.closest('.react-btn,.react-share,.btn-tip-card')) return;
+      if (e.target.closest('.react-btn,.react-share,.btn-tip-card,.btn-delete-card')) return;
       window.location.href = `campaign.html?c=${card.dataset.id}`;
     };
   });
