@@ -68,6 +68,13 @@
       margin: 24px;
     }
 
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--dim); text-decoration: none;
+      margin-bottom: 20px; transition: color .15s;
+    }
+    .back-link:hover { color: var(--text); }
+
     .brand {
       display: flex; align-items: center; gap: 12px;
       margin-bottom: 26px;
@@ -100,22 +107,13 @@
 
     .divider { height: 1px; background: var(--line); margin-bottom: 24px; }
 
-    .mode-toggle {
-      display: flex; gap: 6px; margin-bottom: 20px;
-      background: var(--ink-3); border-radius: var(--r-sm);
-      padding: 4px;
+    .or-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0; font-size: 11px; color: var(--dim-2);
+      font-family: 'Space Mono', monospace; letter-spacing: 0.08em;
     }
-
-    .mode-btn {
-      flex: 1; padding: 8px; border: none; border-radius: 8px;
-      font-family: 'Space Grotesk', sans-serif; font-size: 13px;
-      font-weight: 600; cursor: pointer; transition: all .15s;
-      background: transparent; color: var(--dim);
-    }
-
-    .mode-btn.active {
-      background: linear-gradient(135deg, var(--red), var(--orange));
-      color: #fff; box-shadow: 0 2px 10px rgba(255,61,0,.3);
+    .or-divider::before, .or-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--line);
     }
 
     .field { margin-bottom: 15px; }
@@ -176,6 +174,17 @@
     .btn:active:not(:disabled) { transform: translateY(0); }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
 
+    .btn-wallet {
+      background: var(--ink-3);
+      border: 1px solid var(--line-2);
+      box-shadow: none;
+      color: var(--text);
+    }
+    .btn-wallet:hover:not(:disabled) {
+      border-color: rgba(255,61,0,.4);
+      box-shadow: 0 0 0 3px rgba(255,61,0,.08);
+    }
+
     .btn-spinner {
       display: none; width: 16px; height: 16px;
       border: 2px solid rgba(255,255,255,.35);
@@ -207,6 +216,19 @@
       border: 3px solid var(--line-2); border-top-color: var(--red);
       border-radius: 50%; animation: spin .65s linear infinite; margin: 0 auto;
     }
+
+    .mobile-deeplinks {
+      display: flex; flex-direction: column; gap: 10px; margin-top: 12px;
+    }
+    .deeplink-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 11px 16px; border: 1px solid var(--line-2);
+      border-radius: var(--r-sm); background: var(--ink-3);
+      color: var(--text); font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px; font-weight: 600; text-decoration: none;
+      transition: border-color .15s;
+    }
+    .deeplink-btn:hover { border-color: rgba(255,61,0,.4); }
   </style>
 </head>
 <body>
@@ -219,6 +241,8 @@
   </div>
 
   <div class="card" id="authCard">
+    <a href="/" class="back-link" id="backLink">← Back to feed</a>
+
     <div class="brand">
       <div class="brand-icon">💀</div>
       <span class="brand-wordmark">FudFun.xyz</span>
@@ -227,11 +251,24 @@
     <div class="divider"></div>
 
     <h1 class="card-title">Enter 💀</h1>
-    <p class="card-subtitle">New here? Just fill in an email & password — your account is created instantly.</p>
+    <p class="card-subtitle">Sign in with your Solana wallet or email below.</p>
 
     <div class="error-msg" id="errorMsg" role="alert"></div>
     <div class="success-msg" id="successMsg"></div>
 
+    <!-- Wallet sign-in -->
+    <button type="button" class="btn btn-wallet" id="walletBtn">
+      <div class="btn-spinner"></div>
+      <span class="btn-label">🔑 Connect Wallet</span>
+    </button>
+
+    <div id="mobileDeeplinks" style="display:none" class="mobile-deeplinks">
+      <p style="font-size:13px;color:var(--dim);text-align:center;">Open in your wallet app to sign in:</p>
+    </div>
+
+    <div class="or-divider">OR</div>
+
+    <!-- Email sign-in -->
     <form id="loginForm" novalidate>
       <div class="field">
         <label for="email">Email</label>
@@ -247,13 +284,12 @@
 
       <button type="submit" class="btn" id="submitBtn">
         <div class="btn-spinner"></div>
-        <span class="btn-label">Enter 💀</span>
+        <span class="btn-label">Enter with Email 💀</span>
       </button>
     </form>
 
     <div class="card-footer">
-      Existing account? Just sign in with your email & password.<br/>
-      No account? Same form — we'll create it automatically.
+      No account? Fill in email & password — we'll create it automatically.
     </div>
   </div>
 
@@ -267,10 +303,17 @@
     const account = new Account(client);
 
     const redirectOverlay = document.getElementById('redirectOverlay');
-    const errorMsg   = document.getElementById('errorMsg');
-    const successMsg = document.getElementById('successMsg');
-    const loginForm  = document.getElementById('loginForm');
-    const submitBtn  = document.getElementById('submitBtn');
+    const errorMsg        = document.getElementById('errorMsg');
+    const successMsg      = document.getElementById('successMsg');
+    const loginForm       = document.getElementById('loginForm');
+    const submitBtn       = document.getElementById('submitBtn');
+    const walletBtn       = document.getElementById('walletBtn');
+    const backLink        = document.getElementById('backLink');
+    const mobileDeeplinks = document.getElementById('mobileDeeplinks');
+
+    // Wire up back link to ?next= if present, otherwise /
+    const nextUrl = new URLSearchParams(location.search).get('next') || '/';
+    backLink.href = nextUrl === '/' ? '/' : '/';
 
     function showError(msg) {
       errorMsg.textContent = msg;
@@ -289,17 +332,115 @@
       successMsg.classList.remove('visible');
     }
 
-    function setLoading(state, label = 'Enter 💀') {
-      submitBtn.disabled = state;
-      submitBtn.classList.toggle('loading', state);
-      if (!state) submitBtn.querySelector('.btn-label').textContent = label;
+    function setLoading(btn, state, label) {
+      btn.disabled = state;
+      btn.classList.toggle('loading', state);
+      if (!state && label) btn.querySelector('.btn-label').textContent = label;
     }
 
     function redirectAfterAuth() {
       redirectOverlay.classList.add('visible');
-      const next = new URLSearchParams(location.search).get('next') || '/';
-      window.location.href = next;
+      window.location.href = nextUrl;
     }
+
+    // Detect any installed Solana wallet provider
+    function getWalletProvider() {
+      if (window.phantom?.solana?.isPhantom)  return window.phantom.solana;
+      if (window.solflare?.isSolflare)         return window.solflare;
+      if (window.backpack?.isBackpack)         return window.backpack;
+      if (window.solana)                       return window.solana;
+      if (window.xnft?.solana)                 return window.xnft.solana;
+      if (window.glowSolana)                   return window.glowSolana;
+      if (window.okxwallet?.solana)            return window.okxwallet.solana;
+      return null;
+    }
+
+    function isMobile() {
+      return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    }
+
+    function showMobileDeeplinks() {
+      const encoded = encodeURIComponent(location.href);
+      const ref     = encodeURIComponent('https://fudfun.xyz');
+
+      mobileDeeplinks.style.display = 'flex';
+      mobileDeeplinks.innerHTML = `
+        <p style="font-size:13px;color:var(--dim);text-align:center;margin-bottom:4px;">Open in your wallet app to sign in:</p>
+        <a class="deeplink-btn" href="https://phantom.app/ul/browse/${encoded}?ref=${ref}">
+          👻 Open in Phantom
+        </a>
+        <a class="deeplink-btn" href="https://solflare.com/ul/v1/browse/${encoded}?ref=${ref}">
+          ☀️ Open in Solflare
+        </a>
+      `;
+    }
+
+    async function connectWalletLogin() {
+      const provider = getWalletProvider();
+
+      if (!provider) {
+        if (isMobile()) {
+          showMobileDeeplinks();
+          showError('No wallet detected. Tap a link below to open in your wallet app.');
+        } else {
+          showError('No Solana wallet found. Install Phantom or Solflare and refresh.');
+        }
+        return;
+      }
+
+      setLoading(walletBtn, true, 'Connecting…');
+      hideMessages();
+
+      try {
+        // Connect (silently if already trusted, else show popup)
+        try {
+          await provider.connect({ onlyIfTrusted: true });
+        } catch {
+          await provider.connect();
+        }
+
+        const pubkey = provider.publicKey?.toString();
+        if (!pubkey) throw new Error('Could not read wallet public key.');
+
+        setLoading(walletBtn, true, 'Sign the message in your wallet…');
+
+        // Sign ownership proof
+        const message = `FudFun.xyz login: ${pubkey}\nTime: ${Date.now()}`;
+        const msgBytes = new TextEncoder().encode(message);
+        const { signature } = await provider.signMessage(msgBytes, 'utf8');
+
+        // Convert signature (Uint8Array) to base64
+        const sigBase64 = btoa(String.fromCharCode(...signature));
+
+        setLoading(walletBtn, true, 'Verifying…');
+
+        // Server-side verification + Appwrite user creation
+        const resp = await fetch('/api/wallet-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pubkey, signature: sigBase64, message }),
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Auth failed');
+
+        // Create Appwrite session from the short-lived token
+        await account.createSession(data.userId, data.secret);
+
+        showSuccess('Wallet verified! Entering…');
+        redirectAfterAuth();
+      } catch (err) {
+        const msg = err?.message || 'Wallet sign-in failed.';
+        if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('cancelled')) {
+          showError('Signature cancelled. Try again to sign in.');
+        } else {
+          showError(msg);
+        }
+        setLoading(walletBtn, false, '🔑 Connect Wallet');
+      }
+    }
+
+    walletBtn.addEventListener('click', connectWalletLogin);
 
     // Already authed?
     (async () => {
@@ -326,21 +467,19 @@
         return;
       }
 
-      setLoading(true, 'Entering…');
+      setLoading(submitBtn, true, 'Entering…');
 
       try {
-        // Try sign in first
         await account.createEmailPasswordSession(email, password);
         redirectAfterAuth();
       } catch (signInErr) {
-        // If invalid credentials it might mean user doesn't exist — try creating
         const errCode = signInErr?.code;
         const errMsg  = (signInErr?.message || '').toLowerCase();
         const isUnknownUser = errCode === 401 || errMsg.includes('invalid credentials') ||
                               errMsg.includes('user not found') || errMsg.includes('invalid email');
 
         if (isUnknownUser) {
-          setLoading(true, 'Creating account…');
+          setLoading(submitBtn, true, 'Creating account…');
           try {
             showSuccess('New account — creating yours now…');
             await account.create(ID.unique(), email, email, password);
@@ -349,12 +488,12 @@
           } catch (createErr) {
             const msg = createErr?.message || 'Could not create account. Try a different email.';
             showError(msg);
-            setLoading(false);
+            setLoading(submitBtn, false, 'Enter with Email 💀');
           }
         } else {
           const msg = signInErr?.message || 'Sign in failed. Check your password.';
           showError(msg);
-          setLoading(false);
+          setLoading(submitBtn, false, 'Enter with Email 💀');
         }
       }
     });
