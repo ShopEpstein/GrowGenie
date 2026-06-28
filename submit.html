@@ -539,6 +539,42 @@
     }
 
     .preview-error.visible { display: block; }
+
+    /* ---- file upload zone ---- */
+    .upload-zone {
+      border: 2px dashed var(--line-2); border-radius: var(--r-sm);
+      overflow: hidden; transition: border-color .15s;
+    }
+    .upload-zone:hover { border-color: rgba(255,61,0,.4); }
+    .upload-zone.dragging { border-color: rgba(255,61,0,.7); background: rgba(255,61,0,.05); }
+
+    .upload-placeholder {
+      padding: 28px 20px; text-align: center; cursor: pointer;
+      transition: background .15s;
+    }
+    .upload-placeholder:hover { background: rgba(255,255,255,.03); }
+
+    .upload-remove-btn {
+      display: block; width: 100%; padding: 8px;
+      background: rgba(255,92,92,.1); border: none;
+      border-top: 1px solid rgba(255,92,92,.2); color: var(--bad);
+      font-size: 12px; font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600; cursor: pointer; transition: background .13s;
+    }
+    .upload-remove-btn:hover { background: rgba(255,92,92,.2); }
+
+    .upload-prog-bar {
+      height: 4px; background: var(--line-2); border-radius: 99px; overflow: hidden;
+      margin: 16px 20px 0;
+    }
+    .upload-prog-fill {
+      height: 100%; width: 0%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .3s;
+    }
+    .upload-status { padding: 8px 20px 20px; text-align: center; }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -642,6 +678,29 @@
             </div>
           </div>
 
+          <!-- banner upload -->
+          <div class="field" style="margin-bottom:24px">
+            <label>Campaign Banner <span style="color:var(--dim-2);font-weight:400">(optional)</span></label>
+            <div class="upload-zone" id="upload-zone">
+              <input type="file" id="banner-file" accept="image/*" style="display:none"/>
+              <div class="upload-placeholder" id="upload-placeholder" onclick="document.getElementById('banner-file').click()">
+                <div style="font-size:36px;line-height:1;margin-bottom:8px">🖼️</div>
+                <div style="font-weight:600;font-size:14px;color:var(--text);margin-bottom:4px">Click or drag to upload</div>
+                <div style="font-size:12px;color:var(--dim-2)">JPG, PNG, GIF, WEBP — max 10MB</div>
+              </div>
+              <div class="upload-preview-wrap hidden" id="upload-preview-wrap">
+                <img id="banner-preview-img" src="" alt="" style="width:100%;height:160px;object-fit:cover;border-radius:10px;display:block"/>
+                <button type="button" class="upload-remove-btn" id="upload-remove" title="Remove">✕ Remove</button>
+              </div>
+              <div class="upload-status hidden" id="upload-status">
+                <div class="upload-prog-bar"><div class="upload-prog-fill" id="upload-prog-fill"></div></div>
+                <div style="font-size:12px;color:var(--dim);margin-top:6px" id="upload-status-lbl">Uploading…</div>
+              </div>
+            </div>
+            <p class="field-helper" style="margin-top:8px">Or paste a URL:</p>
+            <input id="banner-url" type="url" placeholder="https://… paste any image URL" spellcheck="false" style="margin-top:6px"/>
+          </div>
+
           <div class="divider"></div>
 
           <!-- tip wallet -->
@@ -669,17 +728,21 @@
   </main>
 
   <script type="module">
-    import { Client, Account, Databases, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
+    import { Client, Account, Databases, Storage, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
 
     const client = new Client()
       .setEndpoint('https://nyc.cloud.appwrite.io/v1')
       .setProject('6a2bc15c00065b3c91a0');
 
-    const account = new Account(client);
+    const account   = new Account(client);
     const databases = new Databases(client);
+    const storage   = new Storage(client);
 
-    const DB = 'growthgenie';
-    const COL = 'campaigns';
+    const ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
+    const PROJECT  = '6a2bc15c00065b3c91a0';
+    const DB       = 'growthgenie';
+    const COL      = 'campaigns';
+    const BUCKET   = 'media';
 
     const PILL_EMOJIS = {
       ex: '💔', boss: '😤', family: '👴', hate: '🔥',
@@ -700,6 +763,90 @@
       }
       document.getElementById('auth-spinner').style.display = 'none';
     })();
+
+    // ── Banner upload ──────────────────────────────────────────
+    const uploadZone     = document.getElementById('upload-zone');
+    const bannerFileInp  = document.getElementById('banner-file');
+    const uploadPlaceholder = document.getElementById('upload-placeholder');
+    const uploadPreviewWrap = document.getElementById('upload-preview-wrap');
+    const bannerPreviewImg  = document.getElementById('banner-preview-img');
+    const uploadStatus   = document.getElementById('upload-status');
+    const uploadProgFill = document.getElementById('upload-prog-fill');
+    const uploadStatusLbl = document.getElementById('upload-status-lbl');
+    const bannerUrlInp   = document.getElementById('banner-url');
+
+    function resetUpload() {
+      uploadPlaceholder.classList.remove('hidden');
+      uploadPreviewWrap.classList.add('hidden');
+      uploadStatus.classList.add('hidden');
+      bannerPreviewImg.src = '';
+      bannerUrlInp.value = '';
+      bannerFileInp.value = '';
+    }
+
+    document.getElementById('upload-remove').addEventListener('click', resetUpload);
+
+    async function handleFileUpload(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10MB.'); return; }
+
+      // Show preview from local object URL
+      bannerPreviewImg.src = URL.createObjectURL(file);
+      uploadPlaceholder.classList.add('hidden');
+      uploadPreviewWrap.classList.add('hidden');
+      uploadStatus.classList.remove('hidden');
+      uploadProgFill.style.width = '20%';
+      uploadStatusLbl.textContent = 'Uploading…';
+
+      try {
+        uploadProgFill.style.width = '60%';
+        const result = await storage.createFile(BUCKET, ID.unique(), file);
+        const viewUrl = `${ENDPOINT}/storage/buckets/${BUCKET}/files/${result.$id}/view?project=${PROJECT}`;
+        bannerUrlInp.value = viewUrl;
+        bannerPreviewImg.src = viewUrl;
+        uploadProgFill.style.width = '100%';
+        uploadStatusLbl.textContent = 'Uploaded ✓';
+        setTimeout(() => {
+          uploadStatus.classList.add('hidden');
+          uploadPreviewWrap.classList.remove('hidden');
+        }, 600);
+      } catch (err) {
+        // Fall back: show local preview and keep file for URL-based submission
+        uploadStatus.classList.add('hidden');
+        uploadPreviewWrap.classList.remove('hidden');
+        uploadStatusLbl.textContent = '';
+        // If storage isn't configured yet, just leave the URL field blank
+        console.warn('Upload failed — using local preview:', err.message);
+      }
+    }
+
+    bannerFileInp.addEventListener('change', () => {
+      const file = bannerFileInp.files[0];
+      if (file) handleFileUpload(file);
+    });
+
+    // Drag & drop
+    uploadZone.addEventListener('dragover', e => {
+      e.preventDefault(); uploadZone.classList.add('dragging');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragging'));
+    uploadZone.addEventListener('drop', e => {
+      e.preventDefault(); uploadZone.classList.remove('dragging');
+      const file = e.dataTransfer.files[0];
+      if (file) { bannerFileInp.files = e.dataTransfer.files; handleFileUpload(file); }
+    });
+
+    // When URL is pasted manually, show preview
+    bannerUrlInp.addEventListener('input', () => {
+      const url = bannerUrlInp.value.trim();
+      if (url) {
+        bannerPreviewImg.src = url;
+        uploadPlaceholder.classList.add('hidden');
+        uploadPreviewWrap.classList.remove('hidden');
+      } else {
+        resetUpload();
+      }
+    });
 
     // pill selection
     document.getElementById('category-pills').addEventListener('click', e => {
@@ -827,6 +974,7 @@
       const why        = document.getElementById('why').value.trim();
       const tipWallet  = document.getElementById('tip-wallet').value.trim();
       const socialLink = socialInput.value.trim();
+      const bannerUrl  = document.getElementById('banner-url').value.trim();
 
       if (!targetName) { showError('Give us a target. Who are we FUDing?'); return; }
       if (!selectedCategory) { showError('Pick a reason. Why does this person deserve it?'); return; }
@@ -863,6 +1011,7 @@
           accentColor:  '#FF3D00',
         };
         if (socialLink) doc.socialLink = socialLink;
+        if (bannerUrl)  doc.bannerUrl  = bannerUrl;
         if (socialPreviewData) {
           doc.socialPreviewName     = socialPreviewData.authorName   || null;
           doc.socialPreviewThumb    = socialPreviewData.thumbnailUrl || null;

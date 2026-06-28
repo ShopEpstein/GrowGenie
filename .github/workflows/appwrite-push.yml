@@ -323,5 +323,36 @@ jobs:
             -d '{"key":"idx_fp_ts","type":"key","attributes":["campaignId","timestamp"],"orders":["ASC","DESC"]}' || true
           echo "✅ fud_posts indexes done"
 
+      # ── fudTips attribute on campaigns ──────────────────────────────────────────
+
+      - name: Add fudTips to campaigns
+        run: |
+          curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/attributes/integer" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"key":"fudTips","required":false,"min":0,"max":9999999}' \
+            && echo "✅ fudTips added" || echo "ℹ️  fudTips exists"
+
+      # ── media storage bucket ─────────────────────────────────────────────────
+
+      - name: Create media storage bucket
+        run: |
+          curl -sf -X POST "$BASE/storage/buckets" \
+            -H "X-Appwrite-Project: $PROJECT" \
+            -H "X-Appwrite-Key: $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "bucketId":"media",
+              "name":"media",
+              "enabled":true,
+              "maximumFileSize":10485760,
+              "allowedFileExtensions":["jpg","jpeg","png","gif","webp","svg","avif"],
+              "compression":"gzip",
+              "encryption":false,
+              "antivirus":false,
+              "permissions":["read(\"any\")","create(\"users\")","update(\"users\")","delete(\"users\")"]
+            }' && echo "✅ media bucket created" || echo "ℹ️  media bucket exists"
+
       - name: Done
-        run: echo "🎉 All collections provisioned"
+        run: echo "🎉 All collections and storage provisioned"

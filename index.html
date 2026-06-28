@@ -416,8 +416,18 @@ nav{
         </div>
 
         <div class="field">
-          <label for="lf-banner">Campaign banner URL (optional)</label>
-          <input id="lf-banner" type="url" placeholder="https://… any image, meme, screenshot" spellcheck="false"/>
+          <label for="lf-banner">Campaign Banner <span style="color:var(--dim2);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <div id="lf-upload-zone" style="border:2px dashed var(--border2);border-radius:10px;overflow:hidden;transition:border-color .15s;margin-bottom:6px">
+            <input type="file" id="lf-banner-file" accept="image/*" style="display:none"/>
+            <div id="lf-upload-placeholder" onclick="document.getElementById('lf-banner-file').click()" style="padding:18px;text-align:center;cursor:pointer;font-size:13px;color:var(--dim)">
+              🖼️ <span style="margin-left:6px">Click to upload banner image</span>
+            </div>
+            <div id="lf-upload-preview" style="display:none;position:relative">
+              <img id="lf-preview-img" src="" alt="" style="width:100%;height:100px;object-fit:cover;display:block"/>
+              <button type="button" onclick="clearLfBanner()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px">✕</button>
+            </div>
+          </div>
+          <input id="lf-banner" type="url" placeholder="…or paste an image URL" spellcheck="false"/>
         </div>
 
         <div class="field">
@@ -463,7 +473,7 @@ nav{
 <div id="toast"></div>
 
 <script type="module">
-import { Client, Account, Databases, ID, Query } from
+import { Client, Account, Databases, Storage, ID, Query } from
   'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
 
 const ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
@@ -471,9 +481,11 @@ const PROJECT  = '6a2bc15c00065b3c91a0';
 const DB       = 'growthgenie';
 const COLL     = 'campaigns';
 
-const client  = new Client().setEndpoint(ENDPOINT).setProject(PROJECT);
-const account = new Account(client);
-const dbs     = new Databases(client);
+const client   = new Client().setEndpoint(ENDPOINT).setProject(PROJECT);
+const account  = new Account(client);
+const dbs      = new Databases(client);
+const storage  = new Storage(client);
+const BUCKET   = 'media';
 
 // ── State ──────────────────────────
 let user           = null;
@@ -756,6 +768,46 @@ document.getElementById('launch-overlay').addEventListener('click', e => {
 function closeLaunch() {
   document.getElementById('launch-overlay').classList.remove('open');
 }
+
+// ── Banner file upload in launch modal ─────────────────────
+function clearLfBanner() {
+  document.getElementById('lf-banner').value = '';
+  document.getElementById('lf-preview-img').src = '';
+  document.getElementById('lf-upload-preview').style.display = 'none';
+  document.getElementById('lf-upload-placeholder').style.display = 'block';
+  document.getElementById('lf-banner-file').value = '';
+}
+window.clearLfBanner = clearLfBanner;
+
+document.getElementById('lf-banner-file').addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+  // local preview immediately
+  const localUrl = URL.createObjectURL(file);
+  document.getElementById('lf-preview-img').src = localUrl;
+  document.getElementById('lf-upload-placeholder').style.display = 'none';
+  document.getElementById('lf-upload-preview').style.display = 'block';
+  // attempt upload
+  try {
+    if (user) {
+      const result = await storage.createFile(BUCKET, ID.unique(), file);
+      const viewUrl = `${ENDPOINT}/storage/buckets/${BUCKET}/files/${result.$id}/view?project=${PROJECT}`;
+      document.getElementById('lf-banner').value = viewUrl;
+      document.getElementById('lf-preview-img').src = viewUrl;
+    }
+  } catch { /* silently fall back to local url + no bannerUrl set */ }
+});
+
+document.getElementById('lf-banner').addEventListener('input', function() {
+  const url = this.value.trim();
+  if (url) {
+    document.getElementById('lf-preview-img').src = url;
+    document.getElementById('lf-upload-placeholder').style.display = 'none';
+    document.getElementById('lf-upload-preview').style.display = 'block';
+  } else {
+    clearLfBanner();
+  }
+});
 
 document.getElementById('lf-pills').addEventListener('click', e => {
   const p = e.target.closest('.pill');
