@@ -690,10 +690,16 @@ window.saveProfile = function() {
 
 // ── Wallet providers ───────────────────────────────────────
 function getProvider() {
-  return window.phantom?.solana
-      || (window.solana?.isPhantom ? window.solana : null)
-      || (window.solflare?.isSolflare ? window.solflare : null)
-      || null;
+  const candidates = [
+    window.phantom?.solana,
+    window.solana,
+    window.solflare,
+    window.backpack,
+    window.xnft?.solana,
+    window.glowSolana,
+    window.okxwallet?.solana,
+  ].filter(p => p && typeof p.connect === 'function');
+  return candidates[0] || null;
 }
 function renderWalletBtns() {
   const row = $('pm-walletBtns'); row.innerHTML = '';
@@ -949,18 +955,64 @@ window.handleSubmit = async function() {
   if (!url) { toast('Paste your tweet / post URL first','err'); return; }
 
   const btn = $('btnSubmit');
-  btn.disabled = true; btn.textContent = 'Checking wallet…';
+  btn.disabled = true; btn.textContent = 'Connecting wallet…';
 
-  // Token gate: must hold $SCROLL or $FUD
-  const wallet = p.wallet || '';
-  if (!wallet) {
-    toast('Set a wallet in your profile to post FUD 💀', 'err');
+  // Step 1: require a live wallet connection — no trusting self-reported addresses
+  const provider = getProvider();
+  if (!provider) {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      const here = encodeURIComponent(location.href);
+      const ref  = encodeURIComponent(location.origin);
+      toast('Open this page inside Phantom or Solflare to verify your tokens', 'err');
+      showGateBanner(`
+        <a href="https://phantom.app/ul/browse/${here}?ref=${ref}" target="_blank" rel="noopener"
+           style="display:block;margin-top:10px;padding:10px 16px;border-radius:10px;text-align:center;
+           background:linear-gradient(135deg,#ab9ff2,#6b5bd2);color:#fff;font-weight:700;text-decoration:none;font-size:13px">
+           Open in Phantom →
+        </a>
+        <a href="https://solflare.com/ul/v1/browse/${here}?ref=${ref}" target="_blank" rel="noopener"
+           style="display:block;margin-top:8px;padding:10px 16px;border-radius:10px;text-align:center;
+           background:linear-gradient(135deg,#ff6e38,#ffd339);color:#1a0a00;font-weight:700;text-decoration:none;font-size:13px">
+           Open in Solflare →
+        </a>`);
+    } else {
+      toast('Install Phantom or Solflare to verify token holdings', 'err');
+      showGateBanner();
+    }
     btn.disabled = false; btn.textContent = 'Submit FUD 💀';
-    showGateBanner();
     return;
   }
 
-  const holds = await checkHoldsGateToken(wallet);
+  // Step 2: connect and read the actual public key (proves ownership)
+  let verifiedWallet;
+  try {
+    let pub = provider.publicKey?.toString();
+    if (!pub) {
+      // Try silent first, fall back to full connect popup
+      const res = await provider.connect({ onlyIfTrusted: true }).catch(() => provider.connect());
+      pub = (res?.publicKey || provider.publicKey)?.toString();
+    }
+    verifiedWallet = pub;
+  } catch {
+    toast('Wallet connection cancelled', 'err');
+    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
+    return;
+  }
+
+  if (!verifiedWallet) {
+    toast('Could not read wallet address', 'err');
+    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
+    return;
+  }
+
+  // Auto-save the verified wallet to profile so they receive tips
+  saveProfileToStorage({ ...p, wallet: verifiedWallet });
+  syncProfileUI();
+
+  // Step 3: check token balance against the VERIFIED wallet (not self-reported)
+  btn.textContent = 'Checking tokens…';
+  const holds = await checkHoldsGateToken(verifiedWallet);
   if (!holds) {
     toast('Hold $SCROLL or $FUD to post 💀', 'err');
     btn.disabled = false; btn.textContent = 'Submit FUD 💀';
@@ -968,6 +1020,7 @@ window.handleSubmit = async function() {
     return;
   }
 
+  // Step 4: submit with proven wallet address
   btn.textContent = 'Submitting…';
   try {
     const r = await fetch('/api/fud-post', {
@@ -975,7 +1028,7 @@ window.handleSubmit = async function() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'submit', campaignId: campId,
-        username: p.username, wallet,
+        username: p.username, wallet: verifiedWallet,
         xHandle: p.xhandle || '', tweetUrl: url,
       }),
     });
@@ -990,8 +1043,9 @@ window.handleSubmit = async function() {
   }
 };
 
-function showGateBanner() {
-  if ($('gate-banner')) return;
+function showGateBanner(extraHtml = '') {
+  const existing = $('gate-banner');
+  if (existing) existing.remove();
   const div = document.createElement('div');
   div.id = 'gate-banner';
   div.innerHTML = `
@@ -1003,7 +1057,7 @@ function showGateBanner() {
         🔒 Token Required to Post FUD
       </div>
       <div style="font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:10px">
-        Hold any $SCROLL or $FUD in your wallet to unlock FUD posting and climb the leaderboard.
+        Connect your wallet and hold $SCROLL or $FUD to post FUD and earn SOL tips.
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${GATE_TOKENS.filter(t => t.mint !== 'TBD').map(t => `
@@ -1016,6 +1070,7 @@ function showGateBanner() {
           ">Buy ${t.symbol} →</a>
         `).join('')}
       </div>
+      ${extraHtml}
     </div>`;
   $('btnSubmit').insertAdjacentElement('afterend', div);
 }
