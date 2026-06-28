@@ -55,6 +55,32 @@ nav{
   transition:transform .12s,box-shadow .12s;
 }
 .btn-launch:hover{transform:translateY(-1px);box-shadow:0 0 30px rgba(255,61,0,.6),0 8px 20px rgba(255,61,0,.4)}
+.btn-acct{
+  font-family:'Space Grotesk';font-weight:600;font-size:13px;
+  padding:7px 13px;border-radius:99px;border:1px solid var(--border2);cursor:pointer;
+  background:transparent;color:var(--dim);flex-shrink:0;white-space:nowrap;
+  transition:all .13s;display:flex;align-items:center;gap:5px;
+}
+.btn-acct:hover{color:var(--text);border-color:var(--border3)}
+.btn-acct.logged-in{color:var(--text);border-color:rgba(0,255,135,.3)}
+
+/* account dropdown */
+.acct-wrap{position:relative;flex-shrink:0}
+.acct-drop{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:400;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:12px;
+  padding:6px;min-width:170px;box-shadow:0 12px 32px rgba(0,0,0,.7);
+}
+.acct-drop.open{display:block}
+.acct-drop-item{
+  display:block;width:100%;text-align:left;
+  padding:9px 13px;border:none;background:transparent;
+  color:var(--dim);font-size:13px;font-family:'Space Grotesk';font-weight:500;
+  border-radius:8px;cursor:pointer;transition:all .12s;white-space:nowrap;
+}
+.acct-drop-item:hover{background:var(--bg4);color:var(--text)}
+.acct-drop-item.danger:hover{color:var(--red);background:rgba(255,61,0,.08)}
+.acct-drop-divider{height:1px;background:var(--border);margin:4px 0}
 @media(max-width:480px){.tabs{display:none}}
 
 /* ── TICKER ──────────────────────── */
@@ -339,12 +365,24 @@ nav{
   <div class="tabs">
     <button class="tab active" data-sort="new">🆕 New</button>
     <button class="tab" data-sort="hot">🔥 Hot</button>
+    <button class="tab" data-sort="mine" id="tab-mine" style="display:none">👤 Mine</button>
   </div>
-  <button id="launch-btn" class="btn-launch">Launch FUD 💀</button>
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <button id="launch-btn" class="btn-launch">Launch Campaign 💀</button>
+    <div class="acct-wrap">
+      <button class="btn-acct" id="acct-btn">Sign In</button>
+      <div class="acct-drop" id="acct-drop">
+        <div id="acct-email-row" style="padding:8px 13px 6px;font-size:11px;color:var(--dim);font-family:'Space Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        <div class="acct-drop-divider"></div>
+        <button class="acct-drop-item" id="drop-mine">👤 My Campaigns</button>
+        <button class="acct-drop-item danger" id="drop-signout">Sign Out</button>
+      </div>
+    </div>
+  </div>
 </nav>
 
 <!-- TICKER -->
-<div class="ticker"><span class="ticker-inner" id="ticker-inner"><span class="tk"><span class="tk-skull">💀</span> FudFun.xyz — launch a campaign in seconds</span></span></div>
+<div class="ticker"><span class="ticker-inner" id="ticker-inner"><span class="tk"><span class="tk-skull">💀</span> FudFun.xyz — launch a FUD campaign in seconds</span></span></div>
 
 <!-- STATS BAR -->
 <div class="stats-bar" id="stats-bar">
@@ -380,7 +418,7 @@ nav{
     <button class="m-close" id="lc-close">×</button>
 
     <div id="lc-form-wrap">
-      <div class="m-title">Launch a FUD 💀</div>
+      <div class="m-title">Launch a FUD Campaign 💀</div>
       <p class="m-sub">Free. Instant. The internet does the rest.</p>
       <form id="lc-form" novalidate>
         <div class="field">
@@ -501,7 +539,55 @@ let solanaWeb3     = null;
 let reactedIds     = new Set(JSON.parse(localStorage.getItem('fud_reacted') || '[]'));
 
 // ── Auth (silent) ─────────────────
-account.get().then(u => { user = u; }).catch(() => {});
+account.get().then(u => {
+  user = u;
+  updateAccountUI();
+}).catch(() => { updateAccountUI(); });
+
+function updateAccountUI() {
+  const btn = document.getElementById('acct-btn');
+  const tabMine = document.getElementById('tab-mine');
+  if (user) {
+    btn.textContent = '👤 ' + (user.name || user.email?.split('@')[0] || 'Me');
+    btn.classList.add('logged-in');
+    document.getElementById('acct-email-row').textContent = user.email || '';
+    tabMine.style.display = '';
+  } else {
+    btn.textContent = 'Sign In';
+    btn.classList.remove('logged-in');
+    tabMine.style.display = 'none';
+  }
+}
+
+// Account button toggle
+document.getElementById('acct-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  if (!user) { window.location.href = 'login.html?next=/'; return; }
+  document.getElementById('acct-drop').classList.toggle('open');
+});
+document.addEventListener('click', () => document.getElementById('acct-drop').classList.remove('open'));
+
+document.getElementById('drop-mine').addEventListener('click', () => {
+  document.getElementById('acct-drop').classList.remove('open');
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.getElementById('tab-mine').classList.add('active');
+  sortMode = 'mine';
+  seenIds.clear();
+  document.getElementById('grid').innerHTML = '<div class="skel"></div>'.repeat(6);
+  loadFeed(false);
+});
+
+document.getElementById('drop-signout').addEventListener('click', async () => {
+  document.getElementById('acct-drop').classList.remove('open');
+  try { await account.deleteSession('current'); } catch {}
+  user = null;
+  updateAccountUI();
+  if (sortMode === 'mine') {
+    sortMode = 'new';
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===0));
+    loadFeed(false);
+  }
+});
 
 // ── Helpers ────────────────────────
 const esc = s => (s||'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
@@ -588,7 +674,11 @@ function makeCard(doc, flash) {
 // ── Feed ───────────────────────────
 async function loadFeed(flash) {
   try {
-    const res  = await dbs.listDocuments(DB, COLL, [Query.equal('active', true), Query.limit(80), Query.orderDesc('$createdAt')]);
+    let queries = [Query.equal('active', true), Query.limit(80), Query.orderDesc('$createdAt')];
+    if (sortMode === 'mine' && user) {
+      queries = [Query.equal('clientId', user.$id), Query.limit(80), Query.orderDesc('$createdAt')];
+    }
+    const res  = await dbs.listDocuments(DB, COLL, queries);
     let docs   = res.documents;
 
     if (sortMode === 'hot') {
@@ -693,6 +783,10 @@ function updateTicker(docs) {
 // ── Sort tabs ──────────────────────
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
+    if (t.dataset.sort === 'mine' && !user) {
+      window.location.href = 'login.html?next=/';
+      return;
+    }
     document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
     t.classList.add('active');
     sortMode = t.dataset.sort;
