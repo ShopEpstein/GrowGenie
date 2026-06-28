@@ -374,6 +374,7 @@ nav{
     <button class="tab" data-sort="mine" id="tab-mine" style="display:none">👤 Mine</button>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <a href="haters.html" class="btn-acct" style="text-decoration:none">🏆 Haters</a>
     <button id="launch-btn" class="btn-launch">Launch Campaign 💀</button>
     <div class="acct-wrap">
       <button class="btn-acct" id="acct-btn">Sign In</button>
@@ -479,6 +480,17 @@ nav{
           <input id="lf-wallet" type="text" placeholder="SOL address — community tips go here" spellcheck="false"/>
         </div>
 
+        <div style="height:1px;background:var(--border);margin:14px 0"></div>
+
+        <div class="field">
+          <label for="lf-bounty" style="display:flex;align-items:center;justify-content:space-between">
+            <span>💰 Bounty Pool (optional)</span>
+            <span style="color:var(--dim2);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">Pay the best FUDders in SOL</span>
+          </label>
+          <input id="lf-bounty" type="number" min="0" step="0.1" placeholder="◎ SOL — e.g. 1.0" spellcheck="false"/>
+          <p class="field-hint">Set a bounty and the top FUDder on your campaign earns it. Builds a community of haters working for you.</p>
+        </div>
+
         <div class="m-error" id="lf-err"></div>
         <button type="submit" class="btn-main" id="lf-submit">🎰 Launch Campaign</button>
       </form>
@@ -488,7 +500,10 @@ nav{
       <div class="s-skull">💀</div>
       <div class="s-title">FUD IS LIVE!</div>
       <p class="s-sub">Your campaign is on the feed right now.<br/>Share it — tag your target — watch the internet work.</p>
-      <button class="btn-back" id="lc-done">Back to Feed 🔥</button>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
+        <button class="btn-back" id="lc-done">Back to Feed 🔥</button>
+        <a href="haters.html" style="display:block;text-align:center;font-family:'Space Grotesk';font-size:13px;color:var(--dim);padding:8px">🏆 View Hall of Haters →</a>
+      </div>
     </div>
   </div>
 </div>
@@ -628,6 +643,14 @@ const GRAD  = {
 
 function tgt(doc) { return doc.fudTarget || doc.smearTarget || doc.projectName || '???'; }
 
+function haterRankIcon(sol) {
+  if (sol >= 10)  return '👑';
+  if (sol >= 5)   return '🏆';
+  if (sol >= 1)   return '💀';
+  if (sol >= 0.1) return '👹';
+  return '🎩';
+}
+
 function totalReacts(doc) {
   return (doc.reactFire || 0) + (doc.reactSkull || 0) + (doc.reactLaugh || 0);
 }
@@ -668,6 +691,14 @@ function makeCard(doc, flash) {
       <button class="react-btn" data-reaction="laugh" data-id="${esc(doc.$id)}">😂 <span class="cnt">${rLaugh||''}</span></button>
       <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}" data-target="${esc(doc.fudTarget||doc.smearTarget||'')}">𝕏 share</button>
     </div>
+    ${doc.bountyPool ? `
+    <div style="padding:4px 12px 0;display:flex;align-items:center;gap:5px">
+      <span style="font-family:'Space Mono';font-size:10px;font-weight:700;
+        background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.25);
+        border-radius:99px;padding:2px 9px;color:var(--gold)">
+        💰 ◎${parseFloat(doc.bountyPool).toFixed(2)} bounty
+      </span>
+    </div>` : ''}
     <div class="card-foot">
       ${tw
         ? `<button class="btn-tip-card" data-wallet="${tw}" data-name="${name}">💸 Tip SOL</button>`
@@ -692,7 +723,11 @@ async function loadFeed(flash) {
     let docs   = res.documents;
 
     if (sortMode === 'hot') {
-      docs = [...docs].sort((a, b) => totalReacts(b) - totalReacts(a));
+      docs = [...docs].sort((a, b) => {
+        const scoreB = totalReacts(b) + (parseFloat(b.bountyPool)||0) * 10;
+        const scoreA = totalReacts(a) + (parseFloat(a.bountyPool)||0) * 10;
+        return scoreB - scoreA;
+      });
     }
 
     allDocs = docs;
@@ -992,6 +1027,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
   const social = document.getElementById('lf-social').value.trim();
   const banner = document.getElementById('lf-banner').value.trim();
   const wallet = document.getElementById('lf-wallet').value.trim();
+  const bounty = parseFloat(document.getElementById('lf-bounty').value) || 0;
 
   if (!target) { lfErr('Who are we FUDing?'); return; }
   if (!why)    { lfErr('Tell us what they did.'); return; }
@@ -1040,6 +1076,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
   if (previewData) doc.socialPreviewThumb    = previewData.thumbnailUrl || null;
   if (previewData) doc.socialPreviewPlatform = previewData.platform     || null;
   if (banner)      doc.bannerUrl             = banner;
+  if (bounty > 0)  doc.bountyPool            = bounty.toString();
 
   // Run slot + create in parallel
   const [, created] = await Promise.allSettled([
@@ -1067,6 +1104,7 @@ document.getElementById('lc-done').addEventListener('click', () => {
     document.getElementById('lc-form').reset();
     previewData = null;
     document.getElementById('lf-preview').classList.remove('show');
+    document.getElementById('lf-bounty').value = '';
     const btn = document.getElementById('lf-submit');
     btn.disabled = false; btn.textContent = '🎰 Launch Campaign';
     selectedCat = 'hate';

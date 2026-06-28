@@ -46,7 +46,10 @@
         { "key": "reactFire",            "type": "integer", "required": false, "min": 0, "max": 9999999 },
         { "key": "reactSkull",           "type": "integer", "required": false, "min": 0, "max": 9999999 },
         { "key": "reactLaugh",           "type": "integer", "required": false, "min": 0, "max": 9999999 },
-        { "key": "fudTips",              "type": "integer", "required": false, "min": 0, "max": 9999999 }
+        { "key": "fudTips",              "type": "integer", "required": false, "min": 0, "max": 9999999 },
+        { "key": "bountyPool",           "type": "string",  "size": 32,  "required": false },
+        { "key": "bountyWallet",         "type": "string",  "size": 128, "required": false },
+        { "key": "bountyTxSig",          "type": "string",  "size": 128, "required": false }
       ],
       "indexes": [
         { "key": "idx_slug",     "type": "key", "attributes": ["slug"],     "orders": ["ASC"] },
