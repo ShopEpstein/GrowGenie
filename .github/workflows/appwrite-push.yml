@@ -325,14 +325,23 @@ jobs:
 
       # ── fudTips attribute on campaigns ──────────────────────────────────────────
 
-      - name: Add fudTips to campaigns
+      - name: Add economy fields to campaigns
         run: |
-          curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/attributes/integer" \
-            -H "X-Appwrite-Project: $PROJECT" \
-            -H "X-Appwrite-Key: $KEY" \
-            -H "Content-Type: application/json" \
-            -d '{"key":"fudTips","required":false,"min":0,"max":9999999}' \
-            && echo "✅ fudTips added" || echo "ℹ️  fudTips exists"
+          post_int() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/attributes/integer" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_str() {
+            curl -sf -X POST "$BASE/databases/$DB/collections/campaigns/attributes/string" \
+              -H "X-Appwrite-Project: $PROJECT" -H "X-Appwrite-Key: $KEY" \
+              -H "Content-Type: application/json" -d "$1" && sleep 0.3 || true
+          }
+          post_int '{"key":"fudTips","required":false,"min":0,"max":9999999}'
+          post_str '{"key":"bountyPool","size":32,"required":false}'
+          post_str '{"key":"bountyWallet","size":128,"required":false}'
+          post_str '{"key":"bountyTxSig","size":128,"required":false}'
+          echo "✅ economy fields added"
 
       # ── media storage bucket ─────────────────────────────────────────────────
 

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hall of Haters — FudFun.xyz 💀</title>
+<meta name="description" content="The all-time leaderboard of the internet's greatest FUDders."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#04050a;--bg2:#09090f;--bg3:#0f1018;--bg4:#141622;
+  --border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.12);--border3:rgba(255,255,255,.22);
+  --text:#F0F1FA;--dim:#7A7D96;--dim2:#4a4d62;
+  --red:#FF3D00;--orange:#FF8C00;--gold:#FFD700;--neon:#00FF87;--blue:#00D4FF;--purple:#A855F7;
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.03) 0px,rgba(0,0,0,.03) 1px,transparent 1px,transparent 2px)}
+
+/* ── NAV ─────────────────────────── */
+nav{
+  position:sticky;top:0;z-index:300;
+  background:rgba(4,5,10,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);
+  height:52px;display:flex;align-items:center;padding:0 14px;gap:10px;
+}
+.logo{font-family:'Space Grotesk';font-weight:800;font-size:18px;letter-spacing:-.03em;
+  text-shadow:0 0 20px rgba(255,61,0,.6),0 0 40px rgba(255,61,0,.3);color:#fff;flex-shrink:0}
+.nav-title{font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--dim);flex:1;text-align:center}
+.btn-back{font-family:'Space Grotesk';font-weight:600;font-size:13px;
+  padding:7px 14px;border-radius:99px;border:1px solid var(--border2);
+  background:transparent;color:var(--dim);cursor:pointer;transition:all .13s;white-space:nowrap}
+.btn-back:hover{color:var(--text);border-color:var(--border3)}
+
+/* ── HERO ────────────────────────── */
+.hero{
+  text-align:center;padding:48px 20px 32px;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(255,215,0,.08) 0%,transparent 70%);
+  border-bottom:1px solid var(--border);
+}
+.hero-crown{font-size:56px;line-height:1;margin-bottom:12px;
+  filter:drop-shadow(0 0 32px rgba(255,215,0,.5))}
+.hero-title{font-family:'Space Grotesk';font-weight:800;font-size:36px;letter-spacing:-.04em;
+  background:linear-gradient(90deg,var(--gold),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px}
+.hero-sub{font-size:14px;color:var(--dim);line-height:1.6;max-width:500px;margin:0 auto 24px}
+
+/* ── STATS ROW ───────────────────── */
+.stats-row{display:flex;justify-content:center;gap:24px;flex-wrap:wrap}
+.stat-pill{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:99px;
+  padding:7px 16px;font-family:'Space Mono';font-size:11px;
+  display:flex;align-items:center;gap:6px;color:var(--dim)
+}
+.stat-pill strong{color:var(--text);font-weight:700}
+
+/* ── TOP 3 PODIUM ────────────────── */
+.podium{
+  display:flex;align-items:flex-end;justify-content:center;
+  gap:12px;padding:40px 20px 32px;max-width:700px;margin:0 auto;
+}
+.podium-card{
+  flex:1;max-width:200px;background:var(--bg2);border:1px solid var(--border2);
+  border-radius:var(--r);overflow:hidden;text-align:center;position:relative;
+  transition:transform .15s;
+}
+.podium-card:hover{transform:translateY(-3px)}
+.podium-card.p1{border-color:rgba(255,215,0,.4);box-shadow:0 0 40px rgba(255,215,0,.15)}
+.podium-card.p2{border-color:rgba(192,192,192,.3)}
+.podium-card.p3{border-color:rgba(205,127,50,.3)}
+.podium-rank{
+  font-family:'Space Mono';font-size:28px;padding:16px 0 6px;line-height:1;
+}
+.podium-name{font-family:'Space Grotesk';font-weight:700;font-size:14px;
+  padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.podium-handle{font-size:11px;color:var(--dim);margin-top:2px;padding:0 10px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.podium-tier{
+  font-family:'Space Mono';font-size:10px;font-weight:700;letter-spacing:.06em;
+  padding:3px 10px;margin:6px 10px;border-radius:99px;display:inline-block;
+}
+.podium-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border);margin-top:10px;
+}
+.podium-stat{padding:8px 4px;font-family:'Space Mono';font-size:10px;color:var(--dim);
+  border-right:1px solid var(--border);}
+.podium-stat:last-child{border-right:none}
+.podium-stat strong{display:block;font-size:13px;color:var(--text);margin-bottom:2px}
+.podium-bar{height:4px;margin-top:0;}
+.p1 .podium-bar{background:linear-gradient(90deg,var(--gold),var(--orange))}
+.p2 .podium-bar{background:#c0c0c0}
+.p3 .podium-bar{background:#cd7f32}
+
+/* ── LEADERBOARD TABLE ───────────── */
+.lb-wrap{max-width:800px;margin:0 auto;padding:0 12px 80px}
+.lb-head{
+  display:grid;grid-template-columns:48px 1fr 100px 100px 80px;
+  gap:0;padding:8px 16px;
+  font-family:'Space Mono';font-size:10px;font-weight:700;
+  letter-spacing:.08em;color:var(--dim2);text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+.lb-row{
+  display:grid;grid-template-columns:48px 1fr 100px 100px 80px;
+  gap:0;padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  transition:background .13s;align-items:center;
+}
+.lb-row:hover{background:var(--bg2)}
+.lb-row.top3{background:linear-gradient(90deg,rgba(255,215,0,.04),transparent)}
+.lb-num{font-family:'Space Mono';font-size:13px;font-weight:700;color:var(--dim)}
+.lb-num.gold{color:var(--gold)}
+.lb-num.silver{color:#c0c0c0}
+.lb-num.bronze{color:#cd7f32}
+.lb-identity{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lb-name{font-family:'Space Grotesk';font-weight:700;font-size:14px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-handle{font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-tier-badge{
+  display:inline-flex;align-items:center;gap:3px;
+  font-family:'Space Mono';font-size:9px;font-weight:700;letter-spacing:.05em;
+  padding:2px 7px;border-radius:99px;width:fit-content;margin-top:2px;
+}
+.lb-sol{font-family:'Space Mono';font-size:12px;color:var(--gold);font-weight:700}
+.lb-posts{font-family:'Space Mono';font-size:12px;color:var(--dim)}
+.lb-reacts{font-family:'Space Mono';font-size:12px;color:var(--purple)}
+
+.skel{border-radius:var(--r);height:56px;background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+
+.empty{text-align:center;padding:60px 20px;color:var(--dim)}
+.empty h3{font-family:'Space Grotesk';font-size:22px;color:var(--text);margin-bottom:8px}
+
+/* ── TIER COLOURS ─────────────────── */
+.tier-amateur  {background:rgba(122,125,150,.15);color:var(--dim);border:1px solid rgba(122,125,150,.3)}
+.tier-pro      {background:rgba(0,212,255,.1);color:var(--blue);border:1px solid rgba(0,212,255,.3)}
+.tier-elite    {background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.3)}
+.tier-grand    {background:rgba(255,61,0,.12);color:var(--orange);border:1px solid rgba(255,61,0,.3)}
+.tier-hall     {background:rgba(255,215,0,.12);color:var(--gold);border:1px solid rgba(255,215,0,.4);box-shadow:0 0 8px rgba(255,215,0,.15)}
+
+@media(max-width:560px){
+  .lb-head,.lb-row{grid-template-columns:36px 1fr 80px 60px}
+  .lb-head .col-reacts,.lb-row .lb-reacts{display:none}
+  .podium{gap:6px}
+  .hero-title{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">💀 FudFun</a>
+  <div class="nav-title">Hall of Haters</div>
+  <a href="/" class="btn-back">← Feed</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-crown">🏆</div>
+  <h1 class="hero-title">Hall of Haters</h1>
+  <p class="hero-sub">The all-time leaderboard of the internet's greatest FUDders. Rank up by earning SOL tips and reactions. The best haters get hired.</p>
+  <div class="stats-row" id="global-stats">
+    <div class="stat-pill">💀 <strong id="gs-haters">—</strong> FUDders</div>
+    <div class="stat-pill">◎ <strong id="gs-sol">—</strong> SOL tipped</div>
+    <div class="stat-pill">🔥 <strong id="gs-posts">—</strong> FUD posts</div>
+  </div>
+</div>
+
+<!-- TOP 3 PODIUM -->
+<div class="podium" id="podium"></div>
+
+<!-- FULL LEADERBOARD -->
+<div class="lb-wrap">
+  <div class="lb-head">
+    <div>#</div>
+    <div>Hater</div>
+    <div>◎ SOL earned</div>
+    <div>Posts fired</div>
+    <div class="col-reacts">Reactions</div>
+  </div>
+  <div id="lb-body">
+    <div class="skel" style="margin:6px 0"></div>
+    <div class="skel" style="margin:6px 0"></div>
+    <div class="skel" style="margin:6px 0"></div>
+    <div class="skel" style="margin:6px 0"></div>
+    <div class="skel" style="margin:6px 0"></div>
+  </div>
+</div>
+
+<script type="module">
+import { Client, Databases, Query } from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
+
+const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('6a2bc15c00065b3c91a0');
+const dbs = new Databases(client);
+const DB = 'growthgenie';
+
+// ── Hater rank ──────────────────────────────────────────
+function haterRank(solEarned) {
+  if (solEarned >= 10)  return { icon:'👑', label:'Hall of Hater',    cls:'tier-hall'    };
+  if (solEarned >= 5)   return { icon:'🏆', label:'Grand Hater',      cls:'tier-grand'   };
+  if (solEarned >= 1)   return { icon:'💀', label:'Elite Hater',      cls:'tier-elite'   };
+  if (solEarned >= 0.1) return { icon:'👹', label:'Professional Hater',cls:'tier-pro'    };
+  return                       { icon:'🎩', label:'Amateur Hater',     cls:'tier-amateur' };
+}
+
+function esc(s){ return (s||'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])) }
+
+// ── Fetch & aggregate all fud_posts ─────────────────────
+async function load() {
+  const allPosts = [];
+  let cursor = null;
+  while (true) {
+    const q = [Query.limit(100), Query.orderDesc('$createdAt')];
+    if (cursor) q.push(Query.cursorAfter(cursor));
+    const res = await dbs.listDocuments(DB, 'fud_posts', q);
+    allPosts.push(...res.documents);
+    if (res.documents.length < 100) break;
+    cursor = res.documents[res.documents.length - 1].$id;
+  }
+
+  // Aggregate by username
+  const byUser = {};
+  for (const p of allPosts) {
+    const u = p.username || 'anon';
+    if (!byUser[u]) byUser[u] = { username: u, xHandle: p.xHandle || '', sol: 0, posts: 0, tipCount: 0 };
+    byUser[u].sol      += parseFloat(p.tipsReceived || '0');
+    byUser[u].posts    += 1;
+    byUser[u].tipCount += p.tipCount || 0;
+    if (p.xHandle && !byUser[u].xHandle) byUser[u].xHandle = p.xHandle;
+  }
+
+  const ranked = Object.values(byUser).sort((a, b) => b.sol - a.sol || b.posts - a.posts);
+
+  // Global stats
+  const totalSol = ranked.reduce((s, u) => s + u.sol, 0);
+  document.getElementById('gs-haters').textContent = ranked.length;
+  document.getElementById('gs-sol').textContent    = totalSol.toFixed(2);
+  document.getElementById('gs-posts').textContent  = allPosts.length;
+
+  renderPodium(ranked.slice(0, 3));
+  renderLeaderboard(ranked);
+}
+
+function renderPodium(top) {
+  if (!top.length) { document.getElementById('podium').innerHTML = ''; return; }
+
+  const order = [top[1], top[0], top[2]].filter(Boolean); // 2nd, 1st, 3rd visual order
+  const sizes = { 0: '88px', 1: '108px', 2: '76px' }; // heights for 2nd, 1st, 3rd
+
+  const podium = document.getElementById('podium');
+  podium.innerHTML = top.map((u, idx) => {
+    const pos  = idx + 1;
+    const rank = haterRank(u.sol);
+    const medals = ['🥇','🥈','🥉'];
+    const cls  = ['p1','p2','p3'][idx];
+    return `
+      <div class="podium-card ${cls}" style="order:${pos===1?2:pos===2?1:3}">
+        <div class="podium-bar"></div>
+        <div class="podium-rank">${medals[idx]}</div>
+        <div class="podium-name">${esc(u.username)}</div>
+        ${u.xHandle ? `<div class="podium-handle">@${esc(u.xHandle)}</div>` : ''}
+        <div style="padding:6px 10px 0">
+          <span class="podium-tier lb-tier-badge ${rank.cls}">${rank.icon} ${rank.label}</span>
+        </div>
+        <div class="podium-stats">
+          <div class="podium-stat"><strong>◎ ${u.sol.toFixed(2)}</strong>earned</div>
+          <div class="podium-stat"><strong>${u.posts}</strong>posts</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderLeaderboard(ranked) {
+  const body = document.getElementById('lb-body');
+  if (!ranked.length) {
+    body.innerHTML = `<div class="empty"><h3>No FUDders yet 💀</h3><p>Be the first to fire.</p></div>`;
+    return;
+  }
+
+  body.innerHTML = ranked.map((u, i) => {
+    const pos   = i + 1;
+    const rank  = haterRank(u.sol);
+    const numCls = pos === 1 ? 'gold' : pos === 2 ? 'silver' : pos === 3 ? 'bronze' : '';
+    const rowCls = pos <= 3 ? 'top3' : '';
+    return `
+      <div class="lb-row ${rowCls}">
+        <div class="lb-num ${numCls}">${pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos}</div>
+        <div class="lb-identity">
+          <div class="lb-name">${esc(u.username)}</div>
+          ${u.xHandle ? `<div class="lb-handle">@${esc(u.xHandle)}</div>` : ''}
+          <span class="lb-tier-badge ${rank.cls}">${rank.icon} ${rank.label}</span>
+        </div>
+        <div class="lb-sol">◎ ${u.sol.toFixed(3)}</div>
+        <div class="lb-posts">${u.posts} post${u.posts !== 1 ? 's' : ''}</div>
+        <div class="lb-reacts">${u.tipCount}</div>
+      </div>`;
+  }).join('');
+}
+
+load().catch(console.error);
+</script>
+</body>
+</html>
