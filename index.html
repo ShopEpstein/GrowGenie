@@ -349,6 +349,37 @@ nav{
 .btn-tip-send:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 24px rgba(255,215,0,.3)}
 .btn-tip-send:disabled{opacity:.45;cursor:not-allowed}
 
+/* ── GATE MODAL ──────────────────── */
+.gate-body{text-align:center;padding:8px 0 4px}
+.gate-icon{font-size:52px;margin-bottom:14px;display:block}
+.gate-title{font-family:'Space Grotesk';font-weight:800;font-size:22px;color:var(--gold);margin-bottom:10px}
+.gate-desc{font-size:13px;color:var(--dim);line-height:1.65;margin-bottom:24px}
+.gate-desc strong{color:var(--text)}
+.gate-actions{display:flex;flex-direction:column;gap:8px}
+.btn-gate-buy{
+  display:block;padding:14px;border-radius:12px;text-decoration:none;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  color:#fff;font-family:'Space Grotesk';font-size:15px;font-weight:800;
+  box-shadow:0 0 20px rgba(255,61,0,.3);transition:transform .12s,box-shadow .12s;
+}
+.btn-gate-buy:hover{transform:translateY(-1px);box-shadow:0 0 32px rgba(255,61,0,.5)}
+.btn-gate-cancel{
+  padding:13px;border-radius:12px;border:1px solid var(--border2);
+  background:transparent;color:var(--dim);font-family:'Space Grotesk';font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .13s;
+}
+.btn-gate-cancel:hover{color:var(--text);border-color:var(--border3)}
+
+/* ── LIVE BANNER ─────────────────── */
+#live-banner{
+  display:none;margin:8px 12px 0;border-radius:10px;cursor:pointer;
+  background:rgba(255,61,0,.1);border:1px solid rgba(255,61,0,.35);
+  padding:9px 16px;font-family:'Space Grotesk';font-size:12px;font-weight:700;
+  color:var(--red);text-align:center;animation:flashBadge 1.2s ease-in-out infinite;
+  transition:background .15s;
+}
+#live-banner:hover{background:rgba(255,61,0,.18)}
+
 /* ── TOAST ───────────────────────── */
 #toast{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
@@ -397,6 +428,9 @@ nav{
   <div class="stat">💀 <span class="stat-val" id="st-total">—</span> campaigns</div>
   <div class="stat">🔥 <span class="stat-val" id="st-reactions">—</span> reactions</div>
 </div>
+
+<!-- LIVE BANNER -->
+<div id="live-banner" onclick="dismissLiveBanner()">🔴 New FUD just dropped — tap to see it</div>
 
 <!-- FEED -->
 <main class="main">
@@ -529,6 +563,30 @@ nav{
   </div>
 </div>
 
+<!-- GATE MODAL -->
+<div class="overlay" id="gate-overlay">
+  <div class="modal" style="max-width:420px">
+    <button class="m-close" onclick="document.getElementById('gate-overlay').classList.remove('open')">×</button>
+    <div class="gate-body">
+      <span class="gate-icon">🔒</span>
+      <div class="gate-title">Token-Gated Access</div>
+      <p class="gate-desc">
+        You need to hold <strong>$SCROLL</strong> or <strong>$FUD</strong> to launch a FUD campaign.<br/><br/>
+        These tokens are your ticket to the Player Hater's Ball. No bag, no FUD.
+      </p>
+      <div class="gate-actions">
+        <a id="gate-buy-scroll" href="https://pump.fun/coin/9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump" target="_blank" rel="noopener" class="btn-gate-buy">
+          Buy $SCROLL on pump.fun →
+        </a>
+        <a id="gate-buy-fud" href="#" class="btn-gate-buy" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
+          Buy $FUD — coming soon
+        </a>
+        <button class="btn-gate-cancel" onclick="document.getElementById('gate-overlay').classList.remove('open')">Maybe later</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script type="module">
@@ -558,6 +616,39 @@ let tipTargetLabel = '';
 let selectedTipAmt = 0.5;
 let solanaWeb3     = null;
 let reactedIds     = new Set(JSON.parse(localStorage.getItem('fud_reacted') || '[]'));
+
+// ── Token gate ─────────────────────
+const GATE_TOKENS = [
+  { symbol: '$SCROLL', mint: '9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump' },
+  { symbol: '$FUD',    mint: 'TBD' },
+];
+const SOL_RPC = 'https://api.mainnet-beta.solana.com';
+
+async function getSplBalance(walletAddress, mintAddress) {
+  if (!walletAddress || mintAddress === 'TBD') return 0;
+  try {
+    const resp = await fetch(SOL_RPC, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1, method: 'getTokenAccountsByOwner',
+        params: [walletAddress, { mint: mintAddress }, { encoding: 'jsonParsed' }],
+      }),
+    });
+    const j = await resp.json();
+    return (j.result?.value || []).reduce(
+      (s, a) => s + (a.account?.data?.parsed?.info?.tokenAmount?.uiAmount || 0), 0
+    );
+  } catch { return 0; }
+}
+
+async function checkGateTokens(walletAddress) {
+  const results = await Promise.all(GATE_TOKENS.map(t => getSplBalance(walletAddress, t.mint)));
+  return results.some(b => b > 0);
+}
+
+function showGateModal() {
+  document.getElementById('gate-overlay').classList.add('open');
+}
 
 // ── Auth (silent) ─────────────────
 account.get().then(u => {
@@ -872,9 +963,49 @@ document.querySelectorAll('.tab').forEach(t => {
   });
 });
 
-// ── Auto-refresh ───────────────────
+// ── Auto-refresh + Realtime ────────
+let pendingNewDocs = 0;
+
+function showLiveBanner(count) {
+  pendingNewDocs = count;
+  const el = document.getElementById('live-banner');
+  el.textContent = count === 1
+    ? '🔴 New FUD just dropped — tap to see it'
+    : `🔴 ${count} new FUD campaigns — tap to see them`;
+  el.style.display = 'block';
+}
+
+window.dismissLiveBanner = function() {
+  document.getElementById('live-banner').style.display = 'none';
+  pendingNewDocs = 0;
+  seenIds.clear();
+  loadFeed(false);
+};
+
 loadFeed(false);
-setInterval(() => loadFeed(true), 10000);
+
+// Realtime subscription for instant updates
+try {
+  client.subscribe(
+    `databases.${DB}.collections.${COLL}.documents`,
+    (evt) => {
+      const isCreate = evt.events?.some(e => e.endsWith('.create'));
+      if (!isCreate) return;
+      if (sortMode === 'mine') return;
+      const doc = evt.payload;
+      if (!doc?.active) return;
+      // If user is scrolled near top, inject directly; otherwise show banner
+      if (window.scrollY < 200) {
+        if (!seenIds.has(doc.$id)) loadFeed(true);
+      } else {
+        showLiveBanner(pendingNewDocs + 1);
+      }
+    }
+  );
+} catch {}
+
+// Fallback poll every 45s for any missed events
+setInterval(() => { if (sortMode !== 'mine') loadFeed(true); }, 45000);
 
 // ── Toast ──────────────────────────
 function toast(msg, type = '') {
@@ -927,7 +1058,26 @@ function runSlotMachine() {
 }
 
 // ── Launch modal ───────────────────
-document.getElementById('launch-btn').addEventListener('click', () => {
+document.getElementById('launch-btn').addEventListener('click', async () => {
+  if (!user) { window.location.href = 'login.html?next=/'; return; }
+
+  // Token gate: check if Phantom wallet is connected and holds $SCROLL or $FUD
+  const phantom = window.solana;
+  if (phantom?.isPhantom) {
+    try {
+      let pub = phantom.publicKey?.toString();
+      if (!pub) {
+        // Silent connect only (no popup) — if not previously authorized, skip gate
+        const res = await phantom.connect({ onlyIfTrusted: true }).catch(() => null);
+        pub = res?.publicKey?.toString() || phantom.publicKey?.toString();
+      }
+      if (pub) {
+        const gateOk = await checkGateTokens(pub);
+        if (!gateOk) { showGateModal(); return; }
+      }
+    } catch { /* wallet error — fall through to launch */ }
+  }
+
   document.getElementById('launch-overlay').classList.add('open');
 });
 document.getElementById('lc-close').addEventListener('click', closeLaunch);
