@@ -535,7 +535,19 @@ nav{
       <div class="s-title">FUD IS LIVE!</div>
       <p class="s-sub">Your campaign is on the feed right now.<br/>Share it — tag your target — watch the internet work.</p>
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px">
-        <button class="btn-back" id="lc-done">Back to Feed 🔥</button>
+        <a id="lc-success-share" href="#" target="_blank" rel="noopener"
+           style="display:block;padding:14px;border-radius:12px;text-align:center;
+           background:#000;border:1px solid rgba(255,255,255,.15);
+           font-family:'Space Grotesk';font-weight:800;font-size:15px;color:#fff;text-decoration:none">
+          𝕏 Share on X →
+        </a>
+        <a id="lc-success-camp" href="#"
+           style="display:block;padding:12px;border-radius:12px;text-align:center;
+           background:linear-gradient(135deg,var(--red),var(--orange));
+           font-family:'Space Grotesk';font-weight:800;font-size:15px;color:#fff;text-decoration:none">
+          View Campaign + AI FUD Ammo 💀
+        </a>
+        <button class="btn-back" id="lc-done" style="background:transparent;border:1px solid var(--border2);color:var(--dim);font-size:13px">Back to Feed</button>
         <a href="haters.html" style="display:block;text-align:center;font-family:'Space Grotesk';font-size:13px;color:var(--dim);padding:8px">🏆 View Hall of Haters →</a>
       </div>
     </div>
@@ -825,7 +837,7 @@ function makeCard(doc, flash) {
       <button class="react-btn${hasReacted?' reacted':''}" data-reaction="fire" data-id="${esc(doc.$id)}">🔥 <span class="cnt">${rFire||''}</span></button>
       <button class="react-btn" data-reaction="skull" data-id="${esc(doc.$id)}">💀 <span class="cnt">${rSkull||''}</span></button>
       <button class="react-btn" data-reaction="laugh" data-id="${esc(doc.$id)}">😂 <span class="cnt">${rLaugh||''}</span></button>
-      <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}" data-target="${esc(doc.fudTarget||doc.smearTarget||'')}">𝕏 share</button>
+      <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}" data-target="${esc(doc.fudTarget||doc.smearTarget||'')}" data-why="${esc((doc.tag||'').slice(0,120))}">𝕏 share</button>
     </div>
     ${doc.bountyPool ? `
     <div style="padding:4px 12px 0;display:flex;align-items:center;gap:5px">
@@ -925,9 +937,12 @@ function bindCards() {
       e.stopPropagation();
       const name   = btn.dataset.name;
       const target = btn.dataset.target || name;
+      const why    = btn.dataset.why || '';
       const id     = btn.dataset.id;
-      const url    = `${location.origin}/campaign.html?c=${id}`;
-      const text   = `💀 ${target} is getting exposed on FudFun.xyz — see the receipts and tip the best FUD 🔥`;
+      const url    = `${location.origin}/c/${id}`;
+      const text   = why
+        ? `💀 ${target}: ${why}\n\nFull campaign + tip the best FUD 👇`
+        : `💀 ${target} is getting FUD'd on fudfun.xyz — see the receipts and tip the best takes 🔥`;
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=560,height=420');
     };
   });
@@ -975,7 +990,7 @@ function bindCards() {
   document.querySelectorAll('.card').forEach(card => {
     card.onclick = e => {
       if (e.target.closest('.react-btn,.react-share,.btn-tip-card,.btn-delete-card')) return;
-      window.location.href = `campaign.html?c=${card.dataset.id}`;
+      window.location.href = `/c/${card.dataset.id}`;
     };
   });
 }
@@ -1292,6 +1307,13 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     return;
   }
 
+  const newDoc    = created.value;
+  const campUrl   = `${location.origin}/c/${newDoc.$id}`;
+  const shareText = `💀 I just launched a FUD campaign against ${target} on fudfun.xyz\n\n${doc.tag ? doc.tag.slice(0,100) : 'The internet needs to see this.'}\n\nJoin the campaign 👇`;
+  const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(campUrl)}`;
+
+  document.getElementById('lc-success-share').href = shareHref;
+  document.getElementById('lc-success-camp').href  = `/c/${newDoc.$id}`;
   document.getElementById('lc-form-wrap').style.display = 'none';
   document.getElementById('lc-success').style.display   = 'block';
   seenIds.clear();
