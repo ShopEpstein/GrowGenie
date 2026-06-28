@@ -300,6 +300,14 @@ a{color:inherit;text-decoration:none}
 
 .pb{height:60px}
 
+/* ── TPL SKELETON ───────────────── */
+.tpl-skel{
+  border:1px solid var(--border);border-radius:var(--r);padding:16px;
+  background:linear-gradient(90deg,var(--bg2) 25%,var(--bg3) 50%,var(--bg2) 75%);
+  background-size:200% 100%;animation:shimmer 1.4s linear infinite;height:90px;margin-bottom:8px;
+}
+@keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+
 /* ── HATER RANK BADGES ──────────── */
 .hater-badge{
   display:inline-flex;align-items:center;gap:3px;
@@ -764,26 +772,46 @@ function applyBranding() {
 function buildTemplates() {
   const who   = CAMP.fudTarget || CAMP.smearTarget || CAMP.projectName || '???';
   const angle = CAMP.tag || 'suspicious activity';
-  const url   = `${location.origin}/campaign.html?c=${campId}`;
-  const tmpls = [
+  const url   = `${location.origin}/c/${campId}`;
+  const list  = $('tplList');
+
+  // Show skeletons while AI generates
+  list.innerHTML = '<div class="tpl-skel"></div><div class="tpl-skel"></div><div class="tpl-skel"></div>';
+
+  fetch('/api/fud-copy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ targetName: who, reason: angle, category: CAMP.fudCategory, campaignUrl: url }),
+  })
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(data => renderTemplates(data.tweets && data.tweets.length ? data.tweets : fallbackTemplates(who, angle, url)))
+  .catch(() => renderTemplates(fallbackTemplates(who, angle, url)));
+}
+
+function fallbackTemplates(who, angle, url) {
+  return [
     { e:'🚨', t:`🚨 ${who} is showing major red flags the community needs to know about. DYOR before you get wrecked.\n\n${url}` },
-    { e:'💀', t:`Why is nobody talking about what ${who} has been up to? This is not FUD, these are facts. Check the receipts:\n${url}` },
+    { e:'💀', t:`Why is nobody talking about what ${who} has been up to? These are facts. Check the receipts:\n${url}` },
     { e:'🧵', t:`Thread: everything suspicious about ${who}. Someone has to say it 🧵\n\nFull breakdown: ${url}` },
     { e:'👀', t:`I looked into ${who} so you don't have to. What I found: ${angle}\n\nReceipts: ${url}` },
     { e:'⚠️', t:`PSA: ${who} — ${angle}. The community needs to see this. 💀\n${url}` },
   ];
+}
 
+function renderTemplates(tmpls) {
   const list = $('tplList');
   list.innerHTML = '';
   tmpls.forEach((tpl, i) => {
+    const t = typeof tpl === 'string' ? tpl : tpl.t;
+    const e = typeof tpl === 'string' ? '💀' : (tpl.e || '💀');
     const d = document.createElement('div');
     d.className   = 'tpl';
-    d.dataset.txt = tpl.t;
+    d.dataset.txt = t;
     d.innerHTML   = `
-      <div class="tpl-icon">${tpl.e}</div>
-      <div class="tpl-text">${esc(tpl.t).replace(/\n/g,'<br>')}</div>
+      <div class="tpl-icon">${e}</div>
+      <div class="tpl-text">${esc(t).replace(/\n/g,'<br>')}</div>
       <button class="btn-fire" id="fire-${i}">Fire 💀</button>`;
-    d.querySelector('button').onclick = () => fireTemplate(i, tpl.t);
+    d.querySelector('button').onclick = () => fireTemplate(i, t);
     list.appendChild(d);
   });
 }
