@@ -587,6 +587,29 @@ nav{
   </div>
 </div>
 
+<!-- MOBILE WALLET MODAL -->
+<div class="overlay" id="wallet-overlay">
+  <div class="modal" style="max-width:420px">
+    <button class="m-close" onclick="document.getElementById('wallet-overlay').classList.remove('open')">×</button>
+    <div class="gate-body">
+      <span class="gate-icon">📱</span>
+      <div class="gate-title">Open in Your Wallet</div>
+      <p class="gate-desc">
+        Open FudFun inside your Solana wallet's browser so we can verify you hold <strong>$SCROLL</strong> or <strong>$FUD</strong>.
+      </p>
+      <div class="gate-actions">
+        <a id="open-phantom-btn" href="#" target="_blank" rel="noopener" class="btn-gate-buy">
+          Open in Phantom →
+        </a>
+        <a id="open-solflare-btn" href="#" target="_blank" rel="noopener" class="btn-gate-buy" style="background:linear-gradient(135deg,#ff6e38,#ffd339);color:#1a0a00">
+          Open in Solflare →
+        </a>
+        <button class="btn-gate-cancel" onclick="document.getElementById('wallet-overlay').classList.remove('open')">Skip for now</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script type="module">
@@ -624,6 +647,20 @@ const GATE_TOKENS = [
 ];
 const SOL_RPC = 'https://api.mainnet-beta.solana.com';
 
+// Detect any injected Solana wallet provider across Phantom, Solflare, Backpack, etc.
+function getWalletProvider() {
+  const candidates = [
+    window.phantom?.solana,   // Phantom desktop ext + Phantom mobile in-app browser
+    window.solana,             // Most wallets also alias here
+    window.solflare,           // Solflare desktop + Solflare mobile in-app browser
+    window.backpack,           // Backpack
+    window.xnft?.solana,       // xNFT / Backpack alternate
+    window.glowSolana,         // Glow
+    window.okxwallet?.solana,  // OKX Wallet
+  ].filter(p => p && typeof p.connect === 'function');
+  return candidates[0] || null;
+}
+
 async function getSplBalance(walletAddress, mintAddress) {
   if (!walletAddress || mintAddress === 'TBD') return 0;
   try {
@@ -648,6 +685,14 @@ async function checkGateTokens(walletAddress) {
 
 function showGateModal() {
   document.getElementById('gate-overlay').classList.add('open');
+}
+
+function showMobileWalletModal() {
+  const url = encodeURIComponent(location.href);
+  const ref = encodeURIComponent(location.origin);
+  document.getElementById('open-phantom-btn').href  = `https://phantom.app/ul/browse/${url}?ref=${ref}`;
+  document.getElementById('open-solflare-btn').href = `https://solflare.com/ul/v1/browse/${url}?ref=${ref}`;
+  document.getElementById('wallet-overlay').classList.add('open');
 }
 
 // ── Auth (silent) ─────────────────
@@ -1061,22 +1106,29 @@ function runSlotMachine() {
 document.getElementById('launch-btn').addEventListener('click', async () => {
   if (!user) { window.location.href = 'login.html?next=/'; return; }
 
-  // Token gate: check if Phantom wallet is connected and holds $SCROLL or $FUD
-  const phantom = window.solana;
-  if (phantom?.isPhantom) {
-    try {
-      let pub = phantom.publicKey?.toString();
-      if (!pub) {
-        // Silent connect only (no popup) — if not previously authorized, skip gate
-        const res = await phantom.connect({ onlyIfTrusted: true }).catch(() => null);
-        pub = res?.publicKey?.toString() || phantom.publicKey?.toString();
-      }
-      if (pub) {
-        const gateOk = await checkGateTokens(pub);
-        if (!gateOk) { showGateModal(); return; }
-      }
-    } catch { /* wallet error — fall through to launch */ }
+  const provider = getWalletProvider();
+
+  if (!provider) {
+    // No wallet detected — on mobile, redirect into the wallet's in-app browser
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) { showMobileWalletModal(); return; }
+    // Desktop without a wallet extension — skip gate, open launch
+    document.getElementById('launch-overlay').classList.add('open');
+    return;
   }
+
+  // Wallet detected — try silent connect and check token balance
+  try {
+    let pub = provider.publicKey?.toString();
+    if (!pub) {
+      const res = await provider.connect({ onlyIfTrusted: true }).catch(() => null);
+      pub = res?.publicKey?.toString() || provider.publicKey?.toString();
+    }
+    if (pub) {
+      const gateOk = await checkGateTokens(pub);
+      if (!gateOk) { showGateModal(); return; }
+    }
+  } catch { /* wallet error — fall through */ }
 
   document.getElementById('launch-overlay').classList.add('open');
 });
