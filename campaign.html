@@ -299,6 +299,37 @@ a{color:inherit;text-decoration:none}
 #toast.err{border-color:rgba(255,61,0,.5);color:var(--red)}
 
 .pb{height:60px}
+
+/* ── PLAYBOOK ───────────────────── */
+.playbook-tiers{display:grid;gap:8px}
+.tier{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tier-head{
+  padding:8px 14px;font-family:'Space Mono';font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.tier-head.free{background:rgba(0,255,135,.08);color:var(--neon);border-bottom:1px solid rgba(0,255,135,.15)}
+.tier-head.bronze{background:rgba(205,127,50,.1);color:#cd7f32;border-bottom:1px solid rgba(205,127,50,.2)}
+.tier-head.silver{background:rgba(192,192,192,.08);color:#c0c0c0;border-bottom:1px solid rgba(192,192,192,.15)}
+.tier-head.gold{background:rgba(255,215,0,.08);color:var(--gold);border-bottom:1px solid rgba(255,215,0,.2)}
+.tier-head.diamond{background:rgba(0,212,255,.08);color:var(--blue);border-bottom:1px solid rgba(0,212,255,.2)}
+.tier-list{list-style:none;padding:10px 14px;display:grid;gap:5px}
+.tier-list li{
+  font-size:12px;color:var(--dim);padding-left:14px;position:relative;line-height:1.5;
+}
+.tier-list li::before{content:'→';position:absolute;left:0;color:var(--red);font-size:10px}
+
+/* ── IRL GRID ───────────────────── */
+.irl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-bottom:8px}
+.irl-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px 14px;display:flex;align-items:flex-start;gap:12px;
+  transition:border-color .13s;
+}
+.irl-card:hover{border-color:var(--border2)}
+.irl-icon{font-size:22px;flex-shrink:0;padding-top:1px;line-height:1}
+.irl-body{flex:1;min-width:0}
+.irl-title{font-family:'Space Grotesk';font-weight:700;font-size:13px;margin-bottom:4px}
+.irl-desc{font-size:12px;color:var(--dim);line-height:1.55}
 </style>
 </head>
 <body>
@@ -337,6 +368,120 @@ a{color:inherit;text-decoration:none}
 <section class="section">
   <div class="sec-head">🔥 FUD Ammo <span class="sec-sub">click to fire on X</span></div>
   <div class="tpl-list" id="tplList"><div class="empty">Loading campaign…</div></div>
+</section>
+
+<!-- FUD PLAYBOOK -->
+<section class="section" style="margin-top:8px" id="playbookSection">
+  <div class="sec-head">💰 FUD Playbook <span class="sec-sub">what to do with a budget</span></div>
+  <div class="playbook-tiers">
+
+    <div class="tier">
+      <div class="tier-head free">🆓 FREE</div>
+      <ul class="tier-list">
+        <li>Fire all 5 tweet templates above at the target</li>
+        <li>Post in relevant subreddits, Discords &amp; Telegrams</li>
+        <li>Spam the target's comment section with the link</li>
+        <li>Create a dedicated burner X account to expose them</li>
+        <li>Leave reviews on their products / services</li>
+        <li>DM their followers with the campaign link</li>
+      </ul>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head bronze">⚡ $50 BUDGET</div>
+      <ul class="tier-list">
+        <li>Boost top FUD tweet with Twitter Ads (10k–30k impressions)</li>
+        <li>Hire a meme maker on Fiverr — 10 custom FUD memes for $25</li>
+        <li>Buy 50 Reddit upvotes to push your FUD post to the top</li>
+        <li>Print 200 flyers and post in target's neighborhood / workplace</li>
+        <li>Pay for 3 X "quote retweets" from accounts in target's niche</li>
+      </ul>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head silver">🥈 $100 BUDGET</div>
+      <ul class="tier-list">
+        <li>Hire 5+ freelance "accounts" on Fiverr to push the narrative</li>
+        <li>Register a dedicated exposé domain (e.g. is-scam.xyz)</li>
+        <li>Run a targeted Facebook / IG ad at the target's audience</li>
+        <li>Post Craigslist "Gig" — hire 3 locals to spread the word IRL</li>
+        <li>Commission a 60-second YouTube exposé video</li>
+      </ul>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head gold">🥇 $500 BUDGET</div>
+      <ul class="tier-list">
+        <li>Coordinate 20+ accounts to post simultaneously on the same day</li>
+        <li>Hire a small PR firm to draft and distribute a press release</li>
+        <li>Organize 10 paid "protesters" via Craigslist Gigs ($30–$50 each)</li>
+        <li>Get a micro-influencer (10k–100k followers) to cover the story</li>
+        <li>Billboard near their HQ or home for one week</li>
+        <li>Commission a full investigative dossier + website with receipts</li>
+      </ul>
+    </div>
+
+    <div class="tier">
+      <div class="tier-head diamond">💎 $1000+ BUDGET</div>
+      <ul class="tier-list">
+        <li>Hire actors + 25 protesters for a media event outside their office</li>
+        <li>Commission a real investigative journalist to write the exposé</li>
+        <li>Run YouTube pre-roll ads targeting their subscriber base</li>
+        <li>Full guerrilla campaign: street art, stickers, flyers across a city</li>
+        <li>Coordinate 5–10 mid-tier influencers (50k–500k) in a single day</li>
+        <li>Set up a podcast episode or documentary-style YouTube video</li>
+        <li>Purchase Google Ads on their branded search terms</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- IRL Tactics -->
+  <div class="sec-head" style="margin-top:16px">🏙️ IRL Tactics <span class="sec-sub">take it off the internet</span></div>
+  <div class="irl-grid">
+    <div class="irl-card">
+      <div class="irl-icon">📋</div>
+      <div class="irl-body">
+        <div class="irl-title">Craigslist Gigs</div>
+        <div class="irl-desc">Post in the city's Gigs section: "Need 5 people to hold signs and hand out flyers near [location] for 2 hours — $30 cash each." Get IRL presence for under $200.</div>
+      </div>
+    </div>
+    <div class="irl-card">
+      <div class="irl-icon">📰</div>
+      <div class="irl-body">
+        <div class="irl-title">Flyers &amp; Posters</div>
+        <div class="irl-desc">Print 500 flyers at FedEx for ~$30. Post them around the target's home, office, gym, or favorite coffee shop. QR code links to this campaign page.</div>
+      </div>
+    </div>
+    <div class="irl-card">
+      <div class="irl-icon">🎨</div>
+      <div class="irl-body">
+        <div class="irl-title">Guerrilla Stickers</div>
+        <div class="irl-desc">Order 100 custom stickers from Sticker Mule (~$40). Deploy in relevant neighborhoods, on street poles, public bulletin boards, café windows.</div>
+      </div>
+    </div>
+    <div class="irl-card">
+      <div class="irl-icon">🚗</div>
+      <div class="irl-body">
+        <div class="irl-title">Car Signs / Driving</div>
+        <div class="irl-desc">Print a magnetic car door sign with the FUD message and QR code. Drive around their neighborhood, event venues, or investor meetups.</div>
+      </div>
+    </div>
+    <div class="irl-card">
+      <div class="irl-icon">📺</div>
+      <div class="irl-body">
+        <div class="irl-title">Local TV Tips</div>
+        <div class="irl-desc">Submit a tip to local TV investigative reporters via their online tip forms. Frame it as public interest: fraud, safety, consumer protection.</div>
+      </div>
+    </div>
+    <div class="irl-card">
+      <div class="irl-icon">🎤</div>
+      <div class="irl-body">
+        <div class="irl-title">Public Meetings</div>
+        <div class="irl-desc">If the target speaks at conferences, meetups, or public hearings — show up. Ask hard questions. Record everything. Post immediately.</div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- SUBMIT FUD -->

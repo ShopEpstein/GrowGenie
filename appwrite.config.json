@@ -45,7 +45,8 @@
         { "key": "bannerUrl",            "type": "string",  "size": 2048, "required": false },
         { "key": "reactFire",            "type": "integer", "required": false, "min": 0, "max": 9999999 },
         { "key": "reactSkull",           "type": "integer", "required": false, "min": 0, "max": 9999999 },
-        { "key": "reactLaugh",           "type": "integer", "required": false, "min": 0, "max": 9999999 }
+        { "key": "reactLaugh",           "type": "integer", "required": false, "min": 0, "max": 9999999 },
+        { "key": "fudTips",              "type": "integer", "required": false, "min": 0, "max": 9999999 }
       ],
       "indexes": [
         { "key": "idx_slug",     "type": "key", "attributes": ["slug"],     "orders": ["ASC"] },
