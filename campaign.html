@@ -511,7 +511,10 @@ a{color:inherit;text-decoration:none}
       <input id="inp-wallet" class="mono" placeholder="Set up your profile →" readonly/>
     </div>
     <button class="btn-main" id="btnSubmit" onclick="handleSubmit()">Submit FUD 💀</button>
-    <div class="field-note">No profile? <span onclick="openProfileModal()">Create one first →</span></div>
+    <div class="field-note" style="margin-top:8px">
+      🔒 Requires holding <strong style="color:var(--gold)">$SCROLL</strong> or <strong style="color:var(--gold)">$FUD</strong> in your wallet &nbsp;·&nbsp;
+      No profile? <span onclick="openProfileModal()">Create one →</span>
+    </div>
   </div>
 </section>
 
@@ -852,21 +855,73 @@ function renderFeed() {
     </div>`).join('');
 }
 
+// ── Token gate ─────────────────────────────────────────────
+const GATE_TOKENS = [
+  { symbol: '$SCROLL', mint: '9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump', buy: 'https://pump.fun/coin/9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump' },
+  { symbol: '$FUD',    mint: 'TBD', buy: '#' },  // swap CA when $FUD launches
+];
+const SOL_RPC = 'https://api.mainnet-beta.solana.com';
+
+async function getSplBalance(walletAddress, mintAddress) {
+  if (!walletAddress || mintAddress === 'TBD') return 0;
+  try {
+    const resp = await fetch(SOL_RPC, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1,
+        method: 'getTokenAccountsByOwner',
+        params: [walletAddress, { mint: mintAddress }, { encoding: 'jsonParsed' }],
+      }),
+    });
+    const data = await resp.json();
+    return (data.result?.value || []).reduce(
+      (sum, a) => sum + (a.account.data.parsed.info.tokenAmount.uiAmount || 0), 0
+    );
+  } catch { return 0; }
+}
+
+async function checkHoldsGateToken(walletAddress) {
+  const results = await Promise.all(GATE_TOKENS.map(t => getSplBalance(walletAddress, t.mint)));
+  return results.some(b => b > 0);
+}
+
 // ── Submit FUD ─────────────────────────────────────────────
 window.handleSubmit = async function() {
   const p = getProfile();
   if (!p?.username) { openProfileModal(); return; }
+
   const url = $('inp-url').value.trim();
   if (!url) { toast('Paste your tweet / post URL first','err'); return; }
+
   const btn = $('btnSubmit');
-  btn.disabled = true; btn.textContent = 'Submitting…';
+  btn.disabled = true; btn.textContent = 'Checking wallet…';
+
+  // Token gate: must hold $SCROLL or $FUD
+  const wallet = p.wallet || '';
+  if (!wallet) {
+    toast('Set a wallet in your profile to post FUD 💀', 'err');
+    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
+    showGateBanner();
+    return;
+  }
+
+  const holds = await checkHoldsGateToken(wallet);
+  if (!holds) {
+    toast('Hold $SCROLL or $FUD to post 💀', 'err');
+    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
+    showGateBanner();
+    return;
+  }
+
+  btn.textContent = 'Submitting…';
   try {
     const r = await fetch('/api/fud-post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'submit', campaignId: campId,
-        username: p.username, wallet: p.wallet || '',
+        username: p.username, wallet,
         xHandle: p.xhandle || '', tweetUrl: url,
       }),
     });
@@ -880,6 +935,36 @@ window.handleSubmit = async function() {
     btn.disabled = false; btn.textContent = 'Submit FUD 💀';
   }
 };
+
+function showGateBanner() {
+  if ($('gate-banner')) return;
+  const div = document.createElement('div');
+  div.id = 'gate-banner';
+  div.innerHTML = `
+    <div style="
+      background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);
+      border-radius:14px;padding:14px 16px;margin-top:12px;
+    ">
+      <div style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#FFD700;margin-bottom:6px">
+        🔒 Token Required to Post FUD
+      </div>
+      <div style="font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:10px">
+        Hold any $SCROLL or $FUD in your wallet to unlock FUD posting and climb the leaderboard.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${GATE_TOKENS.filter(t => t.mint !== 'TBD').map(t => `
+          <a href="${t.buy}" target="_blank" rel="noopener" style="
+            display:inline-flex;align-items:center;gap:5px;
+            background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);
+            border-radius:99px;padding:6px 14px;
+            font-family:'Space Mono';font-size:11px;font-weight:700;
+            color:#FFD700;text-decoration:none;transition:all .13s;
+          ">Buy ${t.symbol} →</a>
+        `).join('')}
+      </div>
+    </div>`;
+  $('btnSubmit').insertAdjacentElement('afterend', div);
+}
 
 // ── Tip flow ───────────────────────────────────────────────
 window.openTip = function(postId, wallet, username, postCount) {
