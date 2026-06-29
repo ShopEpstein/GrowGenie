@@ -424,8 +424,8 @@
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Auth failed');
 
-        // Create Appwrite session from the short-lived token
-        await account.createSession(data.userId, data.secret);
+        // Server verified the signature and returned email + derived password
+        await account.createEmailPasswordSession(data.email, data.password);
 
         showSuccess('Wallet verified! Entering…');
         redirectAfterAuth();
