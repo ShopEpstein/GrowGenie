@@ -640,7 +640,8 @@ const storage  = new Storage(client);
 const BUCKET   = 'media';
 
 // ── State ──────────────────────────
-let user           = null;
+let user              = null;
+let connectedWalletPub = null;
 let sortMode       = 'new';
 let seenIds        = new Set();
 let allDocs        = [];
@@ -1119,8 +1120,6 @@ function runSlotMachine() {
 
 // ── Launch modal ───────────────────
 document.getElementById('launch-btn').addEventListener('click', async () => {
-  if (!user) { window.location.href = 'login.html?next=/'; return; }
-
   const provider = getWalletProvider();
 
   if (!provider) {
@@ -1142,6 +1141,7 @@ document.getElementById('launch-btn').addEventListener('click', async () => {
     if (pub) {
       const gateOk = await checkGateTokens(pub);
       if (!gateOk) { showGateModal(); return; }
+      connectedWalletPub = pub;
     }
   } catch { /* wallet error — fall through */ }
 
@@ -1249,14 +1249,6 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
   if (!target) { lfErr('Who are we FUDing?'); return; }
   if (!why)    { lfErr('Tell us what they did.'); return; }
 
-  if (!user) {
-    try { user = await account.get(); } catch {
-      closeLaunch();
-      window.location.href = 'login.html?next=/';
-      return;
-    }
-  }
-
   const btn = document.getElementById('lf-submit');
   btn.disabled = true; btn.textContent = '🎰 Loading…';
 
@@ -1276,7 +1268,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
 
   const doc = {
     slug:          slug(target),
-    clientId:      user.$id,
+    clientId:      user?.$id || connectedWalletPub || 'anon',
     projectName:   target,
     title:         `FUD: ${target}`,
     tag:           why,
