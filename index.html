@@ -620,11 +620,14 @@ html[data-mode="smear"] .btn-mode{
         </div>
 
         <div class="field">
-          <label for="lf-banner">Campaign Banner <span style="color:var(--dim2);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+          <label for="lf-banner" style="display:flex;align-items:center;justify-content:space-between">
+            <span>🐦 X Preview Image <span style="color:var(--dim2);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></span>
+            <span style="color:var(--neon);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,255,135,.08);border:1px solid rgba(0,255,135,.25);border-radius:99px;padding:2px 8px">Boosts clicks</span>
+          </label>
           <div id="lf-upload-zone" style="border:2px dashed var(--border2);border-radius:10px;overflow:hidden;transition:border-color .15s;margin-bottom:6px">
             <input type="file" id="lf-banner-file" accept="image/*" style="display:none"/>
             <div id="lf-upload-placeholder" onclick="document.getElementById('lf-banner-file').click()" style="padding:18px;text-align:center;cursor:pointer;font-size:13px;color:var(--dim)">
-              🖼️ <span style="margin-left:6px">Click to upload banner image</span>
+              🖼️ <span style="margin-left:6px">Upload image — shows as the Twitter card when shared</span>
             </div>
             <div id="lf-upload-preview" style="display:none;position:relative">
               <img id="lf-preview-img" src="" alt="" style="width:100%;height:100px;object-fit:cover;display:block"/>
@@ -632,6 +635,7 @@ html[data-mode="smear"] .btn-mode{
             </div>
           </div>
           <input id="lf-banner" type="url" placeholder="…or paste an image URL" spellcheck="false"/>
+          <p class="field-hint">This becomes the big image preview on X when someone shares your campaign link. Skip it and we auto-generate one.</p>
         </div>
 
         <div style="height:1px;background:var(--border);margin:14px 0"></div>
