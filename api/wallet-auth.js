@@ -33,32 +33,38 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'Server not configured' });
   }
 
-  // 2. Derive a deterministic password from the wallet — only computable server-side
-  const secret = process.env.WALLET_AUTH_SECRET || process.env.APPWRITE_API_KEY;
-  const derivedPass = crypto.createHmac('sha256', secret).update(pubkey).digest('hex');
-
-  const appwrite = new Client()
+  const appwriteClient = new Client()
     .setEndpoint(ENDPOINT)
     .setProject(PROJECT)
     .setKey(process.env.APPWRITE_API_KEY);
 
-  const users  = new Users(appwrite);
-  // Dots in IDs are rejected by Appwrite cloud — alphanumeric only
-  const userId = 'sol' + pubkey.replace(/[^a-zA-Z0-9]/g, '').slice(0, 29);
-  const email  = `${pubkey}@wallet.fudfun.xyz`;
+  const users = new Users(appwriteClient);
 
-  // 3. Find or create Appwrite user; always sync derived password
+  // Alphanumeric-only userId, no dots (Appwrite cloud rejects dots)
+  const userId = 'sol' + pubkey.replace(/[^a-zA-Z0-9]/g, '').slice(0, 29);
+
+  // Lowercase email avoids Appwrite email validator rejecting uppercase in local part
+  const email = userId.toLowerCase() + '@fudfun.xyz';
+
+  // Password satisfies any Appwrite complexity policy:
+  // prefix 'Wa1!' guarantees uppercase+lowercase+digit+special, rest is HMAC hex
+  const hmac = crypto.createHmac('sha256',
+    process.env.WALLET_AUTH_SECRET || process.env.APPWRITE_API_KEY
+  ).update(pubkey).digest('hex');
+  const password = 'Wa1!' + hmac.slice(0, 60);  // 64 chars total
+
+  // 2. Find or create Appwrite user; sync password on every login
   try {
     await users.get(userId);
-    await users.updatePassword(userId, derivedPass);
+    await users.updatePassword(userId, password);
   } catch {
     try {
-      await users.create(userId, email, undefined, derivedPass, pubkey.slice(0, 8) + '...');
+      await users.create(userId, email, undefined, password, pubkey.slice(0, 8) + '...');
     } catch (e) {
       return res.status(500).json({ error: 'Could not create account: ' + e.message });
     }
   }
 
-  // 4. Return credentials — client calls account.createEmailPasswordSession()
-  return res.status(200).json({ email, password: derivedPass });
+  // 3. Return credentials for client to call account.createEmailPasswordSession()
+  return res.status(200).json({ email, password, _v: 4 });
 };

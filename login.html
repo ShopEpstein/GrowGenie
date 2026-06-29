@@ -422,10 +422,15 @@
         });
 
         const data = await resp.json();
-        if (!resp.ok) throw new Error(data.error || 'Auth failed');
+        if (!resp.ok) throw new Error('Server: ' + (data.error || 'Auth failed'));
 
         // Server verified the signature and returned email + derived password
-        await account.createEmailPasswordSession(data.email, data.password);
+        try {
+          await account.createEmailPasswordSession(data.email, data.password);
+        } catch (sessionErr) {
+          const detail = sessionErr?.type ? ` [${sessionErr.type}]` : sessionErr?.code ? ` [${sessionErr.code}]` : '';
+          throw new Error('Session: ' + (sessionErr?.message || 'unknown') + detail + ` (v${data._v})`);
+        }
 
         showSuccess('Wallet verified! Entering…');
         redirectAfterAuth();
