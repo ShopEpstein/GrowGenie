@@ -629,6 +629,12 @@ let selSol   = 0.5;
 
 // ── Utils ──────────────────────────────────────────────────
 const $   = id => document.getElementById(id);
+
+function extractXHandle(url) {
+  if (!url) return null;
+  const m = (url || '').match(/(?:twitter\.com|x\.com)\/@?([A-Za-z0-9_]{1,50})(?:\/|$|\?)/i);
+  return m ? '@' + m[1] : null;
+}
 const esc = s  => (s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
 const tr  = w  => w ? w.slice(0,5)+'…'+w.slice(-4) : '';
 const ago = ts => {
@@ -794,10 +800,11 @@ function applyBranding() {
 
 // ── FUD templates ──────────────────────────────────────────
 function buildTemplates() {
-  const who   = CAMP.fudTarget || CAMP.smearTarget || CAMP.projectName || '???';
-  const angle = CAMP.tag || 'suspicious activity';
-  const url   = `${location.origin}/c/${campId}`;
-  const list  = $('tplList');
+  const who    = CAMP.fudTarget || CAMP.smearTarget || CAMP.projectName || '???';
+  const angle  = CAMP.tag || 'suspicious activity';
+  const url    = `${location.origin}/c/${campId}`;
+  const handle = extractXHandle(CAMP.socialLink);
+  const list   = $('tplList');
 
   // Show skeletons while AI generates
   list.innerHTML = '<div class="tpl-skel"></div><div class="tpl-skel"></div><div class="tpl-skel"></div>';
@@ -805,20 +812,31 @@ function buildTemplates() {
   fetch('/api/fud-copy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ targetName: who, reason: angle, category: CAMP.fudCategory, campaignUrl: url, campaignType: CAMP.campaignType }),
+    body: JSON.stringify({ targetName: who, reason: angle, category: CAMP.fudCategory, campaignUrl: url, campaignType: CAMP.campaignType, socialHandle: handle }),
   })
   .then(r => r.ok ? r.json() : Promise.reject())
-  .then(data => renderTemplates(data.tweets && data.tweets.length ? data.tweets : fallbackTemplates(who, angle, url)))
-  .catch(() => renderTemplates(fallbackTemplates(who, angle, url)));
+  .then(data => renderTemplates(data.tweets && data.tweets.length ? data.tweets : fallbackTemplates(who, angle, url, handle)))
+  .catch(() => renderTemplates(fallbackTemplates(who, angle, url, handle)));
 }
 
-function fallbackTemplates(who, angle, url) {
+function fallbackTemplates(who, angle, url, handle) {
+  const tag = handle ? ` ${handle}` : '';
+  const isSmear = CAMP.campaignType === 'smear';
+  if (isSmear) {
+    return [
+      { e:'🚨', t:`🚨${tag} needs to be held accountable. The voters deserve to know the truth. Full receipts:\n\n${url}` },
+      { e:'⭐', t:`Why is no one talking about${tag}'s record? These are documented facts — not opinions.\n${url}` },
+      { e:'🧵', t:`Thread: The case against${tag} ${who} and why constituents can't ignore it 🧵\n\n${url}` },
+      { e:'👀', t:`I dug into${tag} ${who} so you don't have to. What I found: ${angle}\n\n${url}` },
+      { e:'🗳️', t:`PSA:${tag} ${who} — ${angle}. Before you vote, read this.\n${url}` },
+    ];
+  }
   return [
-    { e:'🚨', t:`🚨 ${who} is showing major red flags the community needs to know about. DYOR before you get wrecked.\n\n${url}` },
-    { e:'💀', t:`Why is nobody talking about what ${who} has been up to? These are facts. Check the receipts:\n${url}` },
-    { e:'🧵', t:`Thread: everything suspicious about ${who}. Someone has to say it 🧵\n\nFull breakdown: ${url}` },
-    { e:'👀', t:`I looked into ${who} so you don't have to. What I found: ${angle}\n\nReceipts: ${url}` },
-    { e:'⚠️', t:`PSA: ${who} — ${angle}. The community needs to see this. 💀\n${url}` },
+    { e:'🚨', t:`🚨${tag} ${who} is showing major red flags. DYOR before you get wrecked.\n\n${url}` },
+    { e:'💀', t:`Why is nobody talking about what${tag} ${who} has been up to? These are facts. Check the receipts:\n${url}` },
+    { e:'🧵', t:`Thread: everything suspicious about${tag} ${who}. Someone has to say it 🧵\n\nFull breakdown: ${url}` },
+    { e:'👀', t:`I looked into${tag} ${who} so you don't have to. What I found: ${angle}\n\nReceipts: ${url}` },
+    { e:'⚠️', t:`PSA:${tag} ${who} — ${angle}. The community needs to see this. 💀\n${url}` },
   ];
 }
 

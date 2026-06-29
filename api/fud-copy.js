@@ -40,8 +40,10 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')   return res.status(405).end();
 
-  const { targetName, reason, category, campaignUrl, campaignType } = req.body || {};
+  const { targetName, reason, category, campaignUrl, campaignType, socialHandle } = req.body || {};
   if (!targetName) return res.status(400).json({ error: 'Missing targetName' });
+
+  const handleLine = socialHandle ? `Target's X handle: ${socialHandle} — tag them directly in at least 3 of the 5 posts.` : '';
 
   const isSmear = campaignType === 'smear';
   const SYSTEM  = isSmear ? SYSTEM_SMEAR : SYSTEM_FUD;
@@ -59,6 +61,7 @@ module.exports = async (req, res) => {
 Reason/context: ${reason || 'corruption and failed promises'}
 Category: ${category || 'political accountability'}
 Campaign URL: ${campaignUrl || ''}
+${handleLine}
 
 Rules:
 - Angles: outraged voter, opposition researcher exposing hypocrisy, fact-checker, concerned constituent, accountability activist
@@ -75,6 +78,7 @@ Return ONLY a JSON array of 5 strings. No markdown, no code fences, no explanati
 Reason/context: ${reason || 'suspicious behavior'}
 Category: ${category || 'general'}
 Campaign URL: ${campaignUrl || ''}
+${handleLine}
 
 Rules:
 - Each post must feel genuinely different in tone: urgent alarm, sarcastic/dismissive, investigative breakdown, community warning, personal experience

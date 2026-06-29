@@ -734,8 +734,8 @@ const MODES = {
     emptyTitle:      'No FUD yet 💀',
     emptyBody:       'Be the first to launch a campaign.',
     tickerDefault:   '💀 FudFun.xyz — launch a FUD campaign in seconds',
-    shareText:       (target, why, url) =>
-      `💀 I just launched a FUD campaign against ${target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The internet needs to see this.'}\n\nJoin the campaign 👇`,
+    shareText:       (target, why, url, handle) =>
+      `💀 I just launched a FUD campaign against ${handle || target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The internet needs to see this.'}\n\nJoin the campaign 👇`,
   },
   smear: {
     logo:            '🇺🇸 SmearFun',
@@ -760,8 +760,8 @@ const MODES = {
     emptyTitle:      'No Smears yet ⭐',
     emptyBody:       'Be the first to launch a smear campaign.',
     tickerDefault:   '🇺🇸 SmearFun.xyz — launch a smear campaign in seconds',
-    shareText:       (target, why, url) =>
-      `🇺🇸 I just launched a Smear campaign against ${target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The voters need to see this.'}\n\nJoin the campaign 👇`,
+    shareText:       (target, why, url, handle) =>
+      `🇺🇸 I just launched a Smear campaign against ${handle || target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The voters need to see this.'}\n\nJoin the campaign 👇`,
   }
 };
 
@@ -926,6 +926,12 @@ document.getElementById('drop-signout').addEventListener('click', async () => {
 // ── Helpers ────────────────────────
 const esc = s => (s||'').replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
 
+function extractXHandle(url) {
+  if (!url) return null;
+  const m = (url || '').match(/(?:twitter\.com|x\.com)\/@?([A-Za-z0-9_]{1,50})(?:\/|$|\?)/i);
+  return m ? '@' + m[1] : null;
+}
+
 function ago(iso) {
   const s = Math.floor((Date.now() - new Date(iso)) / 1000);
   if (s < 60)    return `${s}s`;
@@ -1003,7 +1009,7 @@ function makeCard(doc, flash) {
       <button class="react-btn${hasReacted?' reacted':''}" data-reaction="fire" data-id="${esc(doc.$id)}">🔥 <span class="cnt">${rFire||''}</span></button>
       <button class="react-btn" data-reaction="skull" data-id="${esc(doc.$id)}">💀 <span class="cnt">${rSkull||''}</span></button>
       <button class="react-btn" data-reaction="laugh" data-id="${esc(doc.$id)}">😂 <span class="cnt">${rLaugh||''}</span></button>
-      <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}" data-target="${esc(doc.fudTarget||doc.smearTarget||'')}" data-why="${esc((doc.tag||'').slice(0,120))}">𝕏 share</button>
+      <button class="react-share" data-id="${esc(doc.$id)}" data-name="${name}" data-target="${esc(doc.fudTarget||doc.smearTarget||'')}" data-why="${esc((doc.tag||'').slice(0,120))}" data-social="${esc(doc.socialLink||'')}">𝕏 share</button>
     </div>
     ${doc.bountyPool ? `
     <div style="padding:4px 12px 0;display:flex;align-items:center;gap:5px">
@@ -1114,9 +1120,12 @@ function bindCards() {
       const why    = btn.dataset.why || '';
       const id     = btn.dataset.id;
       const url    = `${location.origin}/c/${id}`;
+      const handle = extractXHandle(btn.dataset.social || '');
+      const tag    = handle ? ` ${handle}` : '';
+      const isSmear = document.documentElement.dataset.mode === 'smear';
       const text   = why
-        ? `💀 ${target}: ${why}\n\nFull campaign + tip the best FUD 👇`
-        : `💀 ${target} is getting FUD'd on fudfun.xyz — see the receipts and tip the best takes 🔥`;
+        ? `${isSmear ? '⭐' : '💀'}${tag} ${target}: ${why}\n\nFull campaign 👇`
+        : `${isSmear ? '⭐' : '💀'}${tag} ${target} is getting ${isSmear ? 'smeared' : "FUD'd"} on fudfun.xyz — see the receipts 🔥`;
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'width=560,height=420');
     };
   });
@@ -1480,7 +1489,8 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
 
   const newDoc    = created.value;
   const campUrl   = `${location.origin}/c/${newDoc.$id}`;
-  const shareText = MODES[mode].shareText(target, why, campUrl);
+  const handle    = extractXHandle(social);
+  const shareText = MODES[mode].shareText(target, why, campUrl, handle);
   const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(campUrl)}`;
 
   document.getElementById('lc-success-share').href = shareHref;
