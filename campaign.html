@@ -920,30 +920,13 @@ const GATE_TOKENS = [
   { symbol: '$SCROLL', mint: '9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump', buy: 'https://pump.fun/coin/9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump' },
   { symbol: '$FUD',    mint: 'TBD', buy: '#' },  // swap CA when $FUD launches
 ];
-const SOL_RPC = 'https://api.mainnet-beta.solana.com';
-
-async function getSplBalance(walletAddress, mintAddress) {
-  if (!walletAddress || mintAddress === 'TBD') return 0;
-  try {
-    const resp = await fetch(SOL_RPC, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1,
-        method: 'getTokenAccountsByOwner',
-        params: [walletAddress, { mint: mintAddress }, { encoding: 'jsonParsed' }],
-      }),
-    });
-    const data = await resp.json();
-    return (data.result?.value || []).reduce(
-      (sum, a) => sum + (a.account.data.parsed.info.tokenAmount.uiAmount || 0), 0
-    );
-  } catch { return 0; }
-}
-
 async function checkHoldsGateToken(walletAddress) {
-  const results = await Promise.all(GATE_TOKENS.map(t => getSplBalance(walletAddress, t.mint)));
-  return results.some(b => b > 0);
+  try {
+    const r = await fetch(`/api/check-gate?wallet=${encodeURIComponent(walletAddress)}`);
+    if (!r.ok) return false;
+    const j = await r.json();
+    return j.allowed === true;
+  } catch { return false; }
 }
 
 // ── Submit FUD ─────────────────────────────────────────────
