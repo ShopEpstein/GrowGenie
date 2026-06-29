@@ -1,4 +1,5 @@
 const { Client, Databases, ID, Query } = require('node-appwrite');
+const crypto = require('crypto');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
 const PROJECT  = process.env.APPWRITE_PROJECT_ID  || '6a2bc15c00065b3c91a0';
@@ -58,6 +59,24 @@ module.exports = async (req, res) => {
           tipCount:     (existing.tipCount || 0) + 1,
         });
         return res.status(200).json(updated);
+      }
+
+      if (action === 'delete') {
+        const { postId, pubkey } = body;
+        if (!postId || !pubkey) return res.status(400).json({ error: 'Missing postId or pubkey' });
+        const auth  = req.headers['authorization'] || '';
+        const token = auth.replace(/^Bearer\s+/i, '').trim();
+        const expected = crypto.createHmac('sha256', API_KEY || 'fudfun-fallback-secret').update(pubkey).digest('hex');
+        try {
+          if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected)))
+            return res.status(401).json({ error: 'Invalid token' });
+        } catch {
+          return res.status(401).json({ error: 'Invalid token' });
+        }
+        const post = await db.getDocument(DB, COLL, postId);
+        if (post.wallet !== pubkey) return res.status(403).json({ error: 'Not your post' });
+        await db.deleteDocument(DB, COLL, postId);
+        return res.status(200).json({ success: true });
       }
 
       return res.status(400).json({ error: 'Unknown action' });

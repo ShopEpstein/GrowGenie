@@ -27,7 +27,10 @@ module.exports = async (req, res) => {
 
   // Verify token is the HMAC we issued at login
   const expected = expectedToken(pubkey);
-  if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))) {
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected)))
+      return res.status(401).json({ error: 'Invalid token' });
+  } catch {
     return res.status(401).json({ error: 'Invalid token' });
   }
 

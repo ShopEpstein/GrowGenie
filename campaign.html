@@ -209,6 +209,13 @@ a{color:inherit;text-decoration:none}
   cursor:pointer;transition:border-color .13s,background .13s;
 }
 .btn-tip-post:hover{border-color:rgba(255,215,0,.5);background:rgba(255,215,0,.15)}
+.btn-del-post{
+  padding:4px 8px;background:transparent;
+  border:1px solid rgba(255,92,92,.2);border-radius:99px;
+  font-size:11px;color:rgba(255,92,92,.6);
+  cursor:pointer;transition:border-color .13s,color .13s,background .13s;
+}
+.btn-del-post:hover{border-color:rgba(255,92,92,.5);color:#FF5C5C;background:rgba(255,92,92,.08)}
 
 .empty{
   text-align:center;padding:28px 16px;
@@ -650,7 +657,7 @@ function toast(msg, type='') {
 }
 
 // ── Profile ────────────────────────────────────────────────
-const PK = 'fudfun_profile';
+const PK = 'fud_profile';
 const getProfile = () => { try { return JSON.parse(localStorage.getItem(PK)); } catch { return null; } };
 const saveProfileToStorage = p => localStorage.setItem(PK, JSON.stringify(p));
 
@@ -931,15 +938,23 @@ function renderLeaderboard() {
   }).join('');
 }
 
+function myWallet() {
+  try { return JSON.parse(localStorage.getItem('fud_wallet') || 'null')?.pubkey || ''; } catch { return ''; }
+}
+
 function renderFeed() {
   const el = $('feedEl');
   if (!posts.length) { el.innerHTML = '<div class="empty">No FUD submitted yet. Be the first 💀</div>'; return; }
+  const me = myWallet();
   el.innerHTML = posts.map(p => `
-    <div class="post">
+    <div class="post" data-post-id="${esc(p.$id)}">
       <div class="post-head">
         <div class="post-av">${(p.username||'?')[0].toUpperCase()}</div>
         <div class="post-user">@${esc(p.username||'anon')}</div>
         <div class="post-age">${ago(p.timestamp)} ago</div>
+        ${me && p.wallet === me
+          ? `<button class="btn-del-post" onclick="deletePost('${esc(p.$id)}')" title="Delete post">🗑️</button>`
+          : ''}
       </div>
       ${p.tweetUrl ? `<a class="post-link" href="${esc(p.tweetUrl)}" target="_blank" rel="noopener">${esc(p.tweetUrl)}</a>` : ''}
       <div class="post-foot">
@@ -950,6 +965,27 @@ function renderFeed() {
       </div>
     </div>`).join('');
 }
+
+window.deletePost = async function(postId) {
+  if (!confirm('Delete this post? This cannot be undone.')) return;
+  const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
+  if (!w?.token || !w?.pubkey) { toast('Sign in on the main feed first', 'err'); return; }
+  try {
+    const r = await fetch('/api/fud-post', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${w.token}` },
+      body: JSON.stringify({ action: 'delete', postId, pubkey: w.pubkey }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      posts = posts.filter(p => p.$id !== postId);
+      renderFeed();
+      toast('Post deleted', '');
+    } else {
+      toast(d.error || 'Delete failed', 'err');
+    }
+  } catch { toast('Delete failed', 'err'); }
+};
 
 // ── Token gate ─────────────────────────────────────────────
 const GATE_TOKENS = [
