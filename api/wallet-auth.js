@@ -1,5 +1,11 @@
-const nacl = require('tweetnacl');
-const bs58 = require('bs58');
+const nacl   = require('tweetnacl');
+const bs58   = require('bs58');
+const crypto = require('crypto');
+
+function sessionToken(pubkey) {
+  const secret = process.env.APPWRITE_API_KEY || 'fudfun-fallback-secret';
+  return crypto.createHmac('sha256', secret).update(pubkey).digest('hex');
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
@@ -23,5 +29,7 @@ module.exports = async (req, res) => {
     return res.status(401).json({ error: 'Verification failed: ' + e.message });
   }
 
-  return res.status(200).json({ verified: true, pubkey, _v: 5 });
+  return res.status(200).json({ verified: true, pubkey, token: sessionToken(pubkey), _v: 5 });
 };
+
+module.exports.sessionToken = sessionToken;

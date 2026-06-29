@@ -1136,11 +1136,12 @@ function bindCards() {
       if (!confirm('Delete this campaign? This cannot be undone.')) return;
       btn.textContent = '…'; btn.disabled = true;
       try {
-        const jwt = (await account.createJWT()).jwt;
+        const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
+        if (!w?.token) { toast('Sign in to delete campaigns', ''); btn.textContent = '🗑️'; btn.disabled = false; return; }
         const r = await fetch('/api/campaign-delete', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
-          body: JSON.stringify({ campaignId: btn.dataset.id }),
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${w.token}` },
+          body: JSON.stringify({ campaignId: btn.dataset.id, pubkey: w.pubkey }),
         });
         if (r.ok) {
           const card = btn.closest('.card');

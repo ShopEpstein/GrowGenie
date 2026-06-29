@@ -374,7 +374,7 @@
         const data = await resp.json();
         if (!resp.ok || !data.verified) throw new Error(data.error || 'Verification failed');
 
-        localStorage.setItem('fud_wallet', JSON.stringify({ pubkey: data.pubkey, ts: Date.now() }));
+        localStorage.setItem('fud_wallet', JSON.stringify({ pubkey: data.pubkey, token: data.token, ts: Date.now() }));
         showSuccess('Wallet verified! Entering…');
         setTimeout(redirectAfterAuth, 600);
       } catch (err) {

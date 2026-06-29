@@ -1,9 +1,15 @@
-const { Client, Account, Databases } = require('node-appwrite');
+const { Client, Databases } = require('node-appwrite');
+const crypto = require('crypto');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
 const PROJECT  = process.env.APPWRITE_PROJECT_ID || '6a2bc15c00065b3c91a0';
 const API_KEY  = process.env.APPWRITE_API_KEY    || '';
 const DB       = 'growthgenie';
+
+function expectedToken(pubkey) {
+  const secret = API_KEY || 'fudfun-fallback-secret';
+  return crypto.createHmac('sha256', secret).update(pubkey).digest('hex');
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
@@ -12,19 +18,19 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
-  // Verify session JWT
-  const auth = req.headers['authorization'] || '';
-  const jwt  = auth.replace(/^Bearer\s+/i, '').trim();
-  if (!jwt) return res.status(401).json({ error: 'Missing auth token' });
+  const auth  = req.headers['authorization'] || '';
+  const token = auth.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return res.status(401).json({ error: 'Missing auth token' });
 
-  const sessionClient = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setJWT(jwt);
-  const user = await new Account(sessionClient).get().catch(() => null);
-  if (!user) return res.status(401).json({ error: 'Invalid session' });
+  const { campaignId, pubkey } = req.body || {};
+  if (!campaignId || !pubkey) return res.status(400).json({ error: 'Missing campaignId or pubkey' });
 
-  const { campaignId } = req.body || {};
-  if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
+  // Verify token is the HMAC we issued at login
+  const expected = expectedToken(pubkey);
+  if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))) {
+    return res.status(401).json({ error: 'Invalid token' });
+  }
 
-  // Fetch the campaign with admin SDK and verify ownership
   const adm = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
   const dbs = new Databases(adm);
 
@@ -35,7 +41,7 @@ module.exports = async (req, res) => {
     return res.status(404).json({ error: 'Campaign not found' });
   }
 
-  if (doc.clientId !== user.$id) {
+  if (doc.clientId !== pubkey) {
     return res.status(403).json({ error: 'Not your campaign' });
   }
 
