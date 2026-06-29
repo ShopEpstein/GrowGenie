@@ -95,12 +95,14 @@ nav{
   nav{gap:6px;padding:0 10px}
   .logo{font-size:15px}
   .nav-haters{display:none}
-  #mode-toggle{display:none}
+  #mode-toggle{display:none} /* moved into dropdown on mobile */
   .launch-long{display:none}
   .btn-launch{padding:7px 11px;font-size:13px}
   .btn-acct{padding:6px 9px;font-size:12px}
   #acct-btn{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+  #drop-mode-mobile{display:block!important}
 }
+#drop-mode-mobile{display:none}
 
 /* ── EDIT PROFILE MODAL ──────────── */
 .profile-edit-modal .m-title{font-size:18px}
@@ -524,6 +526,8 @@ html[data-mode="smear"] .btn-mode{
       <div class="acct-drop" id="acct-drop">
         <div id="acct-email-row" style="padding:8px 13px 6px;font-size:11px;color:var(--dim);font-family:'Space Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
         <div class="acct-drop-divider"></div>
+        <button class="acct-drop-item" id="drop-mode-mobile">🎭 Switch to Politics Mode</button>
+        <div class="acct-drop-divider"></div>
         <button class="acct-drop-item" id="drop-edit-profile">✏️ Edit Profile</button>
         <button class="acct-drop-item" id="drop-profile">🎩 My Profile</button>
         <button class="acct-drop-item" id="drop-mine">👤 My Campaigns</button>
@@ -901,6 +905,8 @@ function applyMode(m) {
   document.querySelector('.logo').textContent = T.logo;
   document.getElementById('launch-btn').textContent = T.launchBtn;
   document.getElementById('mode-toggle').textContent = m === 'fud' ? '🇺🇸 Politics Mode' : '💀 FUD Mode';
+  const mob = document.getElementById('drop-mode-mobile');
+  if (mob) mob.textContent = m === 'fud' ? '🎭 Switch to Politics Mode' : '💀 Switch to FUD Mode';
 
   // Launch modal
   document.querySelector('.m-title').textContent   = T.modalTitle;
@@ -941,8 +947,16 @@ function applyMode(m) {
   }
 }
 
-document.getElementById('mode-toggle').addEventListener('click', () => {
+function toggleMode() {
   applyMode(mode === 'fud' ? 'smear' : 'fud');
+  // keep dropdown label in sync
+  const mob = document.getElementById('drop-mode-mobile');
+  if (mob) mob.textContent = mode === 'fud' ? '🎭 Switch to Politics Mode' : '💀 Switch to FUD Mode';
+}
+document.getElementById('mode-toggle').addEventListener('click', toggleMode);
+document.getElementById('drop-mode-mobile').addEventListener('click', () => {
+  document.getElementById('acct-drop').classList.remove('open');
+  toggleMode();
 });
 
 // ── Token gate ─────────────────────
