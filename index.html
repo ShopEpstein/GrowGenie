@@ -1295,7 +1295,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
   const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(campUrl)}`;
 
   document.getElementById('lc-success-share').href = shareHref;
-  document.getElementById('lc-success-camp').href  = `/c/${newDoc.$id}`;
+  document.getElementById('lc-success-camp').href  = `/campaign.html?c=${newDoc.$id}`;
   document.getElementById('lc-form-wrap').style.display = 'none';
   document.getElementById('lc-success').style.display   = 'block';
   seenIds.clear();
