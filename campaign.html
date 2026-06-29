@@ -982,7 +982,8 @@ window.deletePost = async function(postId) {
     // Sign a delete-specific message to prove ownership
     const message = `delete:${postId}`;
     const encoded = new TextEncoder().encode(message);
-    const { signature } = await provider.signMessage(encoded, 'utf8');
+    const result = await provider.signMessage(encoded, 'utf8');
+    const signature = result.signature || result.data || result;
     const sigBase64 = btoa(String.fromCharCode(...signature));
 
     const r = await fetch('/api/fud-post', {
