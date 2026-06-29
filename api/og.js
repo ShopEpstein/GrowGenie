@@ -29,16 +29,24 @@ module.exports = async (req, res) => {
 
   if (!camp) return res.redirect(dest);
 
-  const who   = camp.fudTarget || camp.smearTarget || camp.projectName || 'Unknown';
-  const why   = (camp.tag || '').slice(0, 200) || 'The community needs to see this.';
-  const thumb = camp.bannerUrl || camp.socialPreviewThumb || '';
-  const proto = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
-  const host  = req.headers.host || 'fudfun.xyz';
+  const who      = camp.fudTarget || camp.smearTarget || camp.projectName || 'Unknown';
+  const why      = (camp.tag || '').slice(0, 200) || 'The community needs to see this.';
+  const isSmear  = camp.campaignType === 'smear';
+  const thumb    = camp.bannerUrl || camp.socialPreviewThumb || '';
+  const proto    = (req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+  const host     = req.headers.host || 'fudfun.xyz';
+  const baseUrl  = `${proto}://${host}`;
 
-  const ogTitle = `💀 ${who} is getting FUD'd | FudFun.xyz`;
-  const ogDesc  = `${why} — Join the campaign, fire on X, and earn SOL tips.`;
-  const ogUrl   = `${proto}://${host}/c/${encodeURIComponent(id)}`;
-  const hasImg  = !!thumb;
+  // Always generate a dynamic OG image; use campaign banner as override if it exists
+  const ogImageUrl = thumb
+    ? thumb
+    : `${baseUrl}/api/og-image?t=${encodeURIComponent(who)}&w=${encodeURIComponent(why.slice(0, 110))}&m=${isSmear ? 's' : 'f'}`;
+
+  const verb     = isSmear ? "getting Smeared" : "getting FUD'd";
+  const icon     = isSmear ? '⭐' : '💀';
+  const ogTitle  = `${icon} ${who} is ${verb} | FudFun.xyz`;
+  const ogDesc   = `${why.slice(0, 160)} — Join the campaign on FudFun.xyz`;
+  const ogUrl    = `${baseUrl}/c/${encodeURIComponent(id)}`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
@@ -49,21 +57,21 @@ module.exports = async (req, res) => {
 <meta name="description" content="${esc(ogDesc)}"/>
 
 <!-- Open Graph -->
-<meta property="og:type"        content="website"/>
-<meta property="og:site_name"   content="FudFun.xyz"/>
-<meta property="og:url"         content="${esc(ogUrl)}"/>
-<meta property="og:title"       content="${esc(ogTitle)}"/>
-<meta property="og:description" content="${esc(ogDesc)}"/>
-${hasImg ? `<meta property="og:image"       content="${esc(thumb)}"/>
+<meta property="og:type"         content="website"/>
+<meta property="og:site_name"    content="FudFun.xyz"/>
+<meta property="og:url"          content="${esc(ogUrl)}"/>
+<meta property="og:title"        content="${esc(ogTitle)}"/>
+<meta property="og:description"  content="${esc(ogDesc)}"/>
+<meta property="og:image"        content="${esc(ogImageUrl)}"/>
 <meta property="og:image:width"  content="1200"/>
-<meta property="og:image:height" content="630"/>` : ''}
+<meta property="og:image:height" content="630"/>
 
 <!-- Twitter Card -->
-<meta name="twitter:card"        content="${hasImg ? 'summary_large_image' : 'summary'}"/>
-<meta name="twitter:site"        content="@FudFunXyz"/>
+<meta name="twitter:card"        content="summary_large_image"/>
+<meta name="twitter:site"        content="@fudfunn"/>
 <meta name="twitter:title"       content="${esc(ogTitle)}"/>
 <meta name="twitter:description" content="${esc(ogDesc)}"/>
-${hasImg ? `<meta name="twitter:image"       content="${esc(thumb)}"/>` : ''}
+<meta name="twitter:image"       content="${esc(ogImageUrl)}"/>
 
 <!-- Redirect users to the real campaign page -->
 <meta http-equiv="refresh" content="0;url=${esc(dest)}"/>
