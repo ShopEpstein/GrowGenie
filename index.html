@@ -1174,12 +1174,20 @@ function totalReacts(doc) {
   return (doc.reactFire || 0) + (doc.reactSkull || 0) + (doc.reactLaugh || 0);
 }
 
+function socialAvatar(link) {
+  if (!link) return '';
+  try {
+    const m = link.match(/(?:twitter\.com|x\.com)\/@?([A-Za-z0-9_]+)/i);
+    return m ? `https://unavatar.io/twitter/${m[1]}` : '';
+  } catch { return ''; }
+}
+
 function makeCard(doc, flash) {
   const name   = esc(tgt(doc));
   const why    = esc((doc.tag || '').slice(0, 280));
   const cat    = (doc.fudCategory || '').toLowerCase();
   const ht     = heat(doc.$createdAt);
-  const banner = doc.bannerUrl || doc.socialPreviewThumb || '';
+  const banner = doc.bannerUrl || doc.socialPreviewThumb || socialAvatar(doc.socialLink) || '';
   const thumb  = doc.socialPreviewThumb || doc.bannerUrl || '';
   const bg     = banner ? '' : `background:linear-gradient(${GRAD[cat]||GRAD.hate})`;
   const rFire  = doc.reactFire  || 0;
@@ -1199,7 +1207,7 @@ function makeCard(doc, flash) {
 
   el.innerHTML = `
     <div class="card-banner" style="${bg}">
-      ${banner ? `<img src="${esc(banner)}" alt="" loading="lazy"/>` : ''}
+      ${banner ? `<img src="${esc(banner)}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
       ${watermark}${catEmoji}
       <div class="card-banner-grad"></div>
       <span class="heat-badge ${ht}">${heatLabel(ht)}</span>
@@ -1350,12 +1358,24 @@ function bindCards() {
       if (!confirm('Delete this campaign? This cannot be undone.')) return;
       btn.textContent = '…'; btn.disabled = true;
       try {
-        const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
-        if (!w?.token) { toast('Sign in to delete campaigns', ''); btn.textContent = '🗑️'; btn.disabled = false; return; }
+        const provider = getWalletProvider();
+        if (!provider) { toast('Open in Phantom or Solflare to delete', ''); btn.textContent = '🗑️'; btn.disabled = false; return; }
+        let pubkey = provider.publicKey?.toString();
+        if (!pubkey) {
+          const conn = await provider.connect({ onlyIfTrusted: true }).catch(() => provider.connect());
+          pubkey = (conn?.publicKey || provider.publicKey)?.toString();
+        }
+        if (!pubkey) { toast('Could not read wallet', ''); btn.textContent = '🗑️'; btn.disabled = false; return; }
+        const campaignId = btn.dataset.id;
+        const message = `delete:${campaignId}`;
+        const encoded = new TextEncoder().encode(message);
+        const result = await provider.signMessage(encoded, 'utf8');
+        const sig = result.signature || result.data || result;
+        const sigBase64 = btoa(String.fromCharCode(...sig));
         const r = await fetch('/api/campaign-delete', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${w.token}` },
-          body: JSON.stringify({ campaignId: btn.dataset.id, pubkey: w.pubkey }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ campaignId, pubkey, signature: sigBase64, message }),
         });
         if (r.ok) {
           const card = btn.closest('.card');
@@ -1369,7 +1389,11 @@ function bindCards() {
           btn.textContent = '🗑️'; btn.disabled = false;
         }
       } catch (err) {
-        toast('Delete failed', '');
+        if (err?.message?.toLowerCase().includes('user rejected') || err?.message?.toLowerCase().includes('cancelled')) {
+          toast('Cancelled', '');
+        } else {
+          toast('Delete failed', '');
+        }
         btn.textContent = '🗑️'; btn.disabled = false;
       }
     };

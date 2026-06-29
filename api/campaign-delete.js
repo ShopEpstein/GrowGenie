@@ -1,15 +1,11 @@
 const { Client, Databases } = require('node-appwrite');
-const crypto = require('crypto');
+const nacl   = require('tweetnacl');
+const bs58   = require('bs58');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
 const PROJECT  = process.env.APPWRITE_PROJECT_ID || '6a2bc15c00065b3c91a0';
 const API_KEY  = process.env.APPWRITE_API_KEY    || '';
 const DB       = 'growthgenie';
-
-function expectedToken(pubkey) {
-  const secret = API_KEY || 'fudfun-fallback-secret';
-  return crypto.createHmac('sha256', secret).update(pubkey).digest('hex');
-}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
@@ -18,20 +14,26 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
-  const auth  = req.headers['authorization'] || '';
-  const token = auth.replace(/^Bearer\s+/i, '').trim();
-  if (!token) return res.status(401).json({ error: 'Missing auth token' });
+  const { campaignId, pubkey, signature, message } = req.body || {};
+  if (!campaignId || !pubkey || !signature || !message) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
 
-  const { campaignId, pubkey } = req.body || {};
-  if (!campaignId || !pubkey) return res.status(400).json({ error: 'Missing campaignId or pubkey' });
+  // Verify message is scoped to this campaign to prevent signature replay
+  if (message !== `delete:${campaignId}`) {
+    return res.status(400).json({ error: 'Invalid delete message' });
+  }
 
-  // Verify token is the HMAC we issued at login
-  const expected = expectedToken(pubkey);
+  // Verify ed25519 wallet signature
   try {
-    if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected)))
-      return res.status(401).json({ error: 'Invalid token' });
+    const pubkeyBytes = Buffer.from(bs58.decode(pubkey));
+    const sigBytes    = Buffer.from(signature, 'base64');
+    const msgBytes    = Buffer.from(message, 'utf8');
+    if (!nacl.sign.detached.verify(msgBytes, sigBytes, pubkeyBytes)) {
+      return res.status(401).json({ error: 'Invalid wallet signature' });
+    }
   } catch {
-    return res.status(401).json({ error: 'Invalid token' });
+    return res.status(401).json({ error: 'Signature verification failed' });
   }
 
   const adm = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
