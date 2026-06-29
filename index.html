@@ -1073,10 +1073,10 @@ async function checkGateTokens(walletAddress) {
   }
 })();
 
-function dismissWelcome() {
+window.dismissWelcome = function() {
   localStorage.setItem('fud_welcomed', '1');
   document.getElementById('welcome-overlay').classList.remove('open');
-}
+};
 
 function showGateModal() {
   document.getElementById('gate-overlay').classList.add('open');
