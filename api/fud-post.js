@@ -1,5 +1,6 @@
 const { Client, Databases, ID, Query } = require('node-appwrite');
-const crypto = require('crypto');
+const nacl   = require('tweetnacl');
+const bs58   = require('bs58');
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
 const PROJECT  = process.env.APPWRITE_PROJECT_ID  || '6a2bc15c00065b3c91a0';
@@ -62,16 +63,18 @@ module.exports = async (req, res) => {
       }
 
       if (action === 'delete') {
-        const { postId, pubkey } = body;
-        if (!postId || !pubkey) return res.status(400).json({ error: 'Missing postId or pubkey' });
-        const auth  = req.headers['authorization'] || '';
-        const token = auth.replace(/^Bearer\s+/i, '').trim();
-        const expected = crypto.createHmac('sha256', API_KEY || 'fudfun-fallback-secret').update(pubkey).digest('hex');
+        const { postId, pubkey, signature, message } = body;
+        if (!postId || !pubkey || !signature || !message) return res.status(400).json({ error: 'Missing required fields' });
+        // Verify message is delete:<postId> to prevent replay attacks
+        if (message !== `delete:${postId}`) return res.status(400).json({ error: 'Invalid delete message' });
         try {
-          if (!crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected)))
-            return res.status(401).json({ error: 'Invalid token' });
+          const pubkeyBytes = Buffer.from(bs58.decode(pubkey));
+          const sigBytes    = Buffer.from(signature, 'base64');
+          const msgBytes    = Buffer.from(message, 'utf8');
+          if (!nacl.sign.detached.verify(msgBytes, sigBytes, pubkeyBytes))
+            return res.status(401).json({ error: 'Invalid wallet signature' });
         } catch {
-          return res.status(401).json({ error: 'Invalid token' });
+          return res.status(401).json({ error: 'Signature verification failed' });
         }
         const post = await db.getDocument(DB, COLL, postId);
         if (post.wallet !== pubkey) return res.status(403).json({ error: 'Not your post' });

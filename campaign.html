@@ -968,13 +968,27 @@ function renderFeed() {
 
 window.deletePost = async function(postId) {
   if (!confirm('Delete this post? This cannot be undone.')) return;
-  const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
-  if (!w?.token || !w?.pubkey) { toast('Sign in on the main feed first', 'err'); return; }
+  const provider = getProvider();
+  if (!provider) { toast('Open in Phantom or Solflare to delete', 'err'); return; }
   try {
+    // Connect silently (already trusted from posting)
+    let pubkey = provider.publicKey?.toString();
+    if (!pubkey) {
+      const res = await provider.connect({ onlyIfTrusted: true }).catch(() => provider.connect());
+      pubkey = (res?.publicKey || provider.publicKey)?.toString();
+    }
+    if (!pubkey) { toast('Could not read wallet', 'err'); return; }
+
+    // Sign a delete-specific message to prove ownership
+    const message = `delete:${postId}`;
+    const encoded = new TextEncoder().encode(message);
+    const { signature } = await provider.signMessage(encoded, 'utf8');
+    const sigBase64 = btoa(String.fromCharCode(...signature));
+
     const r = await fetch('/api/fud-post', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${w.token}` },
-      body: JSON.stringify({ action: 'delete', postId, pubkey: w.pubkey }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', postId, pubkey, signature: sigBase64, message }),
     });
     const d = await r.json();
     if (r.ok) {
@@ -984,7 +998,13 @@ window.deletePost = async function(postId) {
     } else {
       toast(d.error || 'Delete failed', 'err');
     }
-  } catch { toast('Delete failed', 'err'); }
+  } catch (e) {
+    if (e?.message?.toLowerCase().includes('user rejected') || e?.message?.toLowerCase().includes('cancelled')) {
+      toast('Cancelled', '');
+    } else {
+      toast('Delete failed', 'err');
+    }
+  }
 };
 
 // ── Token gate ─────────────────────────────────────────────
