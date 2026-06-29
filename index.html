@@ -654,11 +654,6 @@ let solanaWeb3     = null;
 let reactedIds     = new Set(JSON.parse(localStorage.getItem('fud_reacted') || '[]'));
 
 // ── Token gate ─────────────────────
-const GATE_TOKENS = [
-  { symbol: '$SCROLL', mint: '9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump' },
-  { symbol: '$FUD',    mint: 'TBD' },
-];
-const SOL_RPC = 'https://api.mainnet-beta.solana.com';
 
 // Detect any injected Solana wallet provider across Phantom, Solflare, Backpack, etc.
 function getWalletProvider() {
@@ -674,26 +669,13 @@ function getWalletProvider() {
   return candidates[0] || null;
 }
 
-async function getSplBalance(walletAddress, mintAddress) {
-  if (!walletAddress || mintAddress === 'TBD') return 0;
-  try {
-    const resp = await fetch(SOL_RPC, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1, method: 'getTokenAccountsByOwner',
-        params: [walletAddress, { mint: mintAddress }, { encoding: 'jsonParsed' }],
-      }),
-    });
-    const j = await resp.json();
-    return (j.result?.value || []).reduce(
-      (s, a) => s + (a.account?.data?.parsed?.info?.tokenAmount?.uiAmount || 0), 0
-    );
-  } catch { return 0; }
-}
-
 async function checkGateTokens(walletAddress) {
-  const results = await Promise.all(GATE_TOKENS.map(t => getSplBalance(walletAddress, t.mint)));
-  return results.some(b => b > 0);
+  try {
+    const r = await fetch(`/api/check-gate?wallet=${encodeURIComponent(walletAddress)}`);
+    if (!r.ok) return false;
+    const j = await r.json();
+    return j.allowed === true;
+  } catch { return false; }
 }
 
 function showGateModal() {
@@ -1131,19 +1113,27 @@ document.getElementById('launch-btn').addEventListener('click', async () => {
     return;
   }
 
-  // Wallet detected — try silent connect and check token balance
+  // Wallet detected — connect (silently if already trusted, else prompt) then check gate
   try {
     let pub = provider.publicKey?.toString();
     if (!pub) {
-      const res = await provider.connect({ onlyIfTrusted: true }).catch(() => null);
-      pub = res?.publicKey?.toString() || provider.publicKey?.toString();
+      // Try silent first; if that yields nothing, do a real prompt
+      const silent = await provider.connect({ onlyIfTrusted: true }).catch(() => null);
+      pub = silent?.publicKey?.toString() || provider.publicKey?.toString();
+      if (!pub) {
+        const prompted = await provider.connect();
+        pub = prompted?.publicKey?.toString() || provider.publicKey?.toString();
+      }
     }
-    if (pub) {
-      const gateOk = await checkGateTokens(pub);
-      if (!gateOk) { showGateModal(); return; }
-      connectedWalletPub = pub;
-    }
-  } catch { /* wallet error — fall through */ }
+    if (!pub) { showGateModal(); return; }
+    const gateOk = await checkGateTokens(pub);
+    if (!gateOk) { showGateModal(); return; }
+    connectedWalletPub = pub;
+  } catch (e) {
+    // User rejected connect prompt — don't open launch
+    console.warn('Wallet connect error:', e);
+    return;
+  }
 
   document.getElementById('launch-overlay').classList.add('open');
 });
