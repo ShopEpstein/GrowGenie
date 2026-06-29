@@ -207,16 +207,8 @@ nav{
 
 /* card footer */
 .card-foot{display:flex;align-items:center;gap:6px;padding:8px 12px 12px}
-.btn-tip-card{
-  flex:1;font-family:'Space Grotesk';font-size:12px;font-weight:700;
-  padding:7px 12px;border-radius:10px;border:1px solid rgba(255,215,0,.25);
-  background:rgba(255,215,0,.07);color:var(--gold);cursor:pointer;
-  transition:all .13s;text-align:center;
-}
-.btn-tip-card:hover{background:rgba(255,215,0,.14);border-color:rgba(255,215,0,.5);box-shadow:0 0 16px rgba(255,215,0,.15)}
-.no-tip-wallet{font-size:10px;color:var(--dim2);font-family:'Space Mono';padding:7px 0}
-.card-creator{font-size:10px;color:var(--dim2);font-family:'Space Mono';padding:7px 0;margin-left:auto;text-decoration:none;opacity:.6;transition:opacity .15s}
-.card-creator:hover{opacity:1;color:var(--accent)}
+.card-creator{font-size:10px;color:var(--dim2);font-family:'Space Mono';padding:7px 0;text-decoration:none;opacity:.6;transition:opacity .15s}
+.card-creator:hover{opacity:1;color:var(--dim)}
 .btn-delete-card{
   background:transparent;border:1px solid var(--border);border-radius:10px;
   color:var(--dim2);font-size:14px;padding:7px 10px;cursor:pointer;
@@ -393,6 +385,63 @@ nav{
 #toast.win{border-color:rgba(0,255,135,.5);color:var(--neon);box-shadow:0 0 20px rgba(0,255,135,.2)}
 #toast.tip{border-color:rgba(255,215,0,.5);color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.2)}
 
+/* ── SMEAR / POLITICS MODE ───────── */
+html[data-mode="smear"]{
+  --red:#B22234;--orange:#D41E35;
+}
+html[data-mode="smear"] body::before{
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 10%,rgba(178,34,52,.16) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%,rgba(60,59,110,.14) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 60% at 60% 30%,rgba(255,255,255,.02) 0%,transparent 50%);
+}
+html[data-mode="smear"] .logo{
+  text-shadow:0 0 20px rgba(60,59,110,.9),0 0 40px rgba(178,34,52,.4);
+}
+html[data-mode="smear"] .btn-launch{
+  background:linear-gradient(135deg,#B22234,#3C3B6E);
+  box-shadow:0 0 20px rgba(60,59,110,.5),0 4px 16px rgba(178,34,52,.3);
+}
+html[data-mode="smear"] .btn-launch:hover{
+  box-shadow:0 0 30px rgba(60,59,110,.7),0 8px 20px rgba(178,34,52,.5);
+}
+html[data-mode="smear"] .m-title{
+  background:linear-gradient(90deg,#B22234,#3C3B6E);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+html[data-mode="smear"] .btn-main{
+  background:linear-gradient(135deg,#B22234,#3C3B6E);
+  box-shadow:0 0 24px rgba(60,59,110,.4),0 6px 20px rgba(178,34,52,.3);
+}
+html[data-mode="smear"] .btn-main:hover:not(:disabled){
+  box-shadow:0 0 32px rgba(60,59,110,.6),0 8px 24px rgba(178,34,52,.4);
+}
+html[data-mode="smear"] .pill.on{
+  background:linear-gradient(135deg,#B22234,#3C3B6E);
+  box-shadow:0 3px 12px rgba(60,59,110,.4);
+}
+html[data-mode="smear"] .card.hot{
+  border-color:rgba(178,34,52,.5);
+  box-shadow:0 0 0 1px rgba(178,34,52,.3),0 0 24px rgba(178,34,52,.12);
+}
+html[data-mode="smear"] #live-banner{
+  background:rgba(60,59,110,.15);border-color:rgba(60,59,110,.5);color:#8888d0;
+}
+html[data-mode="smear"] #live-banner:hover{background:rgba(60,59,110,.25)}
+html[data-mode="smear"] .heat-badge.hot{color:#B22234;border-color:rgba(178,34,52,.4);background:rgba(178,34,52,.18)}
+html[data-mode="smear"] .heat-badge.jackpot{color:#3C3B6E;border-color:rgba(60,59,110,.5);background:rgba(60,59,110,.15)}
+
+.btn-mode{
+  font-family:'Space Grotesk';font-weight:600;font-size:12px;
+  padding:6px 11px;border-radius:99px;border:1px solid var(--border2);cursor:pointer;
+  background:transparent;color:var(--dim);flex-shrink:0;white-space:nowrap;
+  transition:all .13s;display:flex;align-items:center;gap:5px;
+}
+.btn-mode:hover{color:var(--text);border-color:var(--border3)}
+html[data-mode="smear"] .btn-mode{
+  color:#8888d0;border-color:rgba(60,59,110,.4);
+}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -408,6 +457,7 @@ nav{
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <a href="haters.html" class="btn-acct" style="text-decoration:none">🏆 Haters</a>
+    <button id="mode-toggle" class="btn-mode" title="Switch mode">🎭 FUD Mode</button>
     <button id="launch-btn" class="btn-launch">Launch Campaign 💀</button>
     <div class="acct-wrap">
       <button class="btn-acct" id="acct-btn">Sign In</button>
@@ -520,20 +570,15 @@ nav{
           <input id="lf-banner" type="url" placeholder="…or paste an image URL" spellcheck="false"/>
         </div>
 
-        <div class="field">
-          <label for="lf-wallet">Your Solana wallet (optional — to receive tips)</label>
-          <input id="lf-wallet" type="text" placeholder="SOL address — community tips go here" spellcheck="false"/>
-        </div>
-
         <div style="height:1px;background:var(--border);margin:14px 0"></div>
 
         <div class="field">
           <label for="lf-bounty" style="display:flex;align-items:center;justify-content:space-between">
-            <span>💰 Bounty Pool (optional)</span>
-            <span style="color:var(--dim2);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0">Pay the best FUDders in SOL</span>
+            <span id="lf-bounty-label">💰 FUD FUND (optional)</span>
+            <span style="color:var(--dim2);font-size:9px;font-weight:400;text-transform:none;letter-spacing:0" id="lf-bounty-desc">Reward the best FUDders in SOL</span>
           </label>
           <input id="lf-bounty" type="number" min="0" step="0.1" placeholder="◎ SOL — e.g. 1.0" spellcheck="false"/>
-          <p class="field-hint">Set a bounty and the top FUDder on your campaign earns it. Builds a community of haters working for you.</p>
+          <p class="field-hint" id="lf-bounty-hint">Back your campaign with SOL — the top FUDder earns it. Builds a community of haters working for you.</p>
         </div>
 
         <div class="m-error" id="lf-err"></div>
@@ -664,6 +709,118 @@ let selectedTipAmt = 0.5;
 let solanaWeb3     = null;
 let reactedIds     = new Set(JSON.parse(localStorage.getItem('fud_reacted') || '[]'));
 
+// ── Mode (FUD / SMEAR) ─────────────
+const MODES = {
+  fud: {
+    logo:            '💀 FudFun',
+    modeBtn:         '🎭 FUD Mode',
+    launchBtn:       'Launch Campaign 💀',
+    modalTitle:      'Launch a FUD Campaign 💀',
+    modalSub:        'Free. Instant. The internet does the rest.',
+    targetLabel:     "Who's getting FUD'd?",
+    grievanceLabel:  'The Grievance',
+    grievancePh:     'Give the internet ammunition. The more specific, the better.',
+    bountyLabel:     '💰 FUD FUND (optional)',
+    bountyDesc:      'Reward the best FUDders in SOL',
+    bountyHint:      'Back your campaign with SOL — the top FUDder earns it. Builds a community of haters working for you.',
+    submitBtn:       '🎰 Launch Campaign',
+    successTitle:    'FUD IS LIVE!',
+    successSub:      'Your campaign is on the feed right now.\nShare it — tag your target — watch the internet work.',
+    slotLabel:       'Launching your FUD',
+    slotResult:      '💀 FUD IS LIVE 💀',
+    bannerSingle:    '🔴 New FUD just dropped — tap to see it',
+    bannerMulti:     n => `🔴 ${n} new FUD campaigns — tap to see them`,
+    searchPh:        '🔍 Search targets, KOLs, projects…',
+    emptyTitle:      'No FUD yet 💀',
+    emptyBody:       'Be the first to launch a campaign.',
+    tickerDefault:   '💀 FudFun.xyz — launch a FUD campaign in seconds',
+    shareText:       (target, why, url) =>
+      `💀 I just launched a FUD campaign against ${target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The internet needs to see this.'}\n\nJoin the campaign 👇`,
+  },
+  smear: {
+    logo:            '🇺🇸 SmearFun',
+    modeBtn:         '🇺🇸 Politics Mode',
+    launchBtn:       'Launch Smear 🇺🇸',
+    modalTitle:      'Launch a Smear Campaign 🇺🇸',
+    modalSub:        'Free. Instant. The voters decide.',
+    targetLabel:     "Who's getting Smeared?",
+    grievanceLabel:  'Opposition Research',
+    grievancePh:     'Give voters the receipts. The more documented, the better.',
+    bountyLabel:     '🏛️ PAC Fund (optional)',
+    bountyDesc:      'Reward the best Smear merchants in SOL',
+    bountyHint:      'Back your campaign with SOL — the top Smear merchant earns it. Builds a political hit squad.',
+    submitBtn:       '🗳️ Launch Smear',
+    successTitle:    'SMEAR IS LIVE!',
+    successSub:      'Your smear campaign is live right now.\nShare it — tag your opponent — let the voters decide.',
+    slotLabel:       'Launching your Smear',
+    slotResult:      '🇺🇸 SMEAR IS LIVE 🇺🇸',
+    bannerSingle:    '🔴 New Smear just dropped — tap to see it',
+    bannerMulti:     n => `🔴 ${n} new Smear campaigns — tap to see them`,
+    searchPh:        '🔍 Search candidates, politicians, parties…',
+    emptyTitle:      'No Smears yet ⭐',
+    emptyBody:       'Be the first to launch a smear campaign.',
+    tickerDefault:   '🇺🇸 SmearFun.xyz — launch a smear campaign in seconds',
+    shareText:       (target, why, url) =>
+      `🇺🇸 I just launched a Smear campaign against ${target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The voters need to see this.'}\n\nJoin the campaign 👇`,
+  }
+};
+
+let mode = localStorage.getItem('fud_mode') || 'fud';
+
+function applyMode(m) {
+  mode = m;
+  localStorage.setItem('fud_mode', m);
+  document.documentElement.dataset.mode = m;
+  const T = MODES[m];
+
+  // Nav
+  document.querySelector('.logo').textContent = T.logo;
+  document.getElementById('launch-btn').textContent = T.launchBtn;
+  document.getElementById('mode-toggle').textContent = m === 'fud' ? '🇺🇸 Politics Mode' : '💀 FUD Mode';
+
+  // Launch modal
+  document.querySelector('.m-title').textContent   = T.modalTitle;
+  document.querySelector('.m-sub').textContent      = T.modalSub;
+  document.querySelector('label[for="lf-target"]').textContent = T.targetLabel;
+  document.querySelector('label[for="lf-why"]').textContent    = T.grievanceLabel;
+  document.getElementById('lf-why').placeholder    = T.grievancePh;
+  document.getElementById('lf-bounty-label').textContent = T.bountyLabel;
+  document.getElementById('lf-bounty-desc').textContent  = T.bountyDesc;
+  document.getElementById('lf-bounty-hint').textContent  = T.bountyHint;
+  document.getElementById('lf-submit').textContent = T.submitBtn;
+  document.querySelector('.s-title').textContent   = T.successTitle;
+
+  // Slot machine
+  document.querySelector('.slot-label').textContent = T.slotLabel;
+
+  // Search placeholder
+  const srch = document.getElementById('feed-search');
+  if (srch) srch.placeholder = T.searchPh;
+
+  // Ticker (reset to default until next feed load)
+  const inner = document.getElementById('ticker-inner');
+  if (inner && inner.children.length <= 2) {
+    inner.innerHTML = `<span class="tk">${T.tickerDefault}</span>`;
+  }
+
+  // Re-render feed to update card icons + FUD FUND/PAC FUND labels
+  if (allDocs.length) {
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    const q = (document.getElementById('feed-search')?.value || '').toLowerCase().trim();
+    const filtered = q ? allDocs.filter(d => {
+      const txt = ((d.fudTarget || d.smearTarget || d.projectName || '') + ' ' + (d.tag || '')).toLowerCase();
+      return txt.includes(q);
+    }) : allDocs;
+    filtered.forEach(d => { grid.appendChild(makeCard(d, false)); seenIds.add(d.$id); });
+    bindCards();
+  }
+}
+
+document.getElementById('mode-toggle').addEventListener('click', () => {
+  applyMode(mode === 'fud' ? 'smear' : 'fud');
+});
+
 // ── Token gate ─────────────────────
 
 // Detect any injected Solana wallet provider across Phantom, Solflare, Backpack, etc.
@@ -700,6 +857,9 @@ function showMobileWalletModal() {
   document.getElementById('open-solflare-btn').href = `https://solflare.com/ul/v1/browse/${url}?ref=${ref}`;
   document.getElementById('wallet-overlay').classList.add('open');
 }
+
+// Apply saved mode on load (before auth/feed)
+applyMode(mode);
 
 // ── Auth (silent) ─────────────────
 (function initAuth() {
@@ -812,16 +972,17 @@ function makeCard(doc, flash) {
   const name   = esc(tgt(doc));
   const why    = esc((doc.tag || '').slice(0, 280));
   const cat    = (doc.fudCategory || '').toLowerCase();
-  const emoji  = EMOJI[cat] || '💀';
   const ht     = heat(doc.$createdAt);
   const banner = doc.bannerUrl || doc.socialPreviewThumb || '';
   const thumb  = doc.socialPreviewThumb || doc.bannerUrl || '';
   const bg     = banner ? '' : `background:linear-gradient(${GRAD[cat]||GRAD.hate})`;
-  const tw     = esc(doc.tipWallet || '');
   const rFire  = doc.reactFire  || 0;
   const rSkull = doc.reactSkull || 0;
   const rLaugh = doc.reactLaugh || 0;
   const hasReacted = reactedIds.has(doc.$id);
+  const isSmear = document.documentElement.dataset.mode === 'smear';
+  const cardIcon = isSmear ? '⭐' : '💀';
+  const fundLabel = isSmear ? '🏛️ PAC FUND' : '💰 FUD FUND';
 
   const el = document.createElement('div');
   el.className = `card ${ht}` + (flash ? ' new' : '');
@@ -835,7 +996,7 @@ function makeCard(doc, flash) {
       ${thumb ? `<img class="card-avatar" src="${esc(thumb)}" alt=""/>` : ''}
     </div>
     <div class="card-body">
-      <div class="card-name">💀 ${name}</div>
+      <div class="card-name">${cardIcon} ${name}</div>
       <div class="card-why">${why}</div>
     </div>
     <div class="card-reactions">
@@ -849,14 +1010,10 @@ function makeCard(doc, flash) {
       <span style="font-family:'Space Mono';font-size:10px;font-weight:700;
         background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.25);
         border-radius:99px;padding:2px 9px;color:var(--gold)">
-        💰 ◎${parseFloat(doc.bountyPool).toFixed(2)} bounty
+        ${fundLabel} ◎${parseFloat(doc.bountyPool).toFixed(2)}
       </span>
     </div>` : ''}
     <div class="card-foot">
-      ${tw
-        ? `<button class="btn-tip-card" data-wallet="${tw}" data-name="${name}">💸 Tip SOL</button>`
-        : `<span class="no-tip-wallet">no tip wallet set</span>`
-      }
       ${doc.clientId && doc.clientId !== 'anon'
         ? `<a class="card-creator" href="/profile.html?w=${encodeURIComponent(doc.clientId)}" onclick="event.stopPropagation()" title="View profile">${doc.clientId.slice(0,4)}…${doc.clientId.slice(-4)}</a>`
         : ''
@@ -899,7 +1056,7 @@ async function loadFeed(flash) {
     if (!filtered.length) {
       grid.innerHTML = q
         ? `<div class="empty"><h3>No results 💀</h3><p>No campaigns matching "${q}"</p></div>`
-        : `<div class="empty"><h3>No FUD yet 💀</h3><p>Be the first to launch a campaign.</p></div>`;
+        : `<div class="empty"><h3>${MODES[mode].emptyTitle}</h3><p>${MODES[mode].emptyBody}</p></div>`;
       updateStats(0, 0);
       return;
     }
@@ -1046,9 +1203,7 @@ let pendingNewDocs = 0;
 function showLiveBanner(count) {
   pendingNewDocs = count;
   const el = document.getElementById('live-banner');
-  el.textContent = count === 1
-    ? '🔴 New FUD just dropped — tap to see it'
-    : `🔴 ${count} new FUD campaigns — tap to see them`;
+  el.textContent = count === 1 ? MODES[mode].bannerSingle : MODES[mode].bannerMulti(count);
   el.style.display = 'block';
 }
 
@@ -1128,7 +1283,7 @@ function runSlotMachine() {
         sr.classList.remove('spinning');
         if (i === 2) {
           setTimeout(() => {
-            result.textContent = '💀 FUD IS LIVE 💀';
+            result.textContent = MODES[mode].slotResult;
             result.className = 'slot-result show win';
             setTimeout(() => {
               overlay.classList.remove('open');
@@ -1274,7 +1429,6 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
   const why    = document.getElementById('lf-why').value.trim();
   const social = document.getElementById('lf-social').value.trim();
   const banner = document.getElementById('lf-banner').value.trim();
-  const wallet = document.getElementById('lf-wallet').value.trim();
   const bounty = parseFloat(document.getElementById('lf-bounty').value) || 0;
 
   if (!target) { lfErr('Who are we FUDing?'); return; }
@@ -1301,7 +1455,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     target, why,
     category:  selectedCat,
     clientId:  user?.$id || connectedWalletPub || 'anon',
-    wallet:    wallet || null,
+    wallet:    null,
     social:    social || null,
     banner:    banner || (previewData?.thumbnailUrl) || null,
     bounty:    bounty > 0 ? bounty : null,
@@ -1324,7 +1478,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
 
   const newDoc    = created.value;
   const campUrl   = `${location.origin}/c/${newDoc.$id}`;
-  const shareText = `💀 I just launched a FUD campaign against ${target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The internet needs to see this.'}\n\nJoin the campaign 👇`;
+  const shareText = MODES[mode].shareText(target, why, campUrl);
   const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(campUrl)}`;
 
   document.getElementById('lc-success-share').href = shareHref;
