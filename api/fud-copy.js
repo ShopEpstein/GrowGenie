@@ -1,5 +1,5 @@
-const Anthropic = require('@anthropic-ai/sdk');
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL    = 'llama-3.3-70b-versatile';
 
 const EMOJIS_FUD   = ['🚨','💀','🧵','👀','⚠️','🔥','📢','💣','🎯','😤'];
 const EMOJIS_SMEAR = ['🚨','⭐','🧵','👀','⚠️','🗳️','📢','🇺🇸','🎯','😤'];
@@ -33,6 +33,27 @@ function fallbackSmear(who, angle, url) {
   ];
 }
 
+async function groq(system, user) {
+  const res = await fetch(GROQ_API, {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 1200,
+      messages: [
+        { role: 'system', content: system },
+        { role: 'user',   content: user   },
+      ],
+    }),
+  });
+  if (!res.ok) throw new Error(`Groq ${res.status}`);
+  const j = await res.json();
+  return j.choices?.[0]?.message?.content?.trim() || '[]';
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -49,7 +70,7 @@ module.exports = async (req, res) => {
   const SYSTEM  = isSmear ? SYSTEM_SMEAR : SYSTEM_FUD;
   const EMOJIS  = isSmear ? EMOJIS_SMEAR : EMOJIS_FUD;
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     const fallback = isSmear
       ? fallbackSmear(targetName, reason || '', campaignUrl || '')
       : fallbackFud(targetName, reason || '', campaignUrl || '');
@@ -92,14 +113,7 @@ Rules:
 Return ONLY a JSON array of 5 strings. No markdown, no code fences, no explanation.`;
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1200,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: USER }],
-    });
-
-    const raw = message.content[0]?.text?.trim() || '[]';
+    const raw = await groq(SYSTEM, USER);
     let parsed;
     try {
       const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');

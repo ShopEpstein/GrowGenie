@@ -1,6 +1,5 @@
-const Anthropic = require('@anthropic-ai/sdk');
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const GROQ_API = 'https://api.groq.com/openai/v1/chat/completions';
+const MODEL    = 'llama-3.1-8b-instant';
 
 const SYSTEM_PROMPT = `You are a content moderation system for FudFun.xyz, a social satire platform where users post comedic "FUD" (Fear, Uncertainty, Doubt) about public figures, exes, bosses, and other targets.
 
@@ -32,8 +31,7 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST')   return res.status(405).end();
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    // If no key configured, allow all (fail open)
+  if (!process.env.GROQ_API_KEY) {
     return res.status(200).json({ allowed: true });
   }
 
@@ -49,26 +47,36 @@ module.exports = async (req, res) => {
   ].join('\n');
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 128,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userContent }],
+    const res2 = await fetch(GROQ_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 128,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user',   content: userContent   },
+        ],
+      }),
     });
 
-    const text = message.content[0]?.text?.trim() || '{}';
+    if (!res2.ok) throw new Error(`Groq ${res2.status}`);
+    const j = await res2.json();
+    const text = j.choices?.[0]?.message?.content?.trim() || '{}';
+
     let result;
     try {
       result = JSON.parse(text);
     } catch {
-      // If Claude returned malformed JSON, default allow
       result = { allowed: true };
     }
 
     return res.status(200).json(result);
   } catch (e) {
     console.error('Moderation error:', e.message);
-    // Fail open — don't block users due to API outage
     return res.status(200).json({ allowed: true });
   }
 };
