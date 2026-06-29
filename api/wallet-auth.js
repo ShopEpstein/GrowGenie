@@ -1,7 +1,7 @@
 const { Client, Users } = require('node-appwrite');
 const { PublicKey }     = require('@solana/web3.js');
-// tweetnacl is a direct dependency of @solana/web3.js — available in node_modules
-const nacl = require('tweetnacl');
+const nacl   = require('tweetnacl');
+const crypto = require('crypto');
 
 const ENDPOINT = 'https://nyc.cloud.appwrite.io/v1';
 const PROJECT  = '6a2bc15c00065b3c91a0';
@@ -22,17 +22,20 @@ module.exports = async (req, res) => {
   try {
     const pubkeyBytes = new PublicKey(pubkey).toBytes();
     const sigBytes    = Buffer.from(signature, 'base64');
-    const msgBytes    = new TextEncoder().encode(message);
+    const msgBytes    = Buffer.from(message, 'utf8');
     const valid       = nacl.sign.detached.verify(msgBytes, sigBytes, pubkeyBytes);
     if (!valid) return res.status(401).json({ error: 'Invalid signature' });
-  } catch {
-    return res.status(401).json({ error: 'Signature verification failed' });
+  } catch (e) {
+    return res.status(401).json({ error: 'Signature verification failed: ' + e.message });
   }
 
-  // 2. Find or create Appwrite user for this wallet
   if (!process.env.APPWRITE_API_KEY) {
     return res.status(500).json({ error: 'Server not configured' });
   }
+
+  // 2. Derive a deterministic password from the wallet — only computable server-side
+  const secret = process.env.WALLET_AUTH_SECRET || process.env.APPWRITE_API_KEY;
+  const derivedPass = crypto.createHmac('sha256', secret).update(pubkey).digest('hex');
 
   const appwrite = new Client()
     .setEndpoint(ENDPOINT)
@@ -44,23 +47,18 @@ module.exports = async (req, res) => {
   const userId = 'sol' + pubkey.replace(/[^a-zA-Z0-9]/g, '').slice(0, 29);
   const email  = `${pubkey}@wallet.fudfun.xyz`;
 
-  let user;
+  // 3. Find or create Appwrite user; always sync derived password
   try {
-    user = await users.get(userId);
+    await users.get(userId);
+    await users.updatePassword(userId, derivedPass);
   } catch {
     try {
-      // users.create(userId, email, phone, password, name) — name is 5th param
-      user = await users.create(userId, email, undefined, undefined, pubkey.slice(0, 8) + '...');
+      await users.create(userId, email, undefined, derivedPass, pubkey.slice(0, 8) + '...');
     } catch (e) {
       return res.status(500).json({ error: 'Could not create account: ' + e.message });
     }
   }
 
-  // 3. Issue a short-lived token the client can use to create a session
-  try {
-    const token = await users.createToken(user.$id);
-    return res.status(200).json({ userId: user.$id, secret: token.secret });
-  } catch (e) {
-    return res.status(500).json({ error: 'Could not issue session token: ' + e.message });
-  }
+  // 4. Return credentials — client calls account.createEmailPasswordSession()
+  return res.status(200).json({ email, password: derivedPass });
 };
