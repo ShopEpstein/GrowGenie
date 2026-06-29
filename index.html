@@ -90,6 +90,41 @@ nav{
 .acct-drop-divider{height:1px;background:var(--border);margin:4px 0}
 @media(max-width:480px){.tabs{display:none}}
 
+/* ── MOBILE NAV OVERRIDES ────────── */
+@media(max-width:560px){
+  nav{gap:6px;padding:0 10px}
+  .logo{font-size:15px}
+  .nav-haters{display:none}
+  #mode-toggle{display:none}
+  .launch-long{display:none}
+  .btn-launch{padding:7px 11px;font-size:13px}
+  .btn-acct{padding:6px 9px;font-size:12px}
+  #acct-btn{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+}
+
+/* ── EDIT PROFILE MODAL ──────────── */
+.profile-edit-modal .m-title{font-size:18px}
+.profile-field{margin-bottom:14px}
+.profile-field label{
+  display:block;font-family:'Space Mono';font-size:10px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;
+}
+.profile-field input{
+  width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);font-family:'Space Grotesk';font-size:14px;padding:10px 13px;outline:none;
+  transition:border-color .13s,box-shadow .13s;
+}
+.profile-field input::placeholder{color:var(--dim2)}
+.profile-field input:focus{border-color:rgba(255,61,0,.45);box-shadow:0 0 0 3px rgba(255,61,0,.08)}
+.profile-avatar-preview{
+  display:flex;align-items:center;gap:14px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:14px;margin-bottom:18px;
+}
+.profile-avatar-preview .pap-info{flex:1;min-width:0}
+.pap-name{font-family:'Space Grotesk';font-weight:700;font-size:16px}
+.pap-sub{font-size:12px;color:var(--dim);margin-top:2px}
+
 /* ── TICKER ──────────────────────── */
 .ticker{
   background:var(--bg2);border-bottom:1px solid var(--border);
@@ -480,17 +515,20 @@ html[data-mode="smear"] .btn-mode{
     <button class="tab" data-sort="hot">🔥 Hot</button>
     <button class="tab" data-sort="mine" id="tab-mine" style="display:none">👤 Mine</button>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-    <a href="haters.html" class="btn-acct" style="text-decoration:none">🏆 Haters</a>
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <a href="haters.html" class="btn-acct nav-haters" style="text-decoration:none">🏆 Haters</a>
     <button id="mode-toggle" class="btn-mode" title="Switch mode">🎭 FUD Mode</button>
-    <button id="launch-btn" class="btn-launch">Launch Campaign 💀</button>
+    <button id="launch-btn" class="btn-launch">💀<span class="launch-long"> Launch</span></button>
     <div class="acct-wrap">
       <button class="btn-acct" id="acct-btn">Sign In</button>
       <div class="acct-drop" id="acct-drop">
         <div id="acct-email-row" style="padding:8px 13px 6px;font-size:11px;color:var(--dim);font-family:'Space Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
         <div class="acct-drop-divider"></div>
+        <button class="acct-drop-item" id="drop-edit-profile">✏️ Edit Profile</button>
         <button class="acct-drop-item" id="drop-profile">🎩 My Profile</button>
         <button class="acct-drop-item" id="drop-mine">👤 My Campaigns</button>
+        <a href="haters.html" class="acct-drop-item" style="display:block">🏆 Hall of Haters</a>
+        <div class="acct-drop-divider"></div>
         <button class="acct-drop-item danger" id="drop-signout">Sign Out</button>
       </div>
     </div>
@@ -701,6 +739,34 @@ html[data-mode="smear"] .btn-mode{
         <button class="btn-gate-cancel" onclick="document.getElementById('wallet-overlay').classList.remove('open')">Skip for now</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="overlay" id="edit-profile-overlay">
+  <div class="modal profile-edit-modal" style="max-width:440px">
+    <button class="m-close" id="ep-close">×</button>
+    <div class="m-title" id="ep-title">Edit Profile ✏️</div>
+    <p class="m-sub">Customize how you appear on FudFun</p>
+
+    <div class="profile-avatar-preview" id="ep-avatar-preview">
+      <div id="ep-avatar-big"></div>
+      <div class="pap-info">
+        <div class="pap-name" id="ep-hater-name"></div>
+        <div class="pap-sub">Your Player Hater alias — assigned by your wallet</div>
+      </div>
+    </div>
+
+    <div class="profile-field">
+      <label for="ep-username">Display Name</label>
+      <input id="ep-username" type="text" maxlength="32" placeholder="How you want to be known…" autocomplete="off"/>
+    </div>
+    <div class="profile-field">
+      <label for="ep-xhandle">X / Twitter Handle</label>
+      <input id="ep-xhandle" type="text" maxlength="50" placeholder="@yourhandle" autocomplete="off"/>
+    </div>
+    <div class="m-error" id="ep-err"></div>
+    <button class="btn-main" id="ep-save" style="margin-top:6px">Save Profile</button>
   </div>
 </div>
 
@@ -935,7 +1001,12 @@ function updateAccountUI() {
   if (user) {
     const pubkey = user.$id || '';
     const ph = PLAYER_HATERS[haterIdx(pubkey)];
-    btn.innerHTML = `${ph.emoji} ${ph.name}`;
+    let savedName = ph.name;
+    try {
+      const p = JSON.parse(localStorage.getItem('fud_profile') || 'null');
+      if (p?.wallet === pubkey && p.username) savedName = p.username;
+    } catch {}
+    btn.innerHTML = `${ph.emoji} ${savedName}`;
     btn.classList.add('logged-in');
     document.getElementById('acct-email-row').textContent = pubkey.slice(0,6)+'…'+pubkey.slice(-4);
     tabMine.style.display = '';
@@ -953,6 +1024,53 @@ document.getElementById('acct-btn').addEventListener('click', e => {
   document.getElementById('acct-drop').classList.toggle('open');
 });
 document.addEventListener('click', () => document.getElementById('acct-drop').classList.remove('open'));
+
+// ── Edit Profile modal ─────────────
+function openEditProfile() {
+  document.getElementById('acct-drop').classList.remove('open');
+  if (!user) return;
+  const pubkey = user.$id || '';
+  const ph = PLAYER_HATERS[haterIdx(pubkey)];
+  // Load saved profile
+  let saved = {};
+  try { const r = localStorage.getItem('fud_profile'); if (r) saved = JSON.parse(r); } catch {}
+
+  document.getElementById('ep-avatar-big').outerHTML = haterAvatar(pubkey, 56).replace('<span', '<div id="ep-avatar-big"').replace('</span>', '</div>');
+  document.getElementById('ep-hater-name').textContent = ph.name;
+  document.getElementById('ep-username').value = saved.username || '';
+  document.getElementById('ep-xhandle').value = saved.xhandle || '';
+  document.getElementById('ep-err').classList.remove('show');
+  document.getElementById('edit-profile-overlay').classList.add('open');
+}
+
+document.getElementById('drop-edit-profile').addEventListener('click', openEditProfile);
+
+document.getElementById('ep-close').addEventListener('click', () => {
+  document.getElementById('edit-profile-overlay').classList.remove('open');
+});
+document.getElementById('edit-profile-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) document.getElementById('edit-profile-overlay').classList.remove('open');
+});
+
+document.getElementById('ep-save').addEventListener('click', () => {
+  if (!user) return;
+  const pubkey = user.$id || '';
+  let username = document.getElementById('ep-username').value.trim();
+  let xhandle  = document.getElementById('ep-xhandle').value.trim().replace(/^@/, '');
+
+  if (username.length > 32) { const el = document.getElementById('ep-err'); el.textContent = 'Name too long (max 32 chars)'; el.classList.add('show'); return; }
+
+  const profile = { wallet: pubkey, username, xhandle, ts: Date.now() };
+  localStorage.setItem('fud_profile', JSON.stringify(profile));
+
+  // Update nav display name
+  const ph = PLAYER_HATERS[haterIdx(pubkey)];
+  const btn = document.getElementById('acct-btn');
+  btn.innerHTML = `${ph.emoji} ${username || ph.name}`;
+
+  document.getElementById('edit-profile-overlay').classList.remove('open');
+  toast('✅ Profile saved', '');
+});
 
 document.getElementById('drop-profile').addEventListener('click', () => {
   document.getElementById('acct-drop').classList.remove('open');
