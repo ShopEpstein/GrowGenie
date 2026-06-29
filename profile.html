@@ -56,11 +56,16 @@ a{color:inherit;text-decoration:none}
   padding:24px;margin-bottom:20px;
 }
 .profile-avatar{
-  width:60px;height:60px;border-radius:50%;
-  background:linear-gradient(135deg,var(--red),var(--orange));
+  width:72px;height:72px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  font-size:24px;font-weight:800;margin-bottom:14px;flex-shrink:0;
-  border:2px solid rgba(255,61,0,.3);
+  font-size:34px;flex-shrink:0;
+  border:3px solid rgba(255,255,255,.12);
+}
+.profile-hater-name{
+  font-family:'Space Mono';font-size:11px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);margin-top:5px;margin-bottom:14px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:99px;
+  padding:3px 10px;width:fit-content;
 }
 .profile-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .profile-info{flex:1;min-width:0}
@@ -236,6 +241,34 @@ const COL_POSTS     = 'fud_posts';
 
 const app = document.getElementById('app');
 
+/* ── Player Hater's Ball avatars ── */
+const PLAYER_HATERS = [
+  { name:'Silky Johnson',    emoji:'🎩', g:'#1a0030,#3d0066' },
+  { name:'Beautiful',        emoji:'💅', g:'#001430,#003566' },
+  { name:'Ice Cold',         emoji:'🧊', g:'#001a2a,#004466' },
+  { name:'Pit Bull',         emoji:'🦴', g:'#1e0000,#660000' },
+  { name:'Buc Nasty',        emoji:'🦅', g:'#001a00,#004400' },
+  { name:'Pee Wee',          emoji:'🎯', g:'#1a1000,#553300' },
+  { name:'The Dark Crusader',emoji:'🦇', g:'#0d0d0d,#222233' },
+  { name:'Sweetness',        emoji:'🍭', g:'#1a001a,#440044' },
+];
+function haterIdx(key) {
+  if (!key) return 0;
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return h % PLAYER_HATERS.length;
+}
+function haterAvatar(key, size = 72) {
+  const ph = PLAYER_HATERS[haterIdx(key)];
+  const fs = Math.round(size * 0.48);
+  return `<div class="profile-avatar" style="background:linear-gradient(135deg,${ph.g});font-size:${fs}px;width:${size}px;height:${size}px">${ph.emoji}</div>`;
+}
+function haterSmall(key, size = 28) {
+  const ph = PLAYER_HATERS[haterIdx(key)];
+  const fs = Math.round(size * 0.5);
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,${ph.g});font-size:${fs}px;flex-shrink:0;border:2px solid rgba(255,255,255,.1)">${ph.emoji}</span>`;
+}
+
 /* ── helpers ── */
 function trunc(wallet) {
   if (!wallet || wallet.length < 10) return wallet || '';
@@ -325,18 +358,19 @@ if (!wallet) {
   const totalReactions = campaigns.reduce((sum, c) =>
     sum + (c.reactFire || 0) + (c.reactSkull || 0) + (c.reactLaugh || 0), 0);
 
-  /* ── avatar letter ── */
-  const avatarLetter = localProfile?.username
-    ? localProfile.username[0].toUpperCase()
-    : wallet[0]?.toUpperCase() || '?';
+  /* ── player hater identity ── */
+  const ph = PLAYER_HATERS[haterIdx(wallet)];
 
   /* ── build html ── */
   const profileHeaderHtml = `
     <div class="profile-header">
       <div class="profile-top">
-        <div class="profile-avatar">${avatarLetter}</div>
+        <div>
+          ${haterAvatar(wallet, 72)}
+          <div class="profile-hater-name">${ph.emoji} ${ph.name}</div>
+        </div>
         <div class="profile-info">
-          ${localProfile?.username ? `<div class="profile-username">@${localProfile.username}</div>` : ''}
+          ${localProfile?.username ? `<div class="profile-username">@${localProfile.username}</div>` : `<div class="profile-username">${ph.name}</div>`}
           ${localProfile?.xhandle ? `<div class="profile-xhandle">On X: <a href="https://x.com/${localProfile.xhandle.replace(/^@/,'')}" target="_blank" rel="noopener">@${localProfile.xhandle.replace(/^@/,'')}</a></div>` : ''}
           <div class="wallet-row">
             <div class="wallet-addr" id="wallet-display">${trunc(wallet)}</div>

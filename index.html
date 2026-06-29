@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>FudFun.xyz — FUD is Fun</title>
 <meta name="description" content="Launch a FUD campaign in seconds. The internet does the rest."/>
+<meta property="og:title" content="FudFun.xyz — FUD is Fun"/>
+<meta property="og:description" content="Launch a FUD campaign in seconds. Token-gated. On-chain. The internet does the rest."/>
+<meta property="og:image" content="https://fudfun.xyz/og-banner.png"/>
+<meta property="og:url" content="https://fudfun.xyz"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:site" content="@fudfunn"/>
+<meta name="twitter:creator" content="@fudfunn"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
@@ -442,6 +449,24 @@ html[data-mode="smear"] .btn-mode{
   color:#8888d0;border-color:rgba(60,59,110,.4);
 }
 
+/* ── HATER AVATAR ──────────────── */
+.hater-avatar{
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,.12);
+  font-size:18px;line-height:1;
+}
+.card-creator-wrap{display:flex;align-items:center;gap:5px;text-decoration:none;opacity:.8;transition:opacity .15s}
+.card-creator-wrap:hover{opacity:1}
+.card-creator-name{font-family:'Space Mono';font-size:10px;color:var(--dim2)}
+
+/* ── FOOTER ──────────────────── */
+.site-footer{
+  text-align:center;padding:20px 16px 32px;border-top:1px solid var(--border);
+  font-size:12px;color:var(--dim2);font-family:'Space Grotesk';
+}
+.site-footer a{color:var(--dim);transition:color .13s}
+.site-footer a:hover{color:var(--text)}
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -464,6 +489,7 @@ html[data-mode="smear"] .btn-mode{
       <div class="acct-drop" id="acct-drop">
         <div id="acct-email-row" style="padding:8px 13px 6px;font-size:11px;color:var(--dim);font-family:'Space Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
         <div class="acct-drop-divider"></div>
+        <button class="acct-drop-item" id="drop-profile">🎩 My Profile</button>
         <button class="acct-drop-item" id="drop-mine">👤 My Campaigns</button>
         <button class="acct-drop-item danger" id="drop-signout">Sign Out</button>
       </div>
@@ -678,6 +704,10 @@ html[data-mode="smear"] .btn-mode{
   </div>
 </div>
 
+<footer class="site-footer">
+  <div>Made with 💀 by the internet's finest haters &nbsp;·&nbsp; <a href="https://x.com/fudfunn" target="_blank" rel="noopener">@fudfunn on X</a> &nbsp;·&nbsp; <a href="haters.html">Hall of Haters 🏆</a></div>
+</footer>
+
 <div id="toast"></div>
 
 <script type="module">
@@ -694,6 +724,30 @@ const account  = new Account(client);
 const dbs      = new Databases(client);
 const storage  = new Storage(client);
 const BUCKET   = 'media';
+
+// ── Player Hater's Ball avatars ────
+const PLAYER_HATERS = [
+  { name:'Silky Johnson',    emoji:'🎩', g:'#1a0030,#3d0066', c:'#c688ff' },
+  { name:'Beautiful',        emoji:'💅', g:'#001430,#003566', c:'#88b8ff' },
+  { name:'Ice Cold',         emoji:'🧊', g:'#001a2a,#004466', c:'#66ddff' },
+  { name:'Pit Bull',         emoji:'🦴', g:'#1e0000,#660000', c:'#ff7777' },
+  { name:'Buc Nasty',        emoji:'🦅', g:'#001a00,#004400', c:'#66ff88' },
+  { name:'Pee Wee',          emoji:'🎯', g:'#1a1000,#553300', c:'#ffaa44' },
+  { name:'The Dark Crusader',emoji:'🦇', g:'#0d0d0d,#222233', c:'#aaaacc' },
+  { name:'Sweetness',        emoji:'🍭', g:'#1a001a,#440044', c:'#ff88ff' },
+];
+function haterIdx(key) {
+  if (!key) return 0;
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return h % PLAYER_HATERS.length;
+}
+function haterAvatar(key, size = 32) {
+  const ph = PLAYER_HATERS[haterIdx(key)];
+  const fs = Math.round(size * 0.5);
+  return `<span class="hater-avatar" style="width:${size}px;height:${size}px;background:linear-gradient(135deg,${ph.g});font-size:${fs}px" title="${ph.name}">${ph.emoji}</span>`;
+}
+function haterName(key) { return PLAYER_HATERS[haterIdx(key)].name; }
 
 // ── State ──────────────────────────
 let user              = null;
@@ -879,10 +933,11 @@ function updateAccountUI() {
   const btn = document.getElementById('acct-btn');
   const tabMine = document.getElementById('tab-mine');
   if (user) {
-    const label = user.name || user.email?.split('@')[0] || 'Wallet';
-    btn.textContent = '👤 ' + label;
+    const pubkey = user.$id || '';
+    const ph = PLAYER_HATERS[haterIdx(pubkey)];
+    btn.innerHTML = `${ph.emoji} ${ph.name}`;
     btn.classList.add('logged-in');
-    document.getElementById('acct-email-row').textContent = user.$id || user.email || '';
+    document.getElementById('acct-email-row').textContent = pubkey.slice(0,6)+'…'+pubkey.slice(-4);
     tabMine.style.display = '';
   } else {
     btn.textContent = 'Sign In';
@@ -898,6 +953,11 @@ document.getElementById('acct-btn').addEventListener('click', e => {
   document.getElementById('acct-drop').classList.toggle('open');
 });
 document.addEventListener('click', () => document.getElementById('acct-drop').classList.remove('open'));
+
+document.getElementById('drop-profile').addEventListener('click', () => {
+  document.getElementById('acct-drop').classList.remove('open');
+  if (user?.$id) window.location.href = `/profile.html?w=${encodeURIComponent(user.$id)}`;
+});
 
 document.getElementById('drop-mine').addEventListener('click', () => {
   document.getElementById('acct-drop').classList.remove('open');
@@ -1021,7 +1081,7 @@ function makeCard(doc, flash) {
     </div>` : ''}
     <div class="card-foot">
       ${doc.clientId && doc.clientId !== 'anon'
-        ? `<a class="card-creator" href="/profile.html?w=${encodeURIComponent(doc.clientId)}" onclick="event.stopPropagation()" title="View profile">${doc.clientId.slice(0,4)}…${doc.clientId.slice(-4)}</a>`
+        ? `<a class="card-creator-wrap" href="/profile.html?w=${encodeURIComponent(doc.clientId)}" onclick="event.stopPropagation()" title="View ${haterName(doc.clientId)}'s profile">${haterAvatar(doc.clientId, 28)}<span class="card-creator-name">${haterName(doc.clientId)}</span></a>`
         : ''
       }
       ${user && doc.clientId === user.$id

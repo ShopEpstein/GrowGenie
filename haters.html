@@ -198,6 +198,29 @@ const client = new Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setP
 const dbs = new Databases(client);
 const DB = 'growthgenie';
 
+// ── Player Hater's Ball avatars ────────────────────────
+const PLAYER_HATERS = [
+  { name:'Silky Johnson',    emoji:'🎩', g:'#1a0030,#3d0066' },
+  { name:'Beautiful',        emoji:'💅', g:'#001430,#003566' },
+  { name:'Ice Cold',         emoji:'🧊', g:'#001a2a,#004466' },
+  { name:'Pit Bull',         emoji:'🦴', g:'#1e0000,#660000' },
+  { name:'Buc Nasty',        emoji:'🦅', g:'#001a00,#004400' },
+  { name:'Pee Wee',          emoji:'🎯', g:'#1a1000,#553300' },
+  { name:'The Dark Crusader',emoji:'🦇', g:'#0d0d0d,#222233' },
+  { name:'Sweetness',        emoji:'🍭', g:'#1a001a,#440044' },
+];
+function phIdx(key) {
+  if (!key) return 0;
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return h % PLAYER_HATERS.length;
+}
+function phAvatar(key, size = 36) {
+  const ph = PLAYER_HATERS[phIdx(key)];
+  const fs = Math.round(size * 0.5);
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,${ph.g});font-size:${fs}px;flex-shrink:0;border:2px solid rgba(255,255,255,.1)" title="${ph.name}">${ph.emoji}</span>`;
+}
+
 // ── Hater rank ──────────────────────────────────────────
 function haterRank(solEarned) {
   if (solEarned >= 10)  return { icon:'👑', label:'Hall of Hater',    cls:'tier-hall'    };
@@ -261,6 +284,7 @@ function renderPodium(top) {
       <div class="podium-card ${cls}" style="order:${pos===1?2:pos===2?1:3}">
         <div class="podium-bar"></div>
         <div class="podium-rank">${medals[idx]}</div>
+        <div style="display:flex;justify-content:center;padding:4px 0">${phAvatar(u.username, pos===1?52:42)}</div>
         <div class="podium-name">${esc(u.username)}</div>
         ${u.xHandle ? `<div class="podium-handle">@${esc(u.xHandle)}</div>` : ''}
         <div style="padding:6px 10px 0">
@@ -289,10 +313,13 @@ function renderLeaderboard(ranked) {
     return `
       <div class="lb-row ${rowCls}">
         <div class="lb-num ${numCls}">${pos <= 3 ? ['🥇','🥈','🥉'][pos-1] : pos}</div>
-        <div class="lb-identity">
-          <div class="lb-name">${esc(u.username)}</div>
-          ${u.xHandle ? `<div class="lb-handle">@${esc(u.xHandle)}</div>` : ''}
-          <span class="lb-tier-badge ${rank.cls}">${rank.icon} ${rank.label}</span>
+        <div class="lb-identity" style="display:flex;align-items:center;gap:8px">
+          ${phAvatar(u.username, 34)}
+          <div>
+            <div class="lb-name">${esc(u.username)}</div>
+            ${u.xHandle ? `<div class="lb-handle">@${esc(u.xHandle)}</div>` : ''}
+            <span class="lb-tier-badge ${rank.cls}">${rank.icon} ${rank.label}</span>
+          </div>
         </div>
         <div class="lb-sol">◎ ${u.sol.toFixed(3)}</div>
         <div class="lb-posts">${u.posts} post${u.posts !== 1 ? 's' : ''}</div>
