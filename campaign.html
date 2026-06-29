@@ -965,7 +965,10 @@ function renderLeaderboard() {
 }
 
 function myWallet() {
-  try { return JSON.parse(localStorage.getItem('fud_wallet') || 'null')?.pubkey || ''; } catch { return ''; }
+  try {
+    return JSON.parse(localStorage.getItem('fud_wallet')  || 'null')?.pubkey  ||
+           JSON.parse(localStorage.getItem('fud_profile') || 'null')?.wallet  || '';
+  } catch { return ''; }
 }
 
 function renderFeed() {
@@ -1108,8 +1111,13 @@ window.handleSubmit = async function() {
     return;
   }
 
-  // Auto-save the verified wallet to profile so they receive tips
+  // Auto-save the verified wallet to profile and fud_wallet so delete buttons recognize ownership
   saveProfileToStorage({ ...p, wallet: verifiedWallet });
+  try {
+    const existing = JSON.parse(localStorage.getItem('fud_wallet') || '{}');
+    localStorage.setItem('fud_wallet', JSON.stringify({ ...existing, pubkey: verifiedWallet }));
+  } catch {}
+  syncProfileUI();
   syncProfileUI();
 
   // Step 3: check token balance against the VERIFIED wallet (not self-reported)

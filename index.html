@@ -1096,10 +1096,13 @@ applyMode(mode);
 // ── Auth (silent) ─────────────────
 (function initAuth() {
   try {
-    const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
-    if (w?.pubkey) {
-      user = { $id: w.pubkey, name: w.pubkey.slice(0,4)+'…'+w.pubkey.slice(-4) };
-      connectedWalletPub = w.pubkey;
+    const w   = JSON.parse(localStorage.getItem('fud_wallet')  || 'null');
+    const p   = JSON.parse(localStorage.getItem('fud_profile') || 'null');
+    const pub = w?.pubkey || p?.wallet || null;
+    if (pub) {
+      const name = p?.username ? '@' + p.username : pub.slice(0,4)+'…'+pub.slice(-4);
+      user = { $id: pub, name };
+      connectedWalletPub = pub;
     }
   } catch {}
   updateAccountUI();
