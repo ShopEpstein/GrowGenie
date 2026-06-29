@@ -1136,10 +1136,14 @@ function heatLabel(h) {
 
 const EMOJI = {hate:'🔥',ex:'💔',boss:'😤',family:'👴',profit:'💰',boredom:'😴',fun:'😂',coin:'🎯'};
 const GRAD  = {
-  hate:'135deg,#2a0500,#0d0015',ex:'135deg,#1e0616,#040010',
-  boss:'135deg,#141200,#050800',profit:'135deg,#001800,#000a04',
-  boredom:'135deg,#060812,#030308',fun:'135deg,#180900,#050200',
-  family:'135deg,#120e00,#060300',coin:'135deg,#0b0020,#030008',
+  hate:    '135deg,#3d0800 0%,#1a0030 100%',
+  ex:      '135deg,#3a0a28 0%,#0a0030 100%',
+  boss:    '135deg,#2a1e00 0%,#0a1200 100%',
+  profit:  '135deg,#003a12 0%,#001a08 100%',
+  boredom: '135deg,#0c1430 0%,#060810 100%',
+  fun:     '135deg,#3a0e00 0%,#180600 100%',
+  family:  '135deg,#1e1400 0%,#100800 100%',
+  coin:    '135deg,#1e0050 0%,#0a0025 100%',
 };
 
 function tgt(doc) { return doc.fudTarget || doc.smearTarget || doc.projectName || '???'; }
@@ -1175,9 +1179,14 @@ function makeCard(doc, flash) {
   const el = document.createElement('div');
   el.className = `card ${ht}` + (flash ? ' new' : '');
   el.dataset.id = doc.$id;
+  const rawName = tgt(doc);
+  const watermark = !banner ? `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none;padding:0 6px"><span style="font-family:'Space Grotesk',sans-serif;font-weight:900;font-size:52px;letter-spacing:-.04em;color:#fff;opacity:.07;white-space:nowrap;text-overflow:clip;max-width:100%;overflow:hidden">${esc(rawName)}</span></div>` : '';
+  const catEmoji = !banner ? `<span style="position:absolute;bottom:6px;right:10px;font-size:28px;opacity:.18;line-height:1;pointer-events:none">${EMOJI[cat]||'💀'}</span>` : '';
+
   el.innerHTML = `
     <div class="card-banner" style="${bg}">
       ${banner ? `<img src="${esc(banner)}" alt="" loading="lazy"/>` : ''}
+      ${watermark}${catEmoji}
       <div class="card-banner-grad"></div>
       <span class="heat-badge ${ht}">${heatLabel(ht)}</span>
       <span class="card-age">${ago(doc.$createdAt)}</span>
