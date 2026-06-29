@@ -694,8 +694,22 @@ function copyBoostWallet() {
 
 // ── Profile ────────────────────────────────────────────────
 const PK = 'fud_profile';
-const getProfile = () => { try { return JSON.parse(localStorage.getItem(PK)); } catch { return null; } };
 const saveProfileToStorage = p => localStorage.setItem(PK, JSON.stringify(p));
+
+function getProfile() {
+  try {
+    const p = JSON.parse(localStorage.getItem(PK));
+    if (p?.username) return p;
+    // Auto-bootstrap from connected wallet so wallet users don't hit the profile gate
+    const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
+    if (w?.pubkey) {
+      const auto = { username: w.pubkey.slice(0,4) + '…' + w.pubkey.slice(-4), wallet: w.pubkey };
+      saveProfileToStorage(auto);
+      return auto;
+    }
+    return null;
+  } catch { return null; }
+}
 
 function syncProfileUI() {
   const p = getProfile();
