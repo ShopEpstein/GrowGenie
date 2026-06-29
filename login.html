@@ -230,11 +230,14 @@
     }
     .deeplink-btn:hover { border-color: rgba(255,61,0,.4); }
 
-    .btn-google {
-      background: #fff; color: #1a1a1a; border: none;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+    .wallet-detected {
+      font-size: 12px; color: var(--dim); text-align: center;
+      margin-top: 10px; font-family: 'Space Mono', monospace;
     }
-    .btn-google:hover { background: #f0f0f0; }
+
+    .auto-connect-msg {
+      text-align: center; color: var(--dim); font-size: 13px; margin-bottom: 12px;
+    }
   </style>
 </head>
 <body>
@@ -262,69 +265,34 @@
     <div class="error-msg" id="errorMsg" role="alert"></div>
     <div class="success-msg" id="successMsg"></div>
 
-    <!-- Wallet sign-in (primary) -->
+    <!-- Wallet sign-in -->
+    <div id="autoConnectMsg" class="auto-connect-msg" style="display:none">Checking wallet…</div>
     <button type="button" class="btn btn-wallet" id="walletBtn">
       <div class="btn-spinner"></div>
-      <span class="btn-label">🔑 Connect Wallet</span>
+      <span class="btn-label" id="walletBtnLabel">🔑 Connect Wallet</span>
     </button>
+    <div class="wallet-detected" id="walletDetected"></div>
 
     <div id="mobileDeeplinks" style="display:none" class="mobile-deeplinks"></div>
 
-    <div class="or-divider">OR</div>
-
-    <!-- Google sign-in -->
-    <button type="button" class="btn btn-google" id="googleBtn">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style="flex-shrink:0">
-        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
-        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-      </svg>
-      <span class="btn-label">Continue with Google</span>
-    </button>
-
     <div class="card-footer">
-      <a href="#" id="showEmailLink" style="color:var(--dim-2);font-size:11px;text-decoration:none">sign in with email →</a>
+      Solana wallet required · <a href="https://phantom.app" target="_blank" rel="noopener" style="color:var(--dim);text-decoration:none">Get Phantom</a>
     </div>
-
-    <!-- Email form (hidden, shown on demand) -->
-    <form id="loginForm" novalidate style="display:none;margin-top:12px">
-      <div class="field">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required />
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
-      </div>
-      <button type="submit" class="btn" id="submitBtn">
-        <div class="btn-spinner"></div>
-        <span class="btn-label">Enter with Email 💀</span>
-      </button>
-    </form>
   </div>
 
-  <script type="module">
-    import { Client, Account, ID } from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
-
-    const client = new Client()
-      .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-      .setProject('6a2bc15c00065b3c91a0');
-
-    const account = new Account(client);
-
+  <script>
     const redirectOverlay = document.getElementById('redirectOverlay');
     const errorMsg        = document.getElementById('errorMsg');
     const successMsg      = document.getElementById('successMsg');
-    const loginForm       = document.getElementById('loginForm');
-    const submitBtn       = document.getElementById('submitBtn');
     const walletBtn       = document.getElementById('walletBtn');
+    const walletBtnLabel  = document.getElementById('walletBtnLabel');
+    const walletDetected  = document.getElementById('walletDetected');
     const backLink        = document.getElementById('backLink');
     const mobileDeeplinks = document.getElementById('mobileDeeplinks');
+    const autoConnectMsg  = document.getElementById('autoConnectMsg');
 
-    // Wire up back link to ?next= if present, otherwise /
     const nextUrl = new URLSearchParams(location.search).get('next') || '/';
-    backLink.href = nextUrl === '/' ? '/' : '/';
+    backLink.href = '/';
 
     function showError(msg) {
       errorMsg.textContent = msg;
@@ -343,10 +311,10 @@
       successMsg.classList.remove('visible');
     }
 
-    function setLoading(btn, state, label) {
-      btn.disabled = state;
-      btn.classList.toggle('loading', state);
-      if (!state && label) btn.querySelector('.btn-label').textContent = label;
+    function setLoading(state, label) {
+      walletBtn.disabled = state;
+      walletBtn.classList.toggle('loading', state);
+      if (label) walletBtnLabel.textContent = label;
     }
 
     function redirectAfterAuth() {
@@ -354,15 +322,13 @@
       window.location.href = nextUrl;
     }
 
-    // Detect any installed Solana wallet provider
     function getWalletProvider() {
-      if (window.phantom?.solana?.isPhantom)  return window.phantom.solana;
-      if (window.solflare?.isSolflare)         return window.solflare;
-      if (window.backpack?.isBackpack)         return window.backpack;
-      if (window.solana)                       return window.solana;
-      if (window.xnft?.solana)                 return window.xnft.solana;
-      if (window.glowSolana)                   return window.glowSolana;
-      if (window.okxwallet?.solana)            return window.okxwallet.solana;
+      if (window.phantom?.solana?.isPhantom) return { p: window.phantom.solana, name: 'Phantom', icon: '👻' };
+      if (window.solflare?.isSolflare)       return { p: window.solflare, name: 'Solflare', icon: '☀️' };
+      if (window.backpack?.isBackpack)       return { p: window.backpack, name: 'Backpack', icon: '🎒' };
+      if (window.okxwallet?.solana)          return { p: window.okxwallet.solana, name: 'OKX', icon: '⭕' };
+      if (window.solana)                     return { p: window.solana, name: 'Wallet', icon: '🔑' };
+      if (window.glowSolana)                 return { p: window.glowSolana, name: 'Glow', icon: '✨' };
       return null;
     }
 
@@ -373,59 +339,32 @@
     function showMobileDeeplinks() {
       const encoded = encodeURIComponent(location.href);
       const ref     = encodeURIComponent('https://fudfun.xyz');
-
       mobileDeeplinks.style.display = 'flex';
       mobileDeeplinks.innerHTML = `
-        <p style="font-size:13px;color:var(--dim);text-align:center;margin-bottom:4px;">Open in your wallet app to sign in:</p>
-        <a class="deeplink-btn" href="https://phantom.app/ul/browse/${encoded}?ref=${ref}">
-          👻 Open in Phantom
-        </a>
-        <a class="deeplink-btn" href="https://solflare.com/ul/v1/browse/${encoded}?ref=${ref}">
-          ☀️ Open in Solflare
-        </a>
+        <p style="font-size:13px;color:var(--dim);text-align:center;margin-bottom:4px">Open in your wallet app:</p>
+        <a class="deeplink-btn" href="https://phantom.app/ul/browse/${encoded}?ref=${ref}">👻 Open in Phantom</a>
+        <a class="deeplink-btn" href="https://solflare.com/ul/v1/browse/${encoded}?ref=${ref}">☀️ Open in Solflare</a>
       `;
     }
 
-    async function connectWalletLogin() {
-      const provider = getWalletProvider();
-
-      if (!provider) {
-        if (isMobile()) {
-          showMobileDeeplinks();
-          showError('No wallet detected. Tap a link below to open in your wallet app.');
-        } else {
-          showError('No Solana wallet found. Install Phantom or Solflare and refresh.');
-        }
-        return;
-      }
-
-      setLoading(walletBtn, true, 'Connecting…');
+    async function doWalletLogin(provider, name) {
+      setLoading(true, 'Connecting…');
       hideMessages();
 
       try {
-        // Connect (silently if already trusted, else show popup)
-        try {
-          await provider.connect({ onlyIfTrusted: true });
-        } catch {
-          await provider.connect();
-        }
+        try { await provider.connect({ onlyIfTrusted: true }); }
+        catch { await provider.connect(); }
 
         const pubkey = provider.publicKey?.toString();
         if (!pubkey) throw new Error('Could not read wallet public key.');
 
-        setLoading(walletBtn, true, 'Sign the message in your wallet…');
-
-        // Sign ownership proof
-        const message = `FudFun.xyz login: ${pubkey}\nTime: ${Date.now()}`;
+        setLoading(true, 'Sign the message in your wallet…');
+        const message  = `FudFun.xyz login: ${pubkey}\nTime: ${Date.now()}`;
         const msgBytes = new TextEncoder().encode(message);
         const { signature } = await provider.signMessage(msgBytes, 'utf8');
-
-        // Convert signature (Uint8Array) to base64
         const sigBase64 = btoa(String.fromCharCode(...signature));
 
-        setLoading(walletBtn, true, 'Verifying…');
-
-        // Server-side verification + Appwrite user creation
+        setLoading(true, 'Verifying…');
         const resp = await fetch('/api/wallet-auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -435,100 +374,74 @@
         const data = await resp.json();
         if (!resp.ok || !data.verified) throw new Error(data.error || 'Verification failed');
 
-        // Store wallet identity in localStorage — no Appwrite session needed
         localStorage.setItem('fud_wallet', JSON.stringify({ pubkey: data.pubkey, ts: Date.now() }));
-
         showSuccess('Wallet verified! Entering…');
         setTimeout(redirectAfterAuth, 600);
       } catch (err) {
         const msg = err?.message || 'Wallet sign-in failed.';
-        if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('cancelled')) {
-          showError('Signature cancelled. Try again to sign in.');
+        if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('cancelled') || msg.toLowerCase().includes('denied')) {
+          showError('Signature cancelled — tap the button and approve in your wallet.');
         } else {
           showError(msg);
         }
-        setLoading(walletBtn, false, '🔑 Connect Wallet');
+        setLoading(false, `${walletInfo ? walletInfo.icon + ' Connect ' + walletInfo.name : '🔑 Connect Wallet'}`);
       }
     }
 
-    walletBtn.addEventListener('click', connectWalletLogin);
+    let walletInfo = null;
 
-    // Google OAuth
-    document.getElementById('googleBtn').addEventListener('click', () => {
-      account.createOAuth2Session('google',
-        `${location.origin}/`,
-        `${location.origin}/login.html`
-      );
+    walletBtn.addEventListener('click', () => {
+      if (walletInfo) {
+        doWalletLogin(walletInfo.p, walletInfo.name);
+      } else if (isMobile()) {
+        showMobileDeeplinks();
+        showError('No wallet detected. Tap a link below.');
+      } else {
+        showError('No Solana wallet found. Install Phantom or Solflare and refresh.');
+      }
     });
 
-    // Show email form on demand
-    document.getElementById('showEmailLink').addEventListener('click', e => {
-      e.preventDefault();
-      document.getElementById('loginForm').style.display = '';
-      e.target.style.display = 'none';
-    });
-
-    // Already authed? (Appwrite session from Google OR wallet localStorage)
+    // On page load: check existing auth, detect wallet, auto-connect if inside wallet browser
     (async () => {
-      // Check localStorage wallet first — fastest
+      // Already logged in via localStorage?
       try {
         const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
         if (w?.pubkey) { redirectAfterAuth(); return; }
       } catch {}
-      // Check Appwrite session (from Google OAuth)
-      try {
-        await account.get();
-        redirectAfterAuth();
-      } catch { /* show form */ }
-    })();
 
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideMessages();
+      // Wait a tick for wallet extensions to inject
+      await new Promise(r => setTimeout(r, 120));
 
-      const email    = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
+      walletInfo = getWalletProvider();
 
-      if (!email || !password) {
-        showError('Please enter your email and password.');
-        return;
-      }
+      if (walletInfo) {
+        walletBtnLabel.textContent = `${walletInfo.icon} Connect ${walletInfo.name}`;
+        walletDetected.textContent = `${walletInfo.name} detected`;
 
-      if (password.length < 8) {
-        showError('Password must be at least 8 characters.');
-        return;
-      }
+        // If inside a wallet's in-app browser, auto-connect silently
+        const inWalletBrowser =
+          /Phantom/i.test(navigator.userAgent) ||
+          /Solflare/i.test(navigator.userAgent) ||
+          /Backpack/i.test(navigator.userAgent);
 
-      setLoading(submitBtn, true, 'Entering…');
-
-      try {
-        await account.createEmailPasswordSession(email, password);
-        redirectAfterAuth();
-      } catch (signInErr) {
-        const errCode = signInErr?.code;
-        const errMsg  = (signInErr?.message || '').toLowerCase();
-        const isUnknownUser = errCode === 401 || errMsg.includes('invalid credentials') ||
-                              errMsg.includes('user not found') || errMsg.includes('invalid email');
-
-        if (isUnknownUser) {
-          setLoading(submitBtn, true, 'Creating account…');
+        if (inWalletBrowser) {
+          autoConnectMsg.style.display = '';
           try {
-            showSuccess('New account — creating yours now…');
-            await account.create(ID.unique(), email, email, password);
-            await account.createEmailPasswordSession(email, password);
-            redirectAfterAuth();
-          } catch (createErr) {
-            const msg = createErr?.message || 'Could not create account. Try a different email.';
-            showError(msg);
-            setLoading(submitBtn, false, 'Enter with Email 💀');
-          }
-        } else {
-          const msg = signInErr?.message || 'Sign in failed. Check your password.';
-          showError(msg);
-          setLoading(submitBtn, false, 'Enter with Email 💀');
+            await walletInfo.p.connect({ onlyIfTrusted: true });
+            if (walletInfo.p.publicKey) {
+              autoConnectMsg.textContent = 'Wallet connected — signing in…';
+              await doWalletLogin(walletInfo.p, walletInfo.name);
+              return;
+            }
+          } catch { /* not pre-trusted, show button */ }
+          autoConnectMsg.style.display = 'none';
         }
+      } else if (isMobile()) {
+        // No wallet on mobile — show deeplinks immediately
+        showMobileDeeplinks();
+        walletBtn.style.display = 'none';
       }
-    });
+    })();
   </script>
 </body>
 </html>
