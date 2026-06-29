@@ -434,6 +434,15 @@ nav{
 <!-- LIVE BANNER -->
 <div id="live-banner" onclick="dismissLiveBanner()">🔴 New FUD just dropped — tap to see it</div>
 
+<!-- SEARCH -->
+<div style="padding:0 16px 12px;max-width:700px;margin:0 auto;width:100%">
+  <input id="feed-search" type="search" placeholder="🔍 Search targets, KOLs, projects…"
+    style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;padding:10px 16px;color:#f0f0f5;font-size:14px;font-family:'Space Grotesk',sans-serif;
+    outline:none;transition:border-color .15s"
+    onfocus="this.style.borderColor='rgba(255,61,0,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.08)'" />
+</div>
+
 <!-- FEED -->
 <main class="main">
   <div class="grid" id="grid">
@@ -881,21 +890,29 @@ async function loadFeed(flash) {
     allDocs = docs;
     const grid = document.getElementById('grid');
 
-    if (!docs.length) {
-      grid.innerHTML = `<div class="empty"><h3>No FUD yet 💀</h3><p>Be the first to launch a campaign.</p></div>`;
+    const q = (document.getElementById('feed-search')?.value || '').toLowerCase().trim();
+    const filtered = q ? docs.filter(d => {
+      const txt = ((d.fudTarget || d.smearTarget || d.projectName || '') + ' ' + (d.tag || '')).toLowerCase();
+      return txt.includes(q);
+    }) : docs;
+
+    if (!filtered.length) {
+      grid.innerHTML = q
+        ? `<div class="empty"><h3>No results 💀</h3><p>No campaigns matching "${q}"</p></div>`
+        : `<div class="empty"><h3>No FUD yet 💀</h3><p>Be the first to launch a campaign.</p></div>`;
       updateStats(0, 0);
       return;
     }
 
-    if (flash) {
-      const fresh = docs.filter(d => !seenIds.has(d.$id));
+    if (flash && !q) {
+      const fresh = filtered.filter(d => !seenIds.has(d.$id));
       fresh.forEach(d => { grid.insertBefore(makeCard(d, true), grid.firstChild); seenIds.add(d.$id); });
     } else {
       grid.innerHTML = '';
-      docs.forEach(d => { grid.appendChild(makeCard(d, false)); seenIds.add(d.$id); });
+      filtered.forEach(d => { grid.appendChild(makeCard(d, false)); seenIds.add(d.$id); });
     }
 
-    updateStats(docs.length, docs.reduce((s, d) => s + totalReacts(d), 0));
+    updateStats(filtered.length, filtered.reduce((s, d) => s + totalReacts(d), 0));
     updateTicker(docs.slice(0, 12));
     bindCards();
   } catch (err) { console.error(err); }
@@ -1043,6 +1060,13 @@ window.dismissLiveBanner = function() {
 };
 
 loadFeed(false);
+
+// Live search — filter existing results without re-fetching
+let _searchTimer;
+document.getElementById('feed-search').addEventListener('input', () => {
+  clearTimeout(_searchTimer);
+  _searchTimer = setTimeout(() => loadFeed(false), 200);
+});
 
 // Realtime subscription for instant updates
 try {
