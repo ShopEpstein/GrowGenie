@@ -1273,31 +1273,23 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     }
   } catch {}
 
-  const doc = {
-    slug:          slug(target),
-    clientId:      user?.$id || connectedWalletPub || 'anon',
-    projectName:   target,
-    title:         `FUD: ${target}`,
-    tag:           why,
-    logo:          EMOJI[selectedCat] || '💀',
-    campaignType:  'fudfund',
-    fudTarget:     target,
-    fudCategory:   selectedCat,
-    tipWallet:     wallet || null,
-    active:        true,
-    accentColor:   '#FF3D00',
+  const payload = {
+    target, why,
+    category:  selectedCat,
+    clientId:  user?.$id || connectedWalletPub || 'anon',
+    wallet:    wallet || null,
+    social:    social || null,
+    banner:    banner || (previewData?.thumbnailUrl) || null,
+    bounty:    bounty > 0 ? bounty : null,
   };
-  if (social)      doc.socialLink            = social;
-  if (previewData) doc.socialPreviewName     = previewData.authorName   || null;
-  if (previewData) doc.socialPreviewThumb    = previewData.thumbnailUrl || null;
-  if (previewData) doc.socialPreviewPlatform = previewData.platform     || null;
-  if (banner)      doc.bannerUrl             = banner;
-  if (bounty > 0)  doc.bountyPool            = bounty.toString();
 
-  // Run slot + create in parallel
+  // Run slot + create in parallel via server API (bypasses Appwrite permission issues)
   const [, created] = await Promise.allSettled([
     runSlotMachine(),
-    dbs.createDocument(DB, COLL, ID.unique(), doc),
+    fetch('/api/create-campaign', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(new Error(e.error || 'Failed')))),
   ]);
 
   if (created.status === 'rejected') {
@@ -1308,7 +1300,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
 
   const newDoc    = created.value;
   const campUrl   = `${location.origin}/c/${newDoc.$id}`;
-  const shareText = `💀 I just launched a FUD campaign against ${target} on fudfun.xyz\n\n${doc.tag ? doc.tag.slice(0,100) : 'The internet needs to see this.'}\n\nJoin the campaign 👇`;
+  const shareText = `💀 I just launched a FUD campaign against ${target} on fudfun.xyz\n\n${why ? why.slice(0,100) : 'The internet needs to see this.'}\n\nJoin the campaign 👇`;
   const shareHref = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(campUrl)}`;
 
   document.getElementById('lc-success-share').href = shareHref;
