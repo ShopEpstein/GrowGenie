@@ -1456,6 +1456,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     target, why,
     category:  selectedCat,
     clientId:  user?.$id || connectedWalletPub || 'anon',
+    campaignType: mode === 'smear' ? 'smear' : 'fudfund',
     wallet:    null,
     social:    social || null,
     banner:    banner || (previewData?.thumbnailUrl) || null,

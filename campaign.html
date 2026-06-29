@@ -361,7 +361,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- TOP BAR -->
 <header class="topbar">
-  <a class="logo-link" href="/">💀 FudFun</a>
+  <a class="logo-link" href="/" id="campLogoLink">💀 FudFun</a>
   <div class="topbar-sep"></div>
   <div class="camp-name" id="campName">Loading…</div>
   <button class="btn-profile" id="btnProfile" onclick="openProfileModal()">Create profile</button>
@@ -383,7 +383,7 @@ a{color:inherit;text-decoration:none}
   </a>
 
   <div class="hero-stats">
-    <div class="hstat">🤡 <span class="hstat-val" id="st-fudders">0</span> FUDders</div>
+    <div class="hstat">🤡 <span class="hstat-val" id="st-fudders">0</span> <span id="fudders-label">FUDders</span></div>
     <div class="hstat">💸 <span class="hstat-val" id="st-tips">◎ 0</span> tipped</div>
     <div class="hstat">📣 <span class="hstat-val" id="st-posts">0</span> posts fired</div>
   </div>
@@ -391,7 +391,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- FUD AMMO -->
 <section class="section">
-  <div class="sec-head">🔥 FUD Ammo <span class="sec-sub">click to fire on X</span></div>
+  <div class="sec-head" id="ammo-head">🔥 FUD Ammo <span class="sec-sub">click to fire on X</span></div>
   <div class="tpl-list" id="tplList"><div class="empty">Loading campaign…</div></div>
 </section>
 
@@ -516,7 +516,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- SUBMIT FUD -->
 <section class="section" style="margin-top:8px">
-  <div class="sec-head">💀 Submit Your FUD <span class="sec-sub">get tipped by the community</span></div>
+  <div class="sec-head" id="submit-head">💀 Submit Your FUD <span class="sec-sub">get tipped by the community</span></div>
   <div class="submit-box">
     <div class="field">
       <label>Tweet / Post URL (proof you fired)</label>
@@ -531,7 +531,7 @@ a{color:inherit;text-decoration:none}
       <input id="inp-wallet" class="mono" placeholder="Set up your profile →" readonly/>
     </div>
     <button class="btn-main" id="btnSubmit" onclick="handleSubmit()">Submit FUD 💀</button>
-    <div class="field-note" style="margin-top:8px">
+    <div class="field-note" style="margin-top:8px" id="submitGateNote">
       🔒 Requires holding <strong style="color:var(--gold)">$SCROLL</strong> or <strong style="color:var(--gold)">$FUD</strong> in your wallet &nbsp;·&nbsp;
       No profile? <span onclick="openProfileModal()">Create one →</span>
     </div>
@@ -540,7 +540,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- LEADERBOARD -->
 <section class="section" style="margin-top:8px">
-  <div class="sec-head" style="display:flex;align-items:center;justify-content:space-between">
+  <div class="sec-head" style="display:flex;align-items:center;justify-content:space-between" id="lb-head">
     <span>🏆 Top FUDders <span class="sec-sub">ranked by SOL earned</span></span>
     <a href="haters.html" style="font-family:'Space Mono';font-size:10px;color:var(--dim);text-decoration:none;border:1px solid var(--border2);border-radius:99px;padding:3px 10px;transition:all .13s" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--dim)'">All-time →</a>
   </div>
@@ -549,7 +549,7 @@ a{color:inherit;text-decoration:none}
 
 <!-- FUD FEED -->
 <section class="section" style="margin-top:8px">
-  <div class="sec-head">📣 FUD Feed <span class="sec-sub">latest receipts</span></div>
+  <div class="sec-head" id="feed-head">📣 FUD Feed <span class="sec-sub">latest receipts</span></div>
   <div class="post-list" id="feedEl"><div class="empty">Loading…</div></div>
 </section>
 
@@ -746,15 +746,33 @@ function renderNotFound() {
 function applyBranding() {
   const who     = CAMP.fudTarget || CAMP.smearTarget || CAMP.projectName || '???';
   const isSmear = CAMP.campaignType === 'smear';
-  const icon    = isSmear ? '🗡️' : '💀';
+  const icon    = isSmear ? '⭐' : '💀';
 
   document.title = `${icon} ${who} — FudFun.xyz`;
   $('heroEyebrow').textContent = `${icon} ${isSmear ? 'SMEAR CAMPAIGN' : 'FUD CAMPAIGN'}`;
   $('campName').textContent    = who;
   $('campTitle').innerHTML     = `<span style="color:var(--red)">${esc(who)}</span>`;
   $('campTag').textContent     = CAMP.tag || (isSmear
-    ? 'Dig up dirt. Spread it. Get tipped.'
+    ? 'Dig up dirt. Spread it. Hold them accountable.'
     : 'FUD hard. Get paid. No mercy.');
+
+  // Swap all page labels based on campaign type
+  if (isSmear) {
+    // Nav / topbar
+    $('campLogoLink').textContent = '🇺🇸 SmearFun';
+    // Stats
+    $('st-fudders').closest('.hstat').childNodes[0].textContent = '🗳️ ';
+    $('fudders-label').textContent = 'Smear Merchants';
+    // Sections
+    $('ammo-head').innerHTML      = '🗳️ Smear Ammo <span class="sec-sub">click to fire on X</span>';
+    $('submit-head').innerHTML    = '⭐ Submit Your Smear <span class="sec-sub">get tipped by the community</span>';
+    $('lb-head').innerHTML        = '🏆 Top Smear Merchants <span class="sec-sub" style="margin-left:auto">ranked by SOL earned</span>';
+    $('feed-head').innerHTML      = '📣 Smear Feed <span class="sec-sub">latest receipts</span>';
+    $('btnSubmit').textContent    = 'Submit Smear 🇺🇸';
+    $('submitGateNote').innerHTML = '🔒 Requires holding <strong style="color:var(--gold)">$SCROLL</strong> or <strong style="color:var(--gold)">$FUD</strong> in your wallet &nbsp;·&nbsp; No profile? <span onclick="openProfileModal()">Create one →</span>';
+    // Playbook
+    renderSmearPlaybook();
+  }
 
   // target social card
   const card = $('targetCard');
@@ -787,7 +805,7 @@ function buildTemplates() {
   fetch('/api/fud-copy', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ targetName: who, reason: angle, category: CAMP.fudCategory, campaignUrl: url }),
+    body: JSON.stringify({ targetName: who, reason: angle, category: CAMP.fudCategory, campaignUrl: url, campaignType: CAMP.campaignType }),
   })
   .then(r => r.ok ? r.json() : Promise.reject())
   .then(data => renderTemplates(data.tweets && data.tweets.length ? data.tweets : fallbackTemplates(who, angle, url)))
@@ -1132,6 +1150,127 @@ window.sendTip = async function() {
     btn.textContent = `Send ◎ ${selSol} SOL 💸`;
   }
 };
+
+// ── Smear playbook ─────────────────────────────────────────
+function renderSmearPlaybook() {
+  const sec = $('playbookSection');
+  if (!sec) return;
+  sec.innerHTML = `
+    <div class="sec-head">🇺🇸 Smear Playbook <span class="sec-sub">amplify your campaign</span></div>
+
+    <div class="playbook-disclaimer">
+      💬 Political speech, criticism of public figures, and opposition research are protected forms of civic expression. The only lines we don't cross: direct threats, doxxing private individuals, or inciting violence. Everything else? Democracy is messy — that's the point.
+    </div>
+
+    <div class="playbook-tiers">
+
+      <div class="tier">
+        <div class="tier-head free">🆓 FREE</div>
+        <ul class="tier-list">
+          <li>Fire all 5 post templates above — tag the target's official accounts</li>
+          <li>Share the campaign in relevant political subreddits, Facebook Groups &amp; Telegram channels</li>
+          <li>Create a dedicated X account to run the opposition operation under a pseudonym</li>
+          <li>Leave reviews on their official government or business pages</li>
+          <li>Post on LinkedIn, TikTok, YouTube Shorts — reach every demographic</li>
+          <li>Start a Change.org petition — it lends legitimacy and generates press coverage</li>
+        </ul>
+      </div>
+
+      <div class="tier">
+        <div class="tier-head bronze">⚡ $50 BUDGET</div>
+        <ul class="tier-list">
+          <li>Boost your top post with X Ads — 10k–30k impressions for ~$30 targeting their district</li>
+          <li>Hire a graphic designer on Fiverr — 10 custom attack memes for $25</li>
+          <li>Print 200 flyers with a QR code to this page and distribute at town halls or public events</li>
+          <li>Submit tips to local TV investigative reporters and political bloggers</li>
+          <li>Commission a 60-second "accountability" video on Fiverr</li>
+        </ul>
+      </div>
+
+      <div class="tier">
+        <div class="tier-head silver">🥈 $100 BUDGET</div>
+        <ul class="tier-list">
+          <li>Register a dedicated domain (e.g. targetname-accountability.com) with a receipts page</li>
+          <li>Run targeted Facebook / Instagram ads aimed at constituents in their district</li>
+          <li>File a public records / FOIA request for their official correspondence and expenses</li>
+          <li>Coordinate 10+ accounts to post simultaneously on a chosen date for maximum visibility</li>
+          <li>Promote posts via local newsletter sponsorships and community email lists</li>
+        </ul>
+      </div>
+
+      <div class="tier">
+        <div class="tier-head gold">🥇 $500 BUDGET</div>
+        <ul class="tier-list">
+          <li>Hire a small PR firm to draft and blast a press release to local media outlets</li>
+          <li>Get a political micro-influencer (10k–100k followers) to cover the story</li>
+          <li>Organize 10 paid demonstrators via Craigslist Gigs near their office or events</li>
+          <li>Billboard near their office, district HQ, or campaign events for one week</li>
+          <li>Commission a full opposition research website with a documented evidence timeline</li>
+          <li>Coordinate simultaneous posts from 20+ accounts on the same day for a news cycle push</li>
+        </ul>
+      </div>
+
+      <div class="tier">
+        <div class="tier-head diamond">💎 $1000+ BUDGET</div>
+        <ul class="tier-list">
+          <li>Hire actors + 25 paid demonstrators for a media event outside their office or campaign HQ</li>
+          <li>Commission an investigative journalist to write the full exposé with named sources</li>
+          <li>Run YouTube pre-roll ads targeting their supporter base and district zip codes</li>
+          <li>Full flyer, sticker &amp; guerrilla poster campaign across their district</li>
+          <li>Coordinate 5–10 political influencers (50k–500k) to drop coverage on the same day</li>
+          <li>Set up a podcast or documentary-style YouTube series building the case against them</li>
+          <li>Buy Google Ads on their name and campaign search terms</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="sec-head" style="margin-top:16px">🏙️ IRL Tactics <span class="sec-sub">take it off the internet</span></div>
+    <div class="irl-grid">
+      <div class="irl-card">
+        <div class="irl-icon">📋</div>
+        <div class="irl-body">
+          <div class="irl-title">Town Hall Ambush</div>
+          <div class="irl-desc">Show up to their public town halls and constituent meetings. Ask pointed, documented questions during Q&amp;A. Have someone recording. Post immediately to X and TikTok.</div>
+        </div>
+      </div>
+      <div class="irl-card">
+        <div class="irl-icon">📰</div>
+        <div class="irl-body">
+          <div class="irl-title">Flyers &amp; Door Hangers</div>
+          <div class="irl-desc">Print 500 flyers at FedEx for ~$30. Distribute in their district, at community events, and on public bulletin boards. QR code links to this campaign page.</div>
+        </div>
+      </div>
+      <div class="irl-card">
+        <div class="irl-icon">📜</div>
+        <div class="irl-body">
+          <div class="irl-title">FOIA Requests</div>
+          <div class="irl-desc">File Freedom of Information Act requests for their public records, expense reports, and official correspondence. Public documents are legal dynamite when used right.</div>
+        </div>
+      </div>
+      <div class="irl-card">
+        <div class="irl-icon">📺</div>
+        <div class="irl-body">
+          <div class="irl-title">Media Tips</div>
+          <div class="irl-desc">Submit tips to investigative TV reporters, local newspapers, political podcasters, and bloggers. Journalists love a good political scandal — give them the story pre-packaged with receipts.</div>
+        </div>
+      </div>
+      <div class="irl-card">
+        <div class="irl-icon">🗳️</div>
+        <div class="irl-body">
+          <div class="irl-title">Voter Contact</div>
+          <div class="irl-desc">Phone bank or canvass door-to-door in their district. Neighbor-to-neighbor conversations about a candidate's record move more votes than any ad campaign.</div>
+        </div>
+      </div>
+      <div class="irl-card">
+        <div class="irl-icon">🎤</div>
+        <div class="irl-body">
+          <div class="irl-title">Public Comment</div>
+          <div class="irl-desc">Attend city council meetings, zoning hearings, or public comment periods where they have influence. Get your message on the official public record.</div>
+        </div>
+      </div>
+    </div>`;
+}
 
 // ── Boot ───────────────────────────────────────────────────
 syncProfileUI();

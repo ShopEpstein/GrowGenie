@@ -17,28 +17,29 @@ module.exports = async (req, res) => {
   }
 
   const body = req.body || {};
-  const { target, why, category, wallet, social, banner, bounty, clientId } = body;
+  const { target, why, category, wallet, social, banner, bounty, clientId, campaignType } = body;
 
   if (!target || !why) {
     return res.status(400).json({ error: 'Missing target or why' });
   }
 
+  const isSmear = campaignType === 'smear';
   const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const EMOJI = { hate:'💀', coin:'🪙', ex:'💔', boss:'😤', family:'😈', boredom:'😒', fun:'😂', profit:'💰' };
 
   const doc = {
-    slug:        slug(target),
-    clientId:    (clientId || 'anon').slice(0, 64),
-    projectName: target.slice(0, 100),
-    title:       `FUD: ${target}`.slice(0, 100),
-    tag:         why.slice(0, 500),
-    logo:        EMOJI[category] || '💀',
-    campaignType: 'fudfund',
-    fudTarget:   target.slice(0, 100),
-    fudCategory: category || 'hate',
-    tipWallet:   wallet || null,
-    active:      true,
-    accentColor: '#FF3D00',
+    slug:         slug(target),
+    clientId:     (clientId || 'anon').slice(0, 64),
+    projectName:  target.slice(0, 100),
+    title:        `${isSmear ? 'SMEAR' : 'FUD'}: ${target}`.slice(0, 100),
+    tag:          why.slice(0, 500),
+    logo:         isSmear ? '⭐' : (EMOJI[category] || '💀'),
+    campaignType: isSmear ? 'smear' : 'fudfund',
+    fudTarget:    target.slice(0, 100),
+    fudCategory:  category || 'hate',
+    tipWallet:    wallet || null,
+    active:       true,
+    accentColor:  isSmear ? '#B22234' : '#FF3D00',
   };
 
   if (social)  doc.socialLink = social.slice(0, 500);
