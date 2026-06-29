@@ -350,18 +350,50 @@ a{color:inherit;text-decoration:none}
 }
 .tier-list li::before{content:'→';position:absolute;left:0;color:var(--red);font-size:10px}
 
-/* ── IRL GRID ───────────────────── */
-.irl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;margin-bottom:8px}
-.irl-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
-  padding:12px 14px;display:flex;align-items:flex-start;gap:12px;
-  transition:border-color .13s;
+/* ── HERO BANNER ─────────────────── */
+.hero-banner{
+  width:100%;max-width:780px;margin:0 auto;overflow:hidden;
+  border-radius:0 0 var(--r) var(--r);
 }
-.irl-card:hover{border-color:var(--border2)}
-.irl-icon{font-size:22px;flex-shrink:0;padding-top:1px;line-height:1}
-.irl-body{flex:1;min-width:0}
-.irl-title{font-family:'Space Grotesk';font-weight:700;font-size:13px;margin-bottom:4px}
-.irl-desc{font-size:12px;color:var(--dim);line-height:1.55}
+.hero-banner img{
+  width:100%;max-height:260px;object-fit:cover;display:block;
+  border-bottom:1px solid var(--border2);
+}
+
+/* ── WAR ROOM ───────────────────── */
+.war-room-feed{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:10px;min-height:100px;max-height:320px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:7px;margin-bottom:8px;
+  scroll-behavior:smooth;
+}
+.wr-line{display:flex;align-items:flex-start;gap:8px}
+.wr-av{
+  width:26px;height:26px;border-radius:7px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  display:grid;place-items:center;font-family:'Space Grotesk';font-weight:800;font-size:10px;color:#fff;
+}
+.wr-body{flex:1;min-width:0}
+.wr-head{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.wr-user{font-family:'Space Grotesk';font-weight:700;font-size:12px}
+.wr-age{font-family:'Space Mono';font-size:10px;color:var(--dim)}
+.wr-text{font-size:13px;color:var(--dim);line-height:1.45;word-break:break-word}
+.war-room-compose{display:flex;gap:8px}
+.wr-inp{
+  flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  color:var(--text);padding:10px 13px;font-family:'Space Mono';font-size:12px;
+  outline:none;transition:border-color .13s;
+}
+.wr-inp:focus{border-color:rgba(0,212,255,.4)}
+.wr-inp::placeholder{color:var(--dim2)}
+.wr-send{
+  flex-shrink:0;padding:10px 16px;
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:10px;
+  font-family:'Space Grotesk';font-weight:700;font-size:13px;color:var(--blue);
+  cursor:pointer;transition:all .13s;white-space:nowrap;
+}
+.wr-send:hover{background:rgba(0,212,255,.2);border-color:rgba(0,212,255,.5)}
+.wr-send:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -373,6 +405,11 @@ a{color:inherit;text-decoration:none}
   <div class="camp-name" id="campName">Loading…</div>
   <button class="btn-profile" id="btnProfile" onclick="openProfileModal()">Create profile</button>
 </header>
+
+<!-- HERO BANNER -->
+<div class="hero-banner hidden" id="heroBanner">
+  <img id="heroBannerImg" alt="" onerror="this.parentElement.classList.add('hidden')"/>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -404,83 +441,29 @@ a{color:inherit;text-decoration:none}
 
 <!-- FUD PLAYBOOK -->
 <section class="section" style="margin-top:8px" id="playbookSection">
-  <div class="sec-head">🔥 Boost Your Campaign <span class="sec-sub">let FudFun run it for you</span></div>
+  <div class="sec-head">💀 Get Your Hate Squad <span class="sec-sub">we run it for you</span></div>
 
-  <div class="playbook-disclaimer">
-    💬 FUD, rumors, and exaggeration are a normal part of internet culture — and legal. The only lines we don't cross: direct harassment of individuals, stalking, or threats. Don't show up at someone's home. Everything else? The internet is fair game.
-  </div>
-
-  <!-- MANAGED SERVICE TIERS -->
-  <div class="playbook-tiers">
-
-    <div class="tier">
-      <div class="tier-head free">🆓 DIY — FREE</div>
-      <ul class="tier-list">
-        <li>Fire all ammo templates above at the target on X</li>
-        <li>Share the campaign link in relevant subreddits, Discords &amp; Telegrams</li>
-        <li>Create a dedicated X account to run the operation</li>
-        <li>Post on LinkedIn, TikTok, YouTube Shorts — everywhere</li>
-        <li>Leave reviews on their products, services &amp; public profiles</li>
-      </ul>
-    </div>
-
-    <div class="tier">
-      <div class="tier-head bronze">⚡ IGNITE — 0.5 SOL</div>
-      <ul class="tier-list">
-        <li>FudFun team fires your 5 ammo posts from our network of accounts</li>
-        <li>Campaign dropped in 5 relevant communities (Telegram, Discord, Reddit)</li>
-        <li>48-hour coordinated push timed for peak engagement</li>
-      </ul>
-    </div>
-
-    <div class="tier">
-      <div class="tier-head silver">💥 AMPLIFY — 2 SOL</div>
-      <ul class="tier-list">
-        <li>Everything in Ignite, plus 7-day sustained operation</li>
-        <li>15+ coordinated accounts all dropping on the same day</li>
-        <li>Custom meme pack created for your campaign (5 memes)</li>
-        <li>Cross-platform push: X, Reddit, Discord, Telegram, TikTok</li>
-        <li>Weekly update DM with reach &amp; engagement stats</li>
-      </ul>
-    </div>
-
-    <div class="tier">
-      <div class="tier-head gold">💀 FULL OP — 5 SOL</div>
-      <ul class="tier-list">
-        <li>Everything in Amplify, plus 14-day managed campaign</li>
-        <li>Influencer outreach — we pitch 10+ creators in the target's niche</li>
-        <li>Press kit drafted and submitted to relevant journalists &amp; bloggers</li>
-        <li>Dedicated campaign coordinator — daily posts, real-time optimization</li>
-        <li>IRL elements: flyer design, targeted ad copy, event strategy</li>
-      </ul>
-    </div>
-
-    <div class="tier">
-      <div class="tier-head diamond">👑 NUCLEAR — 10 SOL</div>
-      <ul class="tier-list">
-        <li>Everything in Full Op, plus scorched-earth escalation</li>
-        <li>Organic influencer recruiting (50k–500k followers) — multiple drops</li>
-        <li>Dedicated exposé domain registered and deployed</li>
-        <li>Real-world visibility: guerrilla postering, Craigslist gig coordination</li>
-        <li>Nightly reporting — you see exactly what we're firing and where</li>
-        <li>We don't stop until the internet knows</li>
-      </ul>
-    </div>
-
-  </div>
-
-  <!-- BOOST PAYMENT CTA -->
-  <div id="boost-cta" style="
-    margin-top:12px;background:linear-gradient(135deg,rgba(255,61,0,.08),rgba(255,140,0,.05));
-    border:1px solid rgba(255,140,0,.3);border-radius:var(--r);padding:16px;
+  <div style="
+    background:linear-gradient(135deg,rgba(255,61,0,.08),rgba(255,140,0,.04));
+    border:1px solid rgba(255,61,0,.28);border-radius:var(--r);padding:20px 18px;
   ">
-    <div style="font-family:'Space Grotesk';font-weight:800;font-size:14px;margin-bottom:6px;color:var(--orange)">
-      💸 Send SOL to Boost
+    <div style="font-family:'Space Grotesk';font-weight:900;font-size:22px;margin-bottom:8px;line-height:1.2">
+      You launch. We attack. 💀
     </div>
-    <div style="font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.6">
-      Pick your tier, send SOL to the wallet below, then DM <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="color:var(--orange)">@fudfunn on X</a> with your TX hash + this campaign URL. We'll confirm and kick off your operation within 24 hours.
+    <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:18px">
+      Send SOL, DM us your campaign link — our coordinated network deploys against your target across platforms within 24 hours. You get War Room access for real-time coordination.
     </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
+        <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Light Strike</div>
+        <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:var(--orange)">0.5 SOL</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid rgba(255,61,0,.35);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
+        <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Full Op</div>
+        <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:var(--red)">5 SOL</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
       <div id="boost-wallet-addr" style="
         font-family:'Space Mono';font-size:11px;color:var(--text);
         background:var(--bg3);border:1px solid var(--border2);
@@ -496,52 +479,8 @@ a{color:inherit;text-decoration:none}
         📋 Copy
       </button>
     </div>
-  </div>
-
-  <!-- IRL Tactics -->
-  <div class="sec-head" style="margin-top:16px">🏙️ IRL Tactics <span class="sec-sub">take it off the internet</span></div>
-  <div class="irl-grid">
-    <div class="irl-card">
-      <div class="irl-icon">📋</div>
-      <div class="irl-body">
-        <div class="irl-title">Craigslist Gigs</div>
-        <div class="irl-desc">Post in the city's Gigs section: "Need 5 people to hold signs and hand out flyers near [office/event location] for 2 hours — $40 cash each." IRL presence for under $250.</div>
-      </div>
-    </div>
-    <div class="irl-card">
-      <div class="irl-icon">📰</div>
-      <div class="irl-body">
-        <div class="irl-title">Flyers &amp; Posters</div>
-        <div class="irl-desc">Print 500 flyers at FedEx for ~$30. Post around their office building, at relevant events, and on public community boards. QR code links to this campaign page.</div>
-      </div>
-    </div>
-    <div class="irl-card">
-      <div class="irl-icon">🎨</div>
-      <div class="irl-body">
-        <div class="irl-title">Sticker Campaign</div>
-        <div class="irl-desc">Order 100 custom stickers from Sticker Mule (~$40). Deploy around relevant venues, bulletin boards, and public spaces. The more places, the more impressions.</div>
-      </div>
-    </div>
-    <div class="irl-card">
-      <div class="irl-icon">🚌</div>
-      <div class="irl-body">
-        <div class="irl-title">Outdoor Ads</div>
-        <div class="irl-desc">Place ads on bus shelters, benches, or billboards near their office or regular event venues. Local OOH companies sell short runs at reasonable rates.</div>
-      </div>
-    </div>
-    <div class="irl-card">
-      <div class="irl-icon">📺</div>
-      <div class="irl-body">
-        <div class="irl-title">Media Tips</div>
-        <div class="irl-desc">Submit a tip to investigative TV reporters, podcasters, and bloggers. Journalists and content creators love a good scandal — give them the story pre-packaged with screenshots and receipts.</div>
-      </div>
-    </div>
-    <div class="irl-card">
-      <div class="irl-icon">🎤</div>
-      <div class="irl-body">
-        <div class="irl-title">Public Appearances</div>
-        <div class="irl-desc">If the target speaks at conferences, investor meetups, or public events — show up. Ask pointed questions during Q&amp;A. Have someone recording. Post immediately.</div>
-      </div>
+    <div style="font-size:12px;color:var(--dim);line-height:1.6">
+      After sending, DM <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="color:var(--orange)">@fudfunn on X</a> with your TX hash + this campaign URL.
     </div>
   </div>
 </section>
@@ -583,6 +522,18 @@ a{color:inherit;text-decoration:none}
 <section class="section" style="margin-top:8px">
   <div class="sec-head" id="feed-head">📣 FUD Feed <span class="sec-sub">latest receipts</span></div>
   <div class="post-list" id="feedEl"><div class="empty">Loading…</div></div>
+</section>
+
+<!-- WAR ROOM -->
+<section class="section" style="margin-top:8px">
+  <div class="sec-head">💬 War Room <span class="sec-sub">coordinate your crew</span></div>
+  <div class="war-room-feed" id="warRoomFeed">
+    <div class="empty">Loading…</div>
+  </div>
+  <div class="war-room-compose">
+    <input class="wr-inp" id="wr-msg" placeholder="Drop intel, coordinate, taunt…" maxlength="280"/>
+    <button class="wr-send" id="wr-send" onclick="sendWarRoomMsg()">Send 💬</button>
+  </div>
 </section>
 
 <div class="pb"></div>
@@ -806,6 +757,20 @@ function renderNotFound() {
   $('tplList').innerHTML   = '<div class="empty">No campaign loaded.</div>';
 }
 
+function socialAvatarFromCamp(c) {
+  if (c.socialLink) {
+    const m = c.socialLink.match(/(?:twitter\.com|x\.com)\/@?([A-Za-z0-9_]{1,50})/i);
+    if (m) return `https://unavatar.io/twitter/${m[1]}`;
+  }
+  const raw = (c.fudTarget || c.smearTarget || '').trim();
+  if (raw.startsWith('@')) return `https://unavatar.io/twitter/${raw.slice(1)}`;
+  if (c.socialPreviewName) {
+    const handle = c.socialPreviewName.replace(/^@/, '').replace(/\s+/g, '');
+    if (handle) return `https://unavatar.io/twitter/${handle}`;
+  }
+  return '';
+}
+
 function applyBranding() {
   const who     = CAMP.fudTarget || CAMP.smearTarget || CAMP.projectName || '???';
   const isSmear = CAMP.campaignType === 'smear';
@@ -851,6 +816,17 @@ function applyBranding() {
       img.alt = '';
       $('targetAvatar').innerHTML = '';
       $('targetAvatar').appendChild(img);
+    }
+  }
+
+  // Hero banner
+  const bannerSrc = CAMP.bannerUrl || CAMP.socialPreviewThumb || socialAvatarFromCamp(CAMP);
+  if (bannerSrc) {
+    const bImg = $('heroBannerImg');
+    const bWrap = $('heroBanner');
+    if (bImg && bWrap) {
+      bImg.src = bannerSrc;
+      bWrap.classList.remove('hidden');
     }
   }
 }
@@ -1281,82 +1257,29 @@ function renderSmearPlaybook() {
   const sec = $('playbookSection');
   if (!sec) return;
   sec.innerHTML = `
-    <div class="sec-head">🔥 Boost Your Campaign <span class="sec-sub">let FudFun run it for you</span></div>
-
-    <div class="playbook-disclaimer">
-      💬 Political speech, criticism of public figures, and opposition research are protected forms of civic expression. The only lines we don't cross: direct threats, doxxing private individuals, or inciting violence. Everything else? Democracy is messy — that's the point.
-    </div>
-
-    <div class="playbook-tiers">
-
-      <div class="tier">
-        <div class="tier-head free">🆓 DIY — FREE</div>
-        <ul class="tier-list">
-          <li>Fire all ammo templates above — tag the target's official accounts</li>
-          <li>Share the campaign in relevant political subreddits, Facebook Groups &amp; Telegram channels</li>
-          <li>Create a dedicated X account to run the opposition operation under a pseudonym</li>
-          <li>Post on LinkedIn, TikTok, YouTube Shorts — reach every demographic</li>
-          <li>Start a Change.org petition — lends legitimacy and generates press coverage</li>
-        </ul>
-      </div>
-
-      <div class="tier">
-        <div class="tier-head bronze">⚡ IGNITE — 0.5 SOL</div>
-        <ul class="tier-list">
-          <li>FudFun team fires your ammo posts from our network of accounts</li>
-          <li>Campaign dropped in 5 relevant political communities (Telegram, Discord, Reddit)</li>
-          <li>48-hour coordinated push timed for peak political engagement</li>
-        </ul>
-      </div>
-
-      <div class="tier">
-        <div class="tier-head silver">💥 AMPLIFY — 2 SOL</div>
-        <ul class="tier-list">
-          <li>Everything in Ignite, plus 7-day sustained operation</li>
-          <li>15+ coordinated accounts all dropping on the same day</li>
-          <li>Custom attack meme pack created for your campaign (5 memes)</li>
-          <li>Cross-platform push: X, Reddit, Discord, Telegram, TikTok</li>
-          <li>Weekly update DM with reach &amp; engagement stats</li>
-        </ul>
-      </div>
-
-      <div class="tier">
-        <div class="tier-head gold">💀 FULL OP — 5 SOL</div>
-        <ul class="tier-list">
-          <li>Everything in Amplify, plus 14-day managed campaign</li>
-          <li>Influencer &amp; political blogger outreach — we pitch 10+ relevant creators</li>
-          <li>Press kit drafted and submitted to journalists, podcasters &amp; local news</li>
-          <li>Dedicated coordinator — daily posts, real-time optimization</li>
-          <li>FOIA filing + opposition research brief on the target</li>
-        </ul>
-      </div>
-
-      <div class="tier">
-        <div class="tier-head diamond">👑 NUCLEAR — 10 SOL</div>
-        <ul class="tier-list">
-          <li>Everything in Full Op, plus scorched-earth escalation</li>
-          <li>Political influencer recruiting (50k–500k followers) — multiple coordinated drops</li>
-          <li>Dedicated opposition research domain registered and deployed</li>
-          <li>Real-world visibility: guerrilla postering, flyers in their district</li>
-          <li>Nightly reporting — you see exactly what we're firing and where</li>
-          <li>We don't stop until the news cycle cracks</li>
-        </ul>
-      </div>
-
-    </div>
-
-    <div id="boost-cta" style="
-      margin-top:12px;background:linear-gradient(135deg,rgba(255,61,0,.08),rgba(255,140,0,.05));
-      border:1px solid rgba(255,140,0,.3);border-radius:var(--r);padding:16px;
+    <div class="sec-head">⭐ Get Your Smear Squad <span class="sec-sub">we run it for you</span></div>
+    <div style="
+      background:linear-gradient(135deg,rgba(178,34,52,.08),rgba(60,59,110,.06));
+      border:1px solid rgba(178,34,52,.3);border-radius:var(--r);padding:20px 18px;
     ">
-      <div style="font-family:'Space Grotesk';font-weight:800;font-size:14px;margin-bottom:6px;color:var(--orange)">
-        💸 Send SOL to Boost
+      <div style="font-family:'Space Grotesk';font-weight:900;font-size:22px;margin-bottom:8px;line-height:1.2">
+        You launch. We deploy. ⭐
       </div>
-      <div style="font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.6">
-        Pick your tier, send SOL to the wallet below, then DM <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="color:var(--orange)">@fudfunn on X</a> with your TX hash + this campaign URL. We'll confirm and kick off within 24 hours.
+      <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:18px">
+        Send SOL, DM us your campaign link — our coordinated network deploys opposition content across platforms within 24 hours. You get War Room access for real-time coordination.
       </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div style="
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
+          <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Light Strike</div>
+          <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:#FF8C00">0.5 SOL</div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid rgba(178,34,52,.35);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
+          <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Full Op</div>
+          <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:#B22234">5 SOL</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <div id="boost-wallet-addr" style="
           font-family:'Space Mono';font-size:11px;color:var(--text);
           background:var(--bg3);border:1px solid var(--border2);
           border-radius:8px;padding:8px 12px;flex:1;min-width:0;
@@ -1366,17 +1289,89 @@ function renderSmearPlaybook() {
         <button onclick="copyBoostWallet()" style="
           background:var(--bg3);border:1px solid var(--border2);color:var(--dim);
           border-radius:8px;padding:8px 14px;font-size:12px;font-family:'Space Mono';
-          cursor:pointer;white-space:nowrap;
-        ">📋 Copy</button>
+          cursor:pointer;white-space:nowrap;transition:all .12s;
+        " onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--dim)'">📋 Copy</button>
+      </div>
+      <div style="font-size:12px;color:var(--dim);line-height:1.6">
+        After sending, DM <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="color:#FF8C00">@fudfunn on X</a> with your TX hash + this campaign URL.
       </div>
     </div>`;
 }
+
+// ── War Room ────────────────────────────────────────────────
+let wrMessages = [];
+
+async function loadWarRoom() {
+  if (!campId) return;
+  try {
+    const r = await fetch(`/api/chat?campaignId=${encodeURIComponent(campId)}`);
+    if (!r.ok) return;
+    const data = await r.json();
+    wrMessages = data.messages || [];
+    renderWarRoom();
+  } catch {}
+}
+
+function renderWarRoom() {
+  const el = $('warRoomFeed');
+  if (!el) return;
+  if (!wrMessages.length) {
+    el.innerHTML = '<div class="empty">War Room is quiet… drop something 💬</div>';
+    return;
+  }
+  const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 80;
+  el.innerHTML = wrMessages.map(m => `
+    <div class="wr-line">
+      <div class="wr-av">${(m.username||'?')[0].toUpperCase()}</div>
+      <div class="wr-body">
+        <div class="wr-head">
+          <span class="wr-user">@${esc(m.username||'anon')}</span>
+          <span class="wr-age">${ago(m.timestamp)} ago</span>
+        </div>
+        <div class="wr-text">${esc(m.message)}</div>
+      </div>
+    </div>`).join('');
+  if (atBottom) el.scrollTop = el.scrollHeight;
+}
+
+window.sendWarRoomMsg = async function() {
+  const p = getProfile();
+  if (!p?.username) { openProfileModal(); return; }
+  const inp = $('wr-msg');
+  const msg = (inp?.value || '').trim();
+  if (!msg) return;
+  const btn = $('wr-send');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignId: campId, message: msg, username: p.username, wallet: p.wallet || '' }),
+    });
+    if (r.ok) {
+      inp.value = '';
+      await loadWarRoom();
+    } else {
+      toast('Failed to send', 'err');
+    }
+  } catch {
+    toast('Failed to send', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+document.getElementById('wr-msg')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendWarRoomMsg(); }
+});
 
 // ── Boot ───────────────────────────────────────────────────
 syncProfileUI();
 await loadCampaign();
 await loadPosts();
+await loadWarRoom();
 setInterval(loadPosts, 15000);
+setInterval(loadWarRoom, 15000);
 </script>
 </body>
 </html>
