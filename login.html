@@ -422,18 +422,13 @@
         });
 
         const data = await resp.json();
-        if (!resp.ok) throw new Error('Server: ' + (data.error || 'Auth failed'));
+        if (!resp.ok || !data.verified) throw new Error(data.error || 'Verification failed');
 
-        // Server verified the signature and returned email + derived password
-        try {
-          await account.createEmailPasswordSession(data.email, data.password);
-        } catch (sessionErr) {
-          const detail = sessionErr?.type ? ` [${sessionErr.type}]` : sessionErr?.code ? ` [${sessionErr.code}]` : '';
-          throw new Error('Session: ' + (sessionErr?.message || 'unknown') + detail + ` (v${data._v})`);
-        }
+        // Store wallet identity in localStorage — no Appwrite session needed
+        localStorage.setItem('fud_wallet', JSON.stringify({ pubkey: data.pubkey, ts: Date.now() }));
 
         showSuccess('Wallet verified! Entering…');
-        redirectAfterAuth();
+        setTimeout(redirectAfterAuth, 600);
       } catch (err) {
         const msg = err?.message || 'Wallet sign-in failed.';
         if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('cancelled')) {

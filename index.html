@@ -215,6 +215,8 @@ nav{
 }
 .btn-tip-card:hover{background:rgba(255,215,0,.14);border-color:rgba(255,215,0,.5);box-shadow:0 0 16px rgba(255,215,0,.15)}
 .no-tip-wallet{font-size:10px;color:var(--dim2);font-family:'Space Mono';padding:7px 0}
+.card-creator{font-size:10px;color:var(--dim2);font-family:'Space Mono';padding:7px 0;margin-left:auto;text-decoration:none;opacity:.6;transition:opacity .15s}
+.card-creator:hover{opacity:1;color:var(--accent)}
 .btn-delete-card{
   background:transparent;border:1px solid var(--border);border-radius:10px;
   color:var(--dim2);font-size:14px;padding:7px 10px;cursor:pointer;
@@ -691,18 +693,27 @@ function showMobileWalletModal() {
 }
 
 // ── Auth (silent) ─────────────────
-account.get().then(u => {
-  user = u;
+(function initAuth() {
+  try {
+    const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
+    if (w?.pubkey) {
+      user = { $id: w.pubkey, name: w.pubkey.slice(0,4)+'…'+w.pubkey.slice(-4) };
+      connectedWalletPub = w.pubkey;
+    }
+  } catch {}
   updateAccountUI();
-}).catch(() => { updateAccountUI(); });
+  // Sign out any stale Appwrite session — prevents campaign permission errors
+  account.deleteSession('current').catch(() => {});
+})();
 
 function updateAccountUI() {
   const btn = document.getElementById('acct-btn');
   const tabMine = document.getElementById('tab-mine');
   if (user) {
-    btn.textContent = '👤 ' + (user.name || user.email?.split('@')[0] || 'Me');
+    const label = user.name || user.email?.split('@')[0] || 'Wallet';
+    btn.textContent = '👤 ' + label;
     btn.classList.add('logged-in');
-    document.getElementById('acct-email-row').textContent = user.email || '';
+    document.getElementById('acct-email-row').textContent = user.$id || user.email || '';
     tabMine.style.display = '';
   } else {
     btn.textContent = 'Sign In';
@@ -731,6 +742,8 @@ document.getElementById('drop-mine').addEventListener('click', () => {
 
 document.getElementById('drop-signout').addEventListener('click', async () => {
   document.getElementById('acct-drop').classList.remove('open');
+  localStorage.removeItem('fud_wallet');
+  connectedWalletPub = null;
   try { await account.deleteSession('current'); } catch {}
   user = null;
   updateAccountUI();
@@ -834,6 +847,10 @@ function makeCard(doc, flash) {
       ${tw
         ? `<button class="btn-tip-card" data-wallet="${tw}" data-name="${name}">💸 Tip SOL</button>`
         : `<span class="no-tip-wallet">no tip wallet set</span>`
+      }
+      ${doc.clientId && doc.clientId !== 'anon'
+        ? `<a class="card-creator" href="/profile.html?w=${encodeURIComponent(doc.clientId)}" onclick="event.stopPropagation()" title="View profile">${doc.clientId.slice(0,4)}…${doc.clientId.slice(-4)}</a>`
+        : ''
       }
       ${user && doc.clientId === user.$id
         ? `<button class="btn-delete-card" data-id="${esc(doc.$id)}" title="Delete campaign">🗑️</button>`
@@ -972,7 +989,7 @@ function bindCards() {
   // card click → campaign page
   document.querySelectorAll('.card').forEach(card => {
     card.onclick = e => {
-      if (e.target.closest('.react-btn,.react-share,.btn-tip-card,.btn-delete-card')) return;
+      if (e.target.closest('.react-btn,.react-share,.btn-tip-card,.btn-delete-card,.card-creator')) return;
       window.location.href = `/c/${card.dataset.id}`;
     };
   });
