@@ -40,8 +40,8 @@ module.exports = async (req, res) => {
     .setKey(process.env.APPWRITE_API_KEY);
 
   const users  = new Users(appwrite);
-  // Deterministic user ID from wallet (safe prefix — Appwrite IDs must be [a-zA-Z0-9._-])
-  const userId = 'sol.' + pubkey.replace(/[^a-zA-Z0-9]/g, '').slice(0, 28);
+  // Dots in IDs are rejected by Appwrite cloud — alphanumeric only
+  const userId = 'sol' + pubkey.replace(/[^a-zA-Z0-9]/g, '').slice(0, 29);
   const email  = `${pubkey}@wallet.fudfun.xyz`;
 
   let user;
@@ -49,8 +49,8 @@ module.exports = async (req, res) => {
     user = await users.get(userId);
   } catch {
     try {
-      // Name = truncated wallet for display
-      user = await users.create(userId, email, undefined, pubkey.slice(0, 8) + '…');
+      // users.create(userId, email, phone, password, name) — name is 5th param
+      user = await users.create(userId, email, undefined, undefined, pubkey.slice(0, 8) + '...');
     } catch (e) {
       return res.status(500).json({ error: 'Could not create account: ' + e.message });
     }
