@@ -387,6 +387,58 @@ nav{
 .btn-tip-send:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 0 24px rgba(255,215,0,.3)}
 .btn-tip-send:disabled{opacity:.45;cursor:not-allowed}
 
+/* ── WELCOME OVERLAY ─────────────── */
+.welcome-overlay{
+  display:none;position:fixed;inset:0;z-index:600;
+  background:rgba(4,5,10,.97);backdrop-filter:blur(24px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.welcome-overlay.open{display:flex}
+.welcome-inner{
+  max-width:460px;width:100%;text-align:center;
+}
+.welcome-skull{font-size:56px;margin-bottom:18px;display:block;
+  filter:drop-shadow(0 0 28px rgba(255,61,0,.6));}
+.welcome-title{
+  font-family:'Space Grotesk';font-weight:900;font-size:30px;letter-spacing:-.03em;
+  color:#fff;margin-bottom:8px;line-height:1.1;
+}
+.welcome-sub{
+  font-size:14px;color:var(--dim);margin-bottom:32px;line-height:1.6;
+}
+.welcome-steps{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px;
+}
+.welcome-step{
+  background:var(--bg2);border:1px solid var(--border2);border-radius:14px;
+  padding:16px 10px;
+}
+.welcome-step-num{
+  font-family:'Space Mono';font-size:10px;font-weight:700;
+  color:var(--red);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;
+}
+.welcome-step-icon{font-size:26px;margin-bottom:7px;display:block}
+.welcome-step-label{font-family:'Space Grotesk';font-weight:700;font-size:12px;color:var(--text);line-height:1.3}
+.welcome-boost-hook{
+  background:linear-gradient(135deg,rgba(255,61,0,.1),rgba(255,140,0,.07));
+  border:1px solid rgba(255,140,0,.25);border-radius:14px;
+  padding:14px 16px;margin-bottom:22px;
+  font-size:12px;color:var(--dim);line-height:1.6;text-align:left;
+}
+.welcome-boost-hook strong{color:var(--orange)}
+.welcome-enter{
+  width:100%;padding:16px;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  color:#fff;font-family:'Space Grotesk';font-size:17px;font-weight:800;
+  letter-spacing:-.01em;transition:transform .12s,box-shadow .12s;
+  box-shadow:0 0 32px rgba(255,61,0,.35);
+}
+.welcome-enter:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(255,61,0,.5)}
+@media(max-width:420px){
+  .welcome-steps{grid-template-columns:1fr}
+  .welcome-title{font-size:24px}
+}
+
 /* ── GATE MODAL ──────────────────── */
 .gate-body{text-align:center;padding:8px 0 4px}
 .gate-icon{font-size:52px;margin-bottom:14px;display:block}
@@ -728,6 +780,36 @@ html[data-mode="smear"] .btn-mode{
 </div>
 
 <!-- MOBILE WALLET MODAL -->
+<!-- WELCOME OVERLAY -->
+<div class="welcome-overlay" id="welcome-overlay">
+  <div class="welcome-inner">
+    <span class="welcome-skull">💀</span>
+    <div class="welcome-title">Welcome to the Player Hater's Ball</div>
+    <p class="welcome-sub">The internet's most dangerous campaign tool.<br/>Pick a target. Launch the FUD. Watch it spread.</p>
+    <div class="welcome-steps">
+      <div class="welcome-step">
+        <div class="welcome-step-num">Step 1</div>
+        <span class="welcome-step-icon">🎯</span>
+        <div class="welcome-step-label">Pick your target</div>
+      </div>
+      <div class="welcome-step">
+        <div class="welcome-step-num">Step 2</div>
+        <span class="welcome-step-icon">🔥</span>
+        <div class="welcome-step-label">Launch the FUD</div>
+      </div>
+      <div class="welcome-step">
+        <div class="welcome-step-num">Step 3</div>
+        <span class="welcome-step-icon">📢</span>
+        <div class="welcome-step-label">Community fires for you</div>
+      </div>
+    </div>
+    <div class="welcome-boost-hook">
+      <strong>Want professionals to run it?</strong> After you launch, pay FudFun to take over — we handle the entire operation. AI-crafted posts, coordinated timing, community amplification. You light the match, we torch the building.
+    </div>
+    <button class="welcome-enter" onclick="dismissWelcome()">Enter the Ball 💀</button>
+  </div>
+</div>
+
 <div class="overlay" id="wallet-overlay">
   <div class="modal" style="max-width:420px">
     <button class="m-close" onclick="document.getElementById('wallet-overlay').classList.remove('open')">×</button>
@@ -982,6 +1064,18 @@ async function checkGateTokens(walletAddress) {
     const j = await r.json();
     return j.allowed === true;
   } catch { return false; }
+}
+
+// ── Welcome overlay ────────────────
+(function initWelcome() {
+  if (!localStorage.getItem('fud_welcomed')) {
+    document.getElementById('welcome-overlay').classList.add('open');
+  }
+})();
+
+function dismissWelcome() {
+  localStorage.setItem('fud_welcomed', '1');
+  document.getElementById('welcome-overlay').classList.remove('open');
 }
 
 function showGateModal() {
