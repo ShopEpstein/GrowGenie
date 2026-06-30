@@ -63,7 +63,7 @@ export default async function handler(req) {
           color: '#3a3d52', fontSize: '17px', fontWeight: 600,
           letterSpacing: '0.04em',
         }}>
-          fudfun.xyz
+          {isSmear ? 'smearfun.xyz' : 'fudfun.xyz'}
         </div>
       </div>
 
@@ -91,10 +91,10 @@ export default async function handler(req) {
       {/* why text */}
       {why ? (
         <div style={{
-          fontSize: '26px', color: '#6a6d86', lineHeight: 1.45,
+          fontSize: '26px', color: '#b0b3cc', lineHeight: 1.45,
           maxWidth: '900px',
         }}>
-          {why}
+          "{why}"
         </div>
       ) : null}
 
@@ -111,13 +111,13 @@ export default async function handler(req) {
           letterSpacing: '-0.02em',
           display: 'flex', alignItems: 'center', gap: '8px',
         }}>
-          💀 FudFun.xyz
+          {isSmear ? '⭐ SmearFun.xyz' : '💀 FudFun.xyz'}
         </div>
         <div style={{
           fontSize: '16px', color: '#4a4d62', fontWeight: 600,
           letterSpacing: '0.02em',
         }}>
-          @fudfunn on X
+          {isSmear ? '@smearfunxyz on X' : '@fudfunn on X'}
         </div>
       </div>
     </div>,

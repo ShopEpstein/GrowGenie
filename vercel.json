@@ -1,8 +1,5 @@
 {
   "rewrites": [
     { "source": "/c/:id", "destination": "/api/og?id=:id" }
-  ],
-  "env": {
-    "ADMIN_SECRET": "fudfun2025"
-  }
+  ]
 }

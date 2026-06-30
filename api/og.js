@@ -44,8 +44,9 @@ module.exports = async (req, res) => {
 
   const verb     = isSmear ? "getting Smeared" : "getting FUD'd";
   const icon     = isSmear ? '⭐' : '💀';
-  const ogTitle  = `${icon} ${who} is ${verb} | FudFun.xyz`;
-  const ogDesc   = `${why.slice(0, 160)} — Join the campaign on FudFun.xyz`;
+  const siteName = isSmear ? 'SmearFun.xyz' : 'FudFun.xyz';
+  const ogTitle  = `${icon} ${who} is ${verb} | ${siteName}`;
+  const ogDesc   = `${why.slice(0, 160)} — Join the campaign on ${siteName}`;
   const ogUrl    = `${baseUrl}/c/${encodeURIComponent(id)}`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -58,7 +59,7 @@ module.exports = async (req, res) => {
 
 <!-- Open Graph -->
 <meta property="og:type"         content="website"/>
-<meta property="og:site_name"    content="FudFun.xyz"/>
+<meta property="og:site_name"    content="${esc(siteName)}"/>
 <meta property="og:url"          content="${esc(ogUrl)}"/>
 <meta property="og:title"        content="${esc(ogTitle)}"/>
 <meta property="og:description"  content="${esc(ogDesc)}"/>
@@ -68,7 +69,7 @@ module.exports = async (req, res) => {
 
 <!-- Twitter Card -->
 <meta name="twitter:card"        content="summary_large_image"/>
-<meta name="twitter:site"        content="@fudfunn"/>
+<meta name="twitter:site"        content="${isSmear ? '@smearfunxyz' : '@fudfunn'}"/>
 <meta name="twitter:title"       content="${esc(ogTitle)}"/>
 <meta name="twitter:description" content="${esc(ogDesc)}"/>
 <meta name="twitter:image"       content="${esc(ogImageUrl)}"/>
