@@ -638,8 +638,13 @@ const BOOST_WALLET = '78f1wkpK7gGH7uXvwyybGwSNkPuxEKQxPezVXBGQ7Stb';
 const client = new Client().setEndpoint(ENDPOINT).setProject(PROJECT);
 const dbs    = new Databases(client);
 
-// ── State ─────────────────────────────────────────────────
+// ── Welcome gate — new visitors see the homepage welcome first ─
+const IS_SMEAR_DOMAIN = /smearfun\.xyz/i.test(location.hostname);
+const WELCOME_KEY     = IS_SMEAR_DOMAIN ? 'smear_welcomed_v1' : 'fud_welcomed_v2';
 const campId = new URLSearchParams(location.search).get('c') || '';
+if (campId && !localStorage.getItem(WELCOME_KEY)) {
+  location.replace('/?from=' + encodeURIComponent(campId));
+}
 let CAMP     = null;
 let posts    = [];
 let seenPostIds = new Set();

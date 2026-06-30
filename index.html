@@ -870,7 +870,8 @@ html[data-mode="smear"] .btn-mode{
 </div>
 
 <footer class="site-footer">
-  <div>Made with 💀 by the internet's finest haters &nbsp;·&nbsp; <a href="https://x.com/fudfunn" target="_blank" rel="noopener">@fudfunn on X</a> &nbsp;·&nbsp; <a href="haters.html">Hall of Haters 🏆</a></div>
+  <div>Made with 💀 by the internet's finest haters &nbsp;·&nbsp; <a href="https://x.com/fudfunn" target="_blank" rel="noopener" id="footer-x">@fudfunn on X</a> &nbsp;·&nbsp; <a href="haters.html">Hall of Haters 🏆</a></div>
+  <div style="margin-top:5px;font-size:11px" id="footer-support">Got a problem? <a href="/" id="footer-support-link" style="color:var(--red)">Launch a FUD campaign against us</a> until we notice.</div>
 </footer>
 
 <div id="toast"></div>
@@ -986,6 +987,7 @@ const MODES = {
 };
 
 const IS_SMEAR_DOMAIN = /smearfun\.xyz/i.test(location.hostname);
+const WELCOME_KEY     = IS_SMEAR_DOMAIN ? 'smear_welcomed_v1' : 'fud_welcomed_v2';
 let mode = IS_SMEAR_DOMAIN ? 'smear' : (localStorage.getItem('fud_mode') || 'fud');
 
 function applyMode(m) {
@@ -1083,14 +1085,16 @@ async function checkGateTokens(walletAddress) {
 
 // ── Welcome overlay ────────────────
 (function initWelcome() {
-  if (!localStorage.getItem('fud_welcomed_v2')) {
+  if (!localStorage.getItem(WELCOME_KEY)) {
     document.getElementById('welcome-overlay').classList.add('open');
   }
 })();
 
 window.dismissWelcome = function() {
-  localStorage.setItem('fud_welcomed_v2', '1');
+  localStorage.setItem(WELCOME_KEY, '1');
   document.getElementById('welcome-overlay').classList.remove('open');
+  const from = new URLSearchParams(location.search).get('from');
+  if (from) location.href = '/campaign.html?c=' + encodeURIComponent(from);
 };
 
 function showGateModal() {
@@ -1118,14 +1122,38 @@ if (IS_SMEAR_DOMAIN) {
   document.querySelector('.logo').textContent = '🇺🇸 SmearFun';
 
   // Welcome overlay — political copy
+  const wsk = document.querySelector('.welcome-skull');
+  if (wsk) wsk.textContent = '🇺🇸';
   const wt = document.querySelector('.welcome-title');
   if (wt) wt.textContent = 'The internet\'s political hit machine.';
   const ws = document.querySelector('.welcome-sub');
-  if (ws) ws.textContent = 'SmearFun.xyz — opposition research, scandal drops, and coordinated smear campaigns.\nFor politicians, candidates, and anyone who deserves it.';
+  if (ws) ws.textContent = 'SmearFun.xyz — opposition research, scandal drops, and coordinated smear campaigns. For politicians, candidates, and anyone who deserves it.';
+  const wst = document.querySelector('.welcome-steps');
+  if (wst) wst.innerHTML = `
+    <div class="welcome-step">
+      <div class="welcome-step-num">Step 1</div>
+      <span class="welcome-step-icon">🎯</span>
+      <div class="welcome-step-label">Find your target</div>
+    </div>
+    <div class="welcome-step">
+      <div class="welcome-step-num">Step 2</div>
+      <span class="welcome-step-icon">📋</span>
+      <div class="welcome-step-label">Drop the receipts</div>
+    </div>
+    <div class="welcome-step">
+      <div class="welcome-step-num">Step 3</div>
+      <span class="welcome-step-icon">📢</span>
+      <div class="welcome-step-label">Voters see everything</div>
+    </div>`;
   const we = document.querySelector('.welcome-enter');
   if (we) we.textContent = 'Enter the War Room 🇺🇸';
   const wbh = document.querySelector('.welcome-boost-hook');
   if (wbh) wbh.innerHTML = '<strong>Want professionals to run it?</strong> Launch your campaign and pay SmearFun to deploy — coordinated network, AI-crafted opposition research, War Room access. You have the receipts, we burn the building.';
+  // Footer — swap X handle and support link for smear domain
+  const footerX = document.getElementById('footer-x');
+  if (footerX) { footerX.href = 'https://x.com/smearfunxyz'; footerX.textContent = '@smearfunxyz on X'; }
+  const footerSupport = document.getElementById('footer-support');
+  if (footerSupport) footerSupport.innerHTML = 'Got a problem? <a href="https://smearfun.xyz" style="color:#B22234">Smear us publicly on SmearFun</a> until we notice.';
 
   // Swap pills to political categories
   const pillsEl = document.getElementById('lf-pills');
