@@ -1,4 +1,4 @@
-const { Client, Databases, ID } = require('node-appwrite');
+const { Client, Databases, ID, Query } = require('node-appwrite');
 
 const ENDPOINT       = 'https://nyc.cloud.appwrite.io/v1';
 const PROJECT        = '6a2bc15c00065b3c91a0';
@@ -89,6 +89,19 @@ module.exports = async (req, res) => {
     return res.status(402).json({ error: 'Launch fee required — pay 0.01 SOL to create a campaign' });
   }
 
+  // Reject replayed signatures — each tx can only create one campaign
+  const client0 = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(process.env.APPWRITE_API_KEY);
+  const dbs0    = new Databases(client0);
+  try {
+    const existing = await dbs0.listDocuments(DB, COLL, [
+      Query.equal('txSignature', txSignature),
+      Query.limit(1),
+    ]);
+    if (existing.total > 0) {
+      return res.status(409).json({ error: 'Transaction already used — pay a new fee to launch another campaign' });
+    }
+  } catch { /* if check fails, proceed — better UX than blocking */ }
+
   // AI moderation — block sexual/illegal content before saving
   const mod = await aiModerate(`Target: ${target}\nReason: ${why}`);
   if (!mod.allowed) return res.status(422).json({ error: mod.reason || 'Content not allowed' });
@@ -112,9 +125,10 @@ module.exports = async (req, res) => {
     accentColor:  isSmear ? '#B22234' : '#FF3D00',
   };
 
-  if (social)  doc.socialLink = social.slice(0, 500);
-  if (banner)  doc.bannerUrl  = banner.slice(0, 500);
+  if (social)       doc.socialLink  = social.slice(0, 500);
+  if (banner)       doc.bannerUrl   = banner.slice(0, 500);
   if (bounty && parseFloat(bounty) > 0) doc.bountyPool = String(parseFloat(bounty));
+  if (txSignature)  doc.txSignature = txSignature.slice(0, 128);
 
   try {
     const client = new Client()
