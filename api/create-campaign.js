@@ -5,27 +5,6 @@ const PROJECT  = '6a2bc15c00065b3c91a0';
 const DB       = 'growthgenie';
 const COLL     = 'campaigns';
 
-async function aiModerate(text) {
-  if (!process.env.GROQ_API_KEY || !text) return { allowed: true };
-  try {
-    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        max_tokens: 64,
-        messages: [
-          { role: 'system', content: 'You moderate FudFun.xyz, a crypto/political FUD and accountability platform. BLOCK only: porn/CSAM, real doxxing (home address/SSN/bank account numbers), explicit credible threats of physical violence ("I will kill/harm [person]"), illegal content. ALLOW everything else including: calling someone a scammer, rugger, fraud, or thief; crypto criticism (rug pulls, pump and dumps, honeypots, KOL shilling, exit scams); calling politicians corrupt or criminal; harsh insults, profanity, dark humor, satire; accusations of financial wrongdoing; mean but vague statements. When in doubt, ALLOW. Respond ONLY with valid JSON: {"allowed":true} or {"allowed":false,"reason":"..."}' },
-          { role: 'user',   content: text.slice(0, 500) },
-        ],
-      }),
-    });
-    if (!r.ok) return { allowed: true };
-    const j = await r.json();
-    return JSON.parse(j.choices?.[0]?.message?.content?.trim() || '{"allowed":true}');
-  } catch { return { allowed: true }; }
-}
-
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -43,10 +22,6 @@ module.exports = async (req, res) => {
   if (!target || !why) {
     return res.status(400).json({ error: 'Missing target or why' });
   }
-
-  // AI moderation — block sexual/illegal content before saving
-  const mod = await aiModerate(`Target: ${target}\nReason: ${why}`);
-  if (!mod.allowed) return res.status(422).json({ error: mod.reason || 'Content not allowed' });
 
   const isSmear = campaignType === 'smear';
   const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
