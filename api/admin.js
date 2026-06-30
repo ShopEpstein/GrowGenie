@@ -1,19 +1,25 @@
 const { Client, Account, Databases, Users, Query } = require('node-appwrite');
 
-const ENDPOINT = process.env.APPWRITE_ENDPOINT    || 'https://nyc.cloud.appwrite.io/v1';
-const PROJECT  = process.env.APPWRITE_PROJECT_ID  || '6a2bc15c00065b3c91a0';
-const API_KEY  = process.env.APPWRITE_API_KEY     || '';
-const DB       = 'growthgenie';
+const ENDPOINT     = process.env.APPWRITE_ENDPOINT    || 'https://nyc.cloud.appwrite.io/v1';
+const PROJECT      = process.env.APPWRITE_PROJECT_ID  || '6a2bc15c00065b3c91a0';
+const API_KEY      = process.env.APPWRITE_API_KEY     || '';
+const ADMIN_SECRET = process.env.ADMIN_SECRET         || '';
+const DB           = 'growthgenie';
 
 function adminClient() {
   return new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
 }
 
-// Verify the incoming JWT belongs to a user with the 'admin' label
+// Accept either ADMIN_SECRET header key or Appwrite JWT with admin label
 async function verifyAdmin(req) {
+  // Fast path: admin secret header
+  const adminKey = req.headers['x-admin-key'] || (req.body || {}).adminKey || '';
+  if (ADMIN_SECRET && adminKey === ADMIN_SECRET) return { email: 'admin' };
+
+  // Fallback: Appwrite JWT with admin label
   const auth = req.headers['authorization'] || '';
   const jwt  = auth.replace(/^Bearer\s+/i, '').trim();
-  if (!jwt) throw Object.assign(new Error('Missing auth token'), { status: 401 });
+  if (!jwt) throw Object.assign(new Error('Missing auth — set ADMIN_SECRET env var'), { status: 401 });
 
   const sessionClient = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setJWT(jwt);
   const account = new Account(sessionClient);
@@ -69,6 +75,15 @@ module.exports = async (req, res) => {
         Query.orderDesc('$createdAt'),
         Query.limit(100),
       ]);
+      return res.status(200).json(r);
+    }
+
+    if (action === 'list-posts') {
+      const { campaignId, cursor } = req.query;
+      const queries = [Query.orderDesc('$createdAt'), Query.limit(100)];
+      if (campaignId) queries.push(Query.equal('campaignId', campaignId));
+      if (cursor) queries.push(Query.cursorAfter(cursor));
+      const r = await dbs.listDocuments(DB, 'fud_posts', queries);
       return res.status(200).json(r);
     }
 
@@ -138,6 +153,13 @@ module.exports = async (req, res) => {
     if (action === 'reject-campaign') {
       if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
       await dbs.updateDocument(DB, 'campaigns', campaignId, { active: false, reviewStatus: 'rejected' });
+      return res.status(200).json({ success: true });
+    }
+
+    if (action === 'delete-post') {
+      const { postId } = req.body;
+      if (!postId) return res.status(400).json({ error: 'Missing postId' });
+      await dbs.deleteDocument(DB, 'fud_posts', postId);
       return res.status(200).json({ success: true });
     }
 

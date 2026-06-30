@@ -88,8 +88,17 @@ module.exports = async (req, res) => {
       }
 
       if (action === 'delete') {
-        const { postId, pubkey, signature, message } = body;
-        if (!postId || !pubkey || !signature || !message) return res.status(400).json({ error: 'Missing required fields' });
+        const { postId, pubkey, signature, message, adminKey } = body;
+        if (!postId) return res.status(400).json({ error: 'Missing postId' });
+
+        // Admin secret bypass — no wallet signature required
+        const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
+        if (ADMIN_SECRET && adminKey === ADMIN_SECRET) {
+          await db.deleteDocument(DB, COLL, postId);
+          return res.status(200).json({ success: true });
+        }
+
+        if (!pubkey || !signature || !message) return res.status(400).json({ error: 'Missing required fields' });
         // Verify message is delete:<postId> to prevent replay attacks
         if (message !== `delete:${postId}`) return res.status(400).json({ error: 'Invalid delete message' });
         try {

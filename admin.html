@@ -463,7 +463,47 @@
 </head>
 <body>
 
-<div id="auth-gate"><div class="spinner"></div></div>
+<div id="auth-gate" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0">
+  <div id="auth-spin" style="display:flex;align-items:center;justify-content:center"><div class="spinner"></div></div>
+  <div id="auth-key-form" style="display:none;text-align:center;max-width:340px;width:100%;padding:0 20px">
+    <div style="font-size:48px;margin-bottom:14px">🔐</div>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px;color:var(--text)">Admin Access</h2>
+    <p style="font-size:13px;color:var(--dim);margin-bottom:22px;line-height:1.55">Enter the <code style="background:rgba(255,255,255,.07);padding:2px 6px;border-radius:4px">ADMIN_SECRET</code> you set in Vercel env vars.</p>
+    <input id="admin-key-input" type="password" placeholder="Admin key…"
+      style="width:100%;background:var(--ink-2);border:1px solid var(--line-2);border-radius:10px;
+      color:var(--text);font-size:14px;padding:11px 14px;outline:none;margin-bottom:10px;
+      font-family:Inter,sans-serif;transition:border-color .15s;display:block"
+      onfocus="this.style.borderColor='rgba(255,61,0,.5)'" onblur="this.style.borderColor=''"
+      onkeydown="if(event.key==='Enter')submitAdminKey()"/>
+    <button onclick="submitAdminKey()"
+      style="width:100%;padding:12px;background:#FF3D00;border:none;border-radius:10px;
+      color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:opacity .15s"
+      onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+      Enter Admin Panel
+    </button>
+    <div id="auth-error" style="color:#FF5C5C;font-size:12px;margin-top:10px;display:none">
+      Invalid admin key. Check your ADMIN_SECRET env var.
+    </div>
+  </div>
+</div>
+
+<!-- posts modal -->
+<div id="posts-overlay" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto">
+  <div style="background:var(--ink-2);border:1px solid var(--line-2);border-radius:var(--r);max-width:680px;width:100%;padding:0;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)">
+      <div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px" id="posts-modal-title">Campaign Posts</div>
+        <div style="font-size:12px;color:var(--dim);margin-top:2px" id="posts-modal-sub">Moderate submitted FUD</div>
+      </div>
+      <button onclick="document.getElementById('posts-overlay').style.display='none'"
+        style="background:var(--ink-3);border:1px solid var(--line-2);color:var(--dim);width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;display:grid;place-items:center;transition:all .12s"
+        onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--dim)'">×</button>
+    </div>
+    <div id="posts-modal-body" style="padding:16px;max-height:60vh;overflow-y:auto">
+      <div style="text-align:center;color:var(--dim);padding:40px">Loading…</div>
+    </div>
+  </div>
+</div>
 
 <!-- toast -->
 <div id="toast"></div>
@@ -636,52 +676,66 @@
 
 </main>
 
-<script type="module">
-  import { Client, Account } from 'https://cdn.jsdelivr.net/npm/appwrite@17/dist/esm/sdk.js';
-
-  const client = new Client()
-    .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-    .setProject('6a2bc15c00065b3c91a0');
-
-  const account = new Account(client);
-
+<script>
   const CAT_LABELS = {
     ex:'💔 Ex', boss:'😤 Boss', family:'👴 Family', hate:'🔥 Hate',
     profit:'💰 Profit', boredom:'😴 Boredom', fun:'😂 Fun', coin:'🎯 Coin',
   };
 
-  let currentJWT = null;
+  let adminKey = sessionStorage.getItem('fud_admin_key') || '';
 
-  // ── Auth gate ───────────────────────────────────────────────────
-  (async () => {
-    let user;
+  async function tryAdminKey(key) {
     try {
-      user = await account.get();
-    } catch {
-      window.location.replace('login.html');
-      return;
+      const r = await fetch('/api/admin?action=stats', { headers: { 'X-Admin-Key': key } });
+      if (!r.ok) return false;
+      const data = await r.json();
+      adminKey = key;
+      sessionStorage.setItem('fud_admin_key', key);
+      document.getElementById('user-email').textContent = 'Admin';
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('stat-total').textContent  = data.totalCampaigns;
+      document.getElementById('stat-active').textContent = data.activeCampaigns;
+      document.getElementById('stat-users').textContent  = data.totalUsers;
+      if (data.pendingCount > 0) document.getElementById('pending-count').textContent = data.pendingCount;
+      loadCampaigns();
+      return true;
+    } catch { return false; }
+  }
+
+  window.submitAdminKey = async function() {
+    const key = document.getElementById('admin-key-input').value.trim();
+    if (!key) return;
+    document.getElementById('auth-spin').style.display = 'flex';
+    document.getElementById('auth-key-form').style.display = 'none';
+    const ok = await tryAdminKey(key);
+    if (!ok) {
+      document.getElementById('auth-spin').style.display = 'none';
+      document.getElementById('auth-key-form').style.display = 'block';
+      document.getElementById('auth-error').style.display = 'block';
     }
+  };
 
-    if (!user.labels?.includes('admin')) {
-      document.getElementById('auth-gate').innerHTML =
-        '<div style="text-align:center;"><div style="font-size:48px;">🚫</div>' +
-        '<p style="color:#8A8DA3;margin-top:12px;font-family:Inter,sans-serif;">Not an admin account.</p>' +
-        '<a href="fud.html" style="color:#FF3D00;font-size:13px;text-decoration:none;">← Back to feed</a></div>';
-      return;
+  // On load: try stored key or show form
+  (async () => {
+    if (adminKey) {
+      const ok = await tryAdminKey(adminKey);
+      if (!ok) {
+        sessionStorage.removeItem('fud_admin_key');
+        adminKey = '';
+        document.getElementById('auth-spin').style.display = 'none';
+        document.getElementById('auth-key-form').style.display = 'block';
+      }
+    } else {
+      document.getElementById('auth-spin').style.display = 'none';
+      document.getElementById('auth-key-form').style.display = 'block';
     }
-
-    document.getElementById('user-email').textContent = user.email;
-    currentJWT = await account.createJWT().then(r => r.jwt);
-    document.getElementById('auth-gate').style.display = 'none';
-
-    loadStats();
-    loadCampaigns();
   })();
 
   // ── Sign out ────────────────────────────────────────────────────
-  document.getElementById('sign-out-btn').addEventListener('click', async () => {
-    await account.deleteSession('current').catch(() => {});
-    window.location.href = 'login.html';
+  document.getElementById('sign-out-btn').addEventListener('click', () => {
+    sessionStorage.removeItem('fud_admin_key');
+    adminKey = '';
+    window.location.reload();
   });
 
   // ── Tabs ────────────────────────────────────────────────────────
@@ -701,7 +755,7 @@
 
   // ── API helper ──────────────────────────────────────────────────
   async function api(method, params) {
-    const headers = { 'Authorization': `Bearer ${currentJWT}` };
+    const headers = { 'X-Admin-Key': adminKey };
     let resp;
     if (method === 'GET') {
       const qs = new URLSearchParams(params).toString();
@@ -855,6 +909,7 @@
             <div class="action-btns">
               <button class="btn-action btn-edit" onclick="openEdit('${esc(c.$id)}')">Edit</button>
               <button class="btn-action btn-toggle" onclick="toggleCampaign('${esc(c.$id)}', ${c.active})">${c.active ? 'Cancel' : 'Restore'}</button>
+              <button class="btn-action" style="color:var(--warn);border-color:rgba(255,197,61,.3)" onclick="moderatePosts('${esc(c.$id)}', '${esc(c.fudTarget||c.projectName||'')}')">Posts</button>
               <button class="btn-action btn-delete" onclick="deleteCampaign('${esc(c.$id)}', '${esc(c.fudTarget||c.projectName||'')}')">Delete</button>
             </div>
           </td>
@@ -1052,6 +1107,52 @@
     } catch (e) {
       toast(`Error: ${e.message}`, 'err');
     }
+  };
+
+  // ── Moderate Posts ───────────────────────────────────────────────
+  window.moderatePosts = async (campaignId, targetName) => {
+    const overlay = document.getElementById('posts-overlay');
+    const body = document.getElementById('posts-modal-body');
+    document.getElementById('posts-modal-title').textContent = `Posts — ${targetName}`;
+    document.getElementById('posts-modal-sub').textContent = 'Loading FUD posts…';
+    body.innerHTML = '<div style="text-align:center;color:var(--dim);padding:40px">Loading…</div>';
+    overlay.style.display = 'flex';
+
+    try {
+      const data = await api('GET', { action: 'list-posts', campaignId });
+      const docs = data.documents || [];
+      document.getElementById('posts-modal-sub').textContent = `${docs.length} post${docs.length !== 1 ? 's' : ''}`;
+      if (!docs.length) {
+        body.innerHTML = '<div style="text-align:center;color:var(--dim);padding:40px">No posts yet.</div>';
+        return;
+      }
+      body.innerHTML = docs.map(p => `
+        <div id="post-row-${esc(p.$id)}" style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px">@${esc(p.username||'anon')}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:3px">${new Date(p.$createdAt).toLocaleString()}</div>
+            ${p.tweetUrl ? `<a href="${esc(p.tweetUrl)}" target="_blank" rel="noopener"
+              style="font-family:'Space Mono',monospace;font-size:11px;color:#00D4FF;word-break:break-all;text-decoration:none">${esc(p.tweetUrl.slice(0,80))}${p.tweetUrl.length>80?'…':''}</a>` : ''}
+          </div>
+          <button onclick="deletePost('${esc(p.$id)}')"
+            style="flex-shrink:0;padding:5px 11px;background:transparent;border:1px solid rgba(255,92,92,.3);
+            border-radius:6px;color:#FF5C5C;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .13s"
+            onmouseover="this.style.background='rgba(255,92,92,.1)'" onmouseout="this.style.background='transparent'">
+            🗑️ Delete
+          </button>
+        </div>`).join('');
+    } catch (e) {
+      body.innerHTML = `<div style="text-align:center;color:#FF5C5C;padding:40px">Error: ${esc(e.message)}</div>`;
+    }
+  };
+
+  window.deletePost = async (postId) => {
+    try {
+      await api('POST', { action: 'delete-post', postId });
+      const row = document.getElementById(`post-row-${postId}`);
+      if (row) { row.style.opacity = '0'; row.style.transition = 'opacity .2s'; setTimeout(() => row.remove(), 220); }
+      toast('Post deleted', 'ok');
+    } catch (e) { toast(`Error: ${e.message}`, 'err'); }
   };
 
   function esc(s) {
