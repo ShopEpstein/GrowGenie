@@ -817,9 +817,10 @@ html[data-mode="smear"] .btn-mode{
     <button class="m-close" onclick="document.getElementById('wallet-overlay').classList.remove('open')">×</button>
     <div class="gate-body">
       <span class="gate-icon">📱</span>
-      <div class="gate-title">Open in Your Wallet</div>
+      <div class="gate-title">Wallet Required to Launch</div>
       <p class="gate-desc">
-        Open FudFun inside your Solana wallet's browser so we can verify you hold <strong>$SCROLL</strong> or <strong>$FUD</strong>.
+        Creating a campaign costs <strong style="color:var(--gold)">0.01 SOL</strong>. Open FudFun inside Phantom or Solflare to pay and launch.<br/>
+        <span style="color:var(--dim);font-size:12px">Just want to post FUD? No wallet needed — go back and join any campaign.</span>
       </p>
       <div class="gate-actions">
         <a id="open-phantom-btn" href="#" target="_blank" rel="noopener" class="btn-gate-buy">
@@ -828,7 +829,7 @@ html[data-mode="smear"] .btn-mode{
         <a id="open-solflare-btn" href="#" target="_blank" rel="noopener" class="btn-gate-buy" style="background:linear-gradient(135deg,#ff6e38,#ffd339);color:#1a0a00">
           Open in Solflare →
         </a>
-        <button class="btn-gate-cancel" onclick="document.getElementById('wallet-overlay').classList.remove('open')">Skip for now</button>
+        <button class="btn-gate-cancel" onclick="document.getElementById('wallet-overlay').classList.remove('open')">← Back to feed</button>
       </div>
     </div>
   </div>
@@ -1071,13 +1072,13 @@ async function checkGateTokens(walletAddress) {
 
 // ── Welcome overlay ────────────────
 (function initWelcome() {
-  if (!localStorage.getItem('fud_welcomed')) {
+  if (!localStorage.getItem('fud_welcomed_v2')) {
     document.getElementById('welcome-overlay').classList.add('open');
   }
 })();
 
 window.dismissWelcome = function() {
-  localStorage.setItem('fud_welcomed', '1');
+  localStorage.setItem('fud_welcomed_v2', '1');
   document.getElementById('welcome-overlay').classList.remove('open');
 };
 
