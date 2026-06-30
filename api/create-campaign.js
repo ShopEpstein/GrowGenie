@@ -10,31 +10,38 @@ const SOLANA_RPC     = 'https://api.mainnet-beta.solana.com';
 
 async function verifyLaunchFee(txSignature) {
   if (!txSignature) return false;
-  try {
-    const r = await fetch(SOLANA_RPC, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1,
-        method: 'getTransaction',
-        params: [txSignature, { encoding: 'jsonParsed', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }],
-      }),
-    });
-    const data = await r.json();
-    const tx   = data?.result;
-    if (!tx) return false;
+  // Retry up to 5 times with 1s delay — RPC may lag behind confirmation
+  for (let attempt = 0; attempt < 5; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 1000));
+    try {
+      const r = await fetch(SOLANA_RPC, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0', id: 1,
+          method: 'getTransaction',
+          params: [txSignature, { encoding: 'jsonParsed', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }],
+        }),
+      });
+      const data = await r.json();
+      const tx   = data?.result;
+      if (!tx) continue; // not indexed yet — retry
 
-    // Reject if older than 10 minutes (replay protection)
-    if (tx.blockTime && (Date.now() / 1000 - tx.blockTime) > 600) return false;
+      // Reject if older than 10 minutes (replay protection)
+      if (tx.blockTime && (Date.now() / 1000 - tx.blockTime) > 600) return false;
 
-    const instructions = tx.transaction?.message?.instructions || [];
-    return instructions.some(ix =>
-      ix.program === 'system' &&
-      ix.parsed?.type === 'transfer' &&
-      ix.parsed?.info?.destination === COLLECT_WALLET &&
-      parseInt(ix.parsed?.info?.lamports || '0') >= MIN_LAMPORTS
-    );
-  } catch { return false; }
+      const instructions = tx.transaction?.message?.instructions || [];
+      const ok = instructions.some(ix =>
+        ix.program === 'system' &&
+        ix.parsed?.type === 'transfer' &&
+        ix.parsed?.info?.destination === COLLECT_WALLET &&
+        parseInt(ix.parsed?.info?.lamports || '0') >= MIN_LAMPORTS
+      );
+      if (ok) return true;
+      return false; // tx found but payment doesn't match — no point retrying
+    } catch { /* network error — retry */ }
+  }
+  return false;
 }
 
 async function aiModerate(text) {

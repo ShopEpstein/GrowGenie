@@ -1901,15 +1901,24 @@ async function collectLaunchFee() {
 
   const sw3  = await loadSolana();
   const conn = new sw3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-  const { blockhash } = await conn.getLatestBlockhash();
+  const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash();
 
   const from = new sw3.PublicKey(pub);
   const to   = new sw3.PublicKey(COLLECT_WALLET);
   const tx   = new sw3.Transaction({ recentBlockhash: blockhash, feePayer: from });
   tx.add(sw3.SystemProgram.transfer({ fromPubkey: from, toPubkey: to, lamports: FEE_LAMPORTS }));
 
-  const { signature } = await provider.signAndSendTransaction(tx);
-  await conn.confirmTransaction(signature, 'confirmed');
+  let signature;
+  if (typeof provider.signAndSendTransaction === 'function') {
+    // Phantom, Solflare, Backpack — preferred path
+    ({ signature } = await provider.signAndSendTransaction(tx));
+  } else {
+    // Fallback: sign then send manually (OKX, Glow, older wallets)
+    const signed = await provider.signTransaction(tx);
+    signature = await conn.sendRawTransaction(signed.serialize());
+  }
+
+  await conn.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
   return signature;
 }
 
