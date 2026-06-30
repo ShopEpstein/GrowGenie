@@ -642,7 +642,7 @@ html[data-mode="smear"] .btn-mode{
 
     <div id="lc-form-wrap">
       <div class="m-title">Launch a FUD Campaign 💀</div>
-      <p class="m-sub">0.01 SOL to launch. Instant. The internet does the rest.</p>
+      <p class="m-sub">Free. Instant. The internet does the rest.</p>
       <form id="lc-form" novalidate>
         <div class="field">
           <label for="lf-target">Who's getting FUD'd?</label>
@@ -707,8 +707,7 @@ html[data-mode="smear"] .btn-mode{
         </div>
 
         <div class="m-error" id="lf-err"></div>
-        <button type="submit" class="btn-main" id="lf-submit">🎰 Launch Campaign — 0.01 SOL</button>
-        <p style="text-align:center;font-family:'Space Mono';font-size:10px;color:var(--dim);margin-top:8px">0.01 SOL launch fee · wallet required · funds the platform 💀</p>
+        <button type="submit" class="btn-main" id="lf-submit">🎰 Launch Campaign</button>
       </form>
     </div>
 
@@ -930,7 +929,7 @@ const MODES = {
     modeBtn:         '🎭 FUD Mode',
     launchBtn:       'Launch Campaign 💀',
     modalTitle:      'Launch a FUD Campaign 💀',
-    modalSub:        '0.01 SOL to launch. Instant. The internet does the rest.',
+    modalSub:        'Free. Instant. The internet does the rest.',
     targetLabel:     "Who's getting FUD'd?",
     grievanceLabel:  'The Grievance',
     grievancePh:     'Give the internet ammunition. The more specific, the better.',
@@ -1779,17 +1778,6 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     }
   } catch {}
 
-  // Collect 0.01 SOL launch fee
-  btn.textContent = '💳 Approve 0.01 SOL in wallet…';
-  let txSignature;
-  try {
-    txSignature = await collectLaunchFee();
-  } catch (err) {
-    lfErr(err.message || 'Payment cancelled — wallet required to launch.');
-    btn.disabled = false; btn.textContent = '🎰 Launch Campaign — 0.01 SOL';
-    return;
-  }
-
   btn.textContent = '🎰 Loading…';
 
   const payload = {
@@ -1801,7 +1789,6 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     social:    social || null,
     banner:    banner || (previewData?.thumbnailUrl) || null,
     bounty:    bounty > 0 ? bounty : null,
-    txSignature,
   };
 
   // Run slot + create in parallel via server API (bypasses Appwrite permission issues)
@@ -1843,7 +1830,7 @@ document.getElementById('lc-done').addEventListener('click', () => {
     document.getElementById('lf-preview').classList.remove('show');
     document.getElementById('lf-bounty').value = '';
     const btn = document.getElementById('lf-submit');
-    btn.disabled = false; btn.textContent = '🎰 Launch Campaign — 0.01 SOL';
+    btn.disabled = false; btn.textContent = '🎰 Launch Campaign';
     selectedCat = 'hate';
     document.querySelectorAll('#lf-pills .pill').forEach(p => p.classList.remove('on'));
     document.querySelector('#lf-pills .pill[data-v="hate"]').classList.add('on');
