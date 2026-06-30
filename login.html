@@ -235,9 +235,13 @@ const params   = new URLSearchParams(location.search);
 const nextUrl  = params.get('next') || '/';
 
 // Update brand for smearfun.xyz
-if (/smearfun\.xyz/i.test(location.hostname)) {
+const IS_SMEAR = /smearfun\.xyz/i.test(location.hostname);
+if (IS_SMEAR) {
   document.title = 'Enter — SmearFun.xyz';
   document.getElementById('brandName').textContent = 'SmearFun.xyz';
+  document.getElementById('authCard').querySelector('.card-title').textContent = 'Enter ⭐';
+  document.getElementById('authCard').querySelector('.card-subtitle').textContent = 'No wallet? No problem. Sign in with Google or email.';
+  document.querySelector('.card-footer').textContent = 'By signing in you agree to spread political heat responsibly. No CSAM. No actual porn. Everything else goes.';
 }
 
 const redirectOverlay = document.getElementById('redirectOverlay');
@@ -252,6 +256,8 @@ const googleBtn       = document.getElementById('googleBtn');
 const emailBtn        = document.getElementById('emailBtn');
 const emailInput      = document.getElementById('emailInput');
 
+let walletInfo = null;
+
 function showError(msg) { errorMsg.textContent = msg; errorMsg.classList.add('visible'); successMsg.classList.remove('visible'); }
 function showSuccess(msg) { successMsg.textContent = msg; successMsg.classList.add('visible'); errorMsg.classList.remove('visible'); }
 function hideMessages() { errorMsg.classList.remove('visible'); successMsg.classList.remove('visible'); }
@@ -263,32 +269,52 @@ function setLoading(btn, state, label) {
   if (label) btn.querySelector('.btn-label').textContent = label;
 }
 
-// ── Handle magic link callback ─────────
-const mlUserId = params.get('userId');
-const mlSecret = params.get('secret');
-if (mlUserId && mlSecret) {
+// ── Handle callbacks (OAuth token OR magic link) ───────────
+// Both flows land here with ?userId=&secret= in the URL.
+// We use sessionStorage to know which flow triggered the redirect.
+const cbUserId = params.get('userId');
+const cbSecret = params.get('secret');
+if (cbUserId && cbSecret) {
   (async () => {
-    setLoading(emailBtn, true, 'Verifying…');
-    try {
-      await account.updateMagicURLSession(mlUserId, mlSecret);
-      redirectAfterAuth();
-    } catch (e) {
-      showError('Magic link expired or already used. Please request a new one.');
+    const isOAuth = sessionStorage.getItem('pending_auth') === 'oauth';
+    sessionStorage.removeItem('pending_auth');
+    if (isOAuth) {
+      // Google OAuth token → finalize into a real session
+      try {
+        await account.createSession(cbUserId, cbSecret);
+        redirectAfterAuth();
+      } catch (e) {
+        showError('Google sign-in failed — the link may have expired. Please try again.');
+      }
+    } else {
+      // Magic link callback
+      setLoading(emailBtn, true, 'Verifying…');
+      try {
+        await account.updateMagicURLSession(cbUserId, cbSecret);
+        redirectAfterAuth();
+      } catch (e) {
+        showError('Magic link expired or already used. Please request a new one.');
+      }
     }
   })();
+}
+
+// Show error if OAuth failure redirect
+if (params.get('error') === 'oauth_failed') {
+  showError('Google sign-in was cancelled or failed. Please try again.');
 }
 
 // ── Check existing Appwrite session ────
 (async () => {
   try {
     const aw = await account.get();
-    if (aw?.$id && !mlUserId) { redirectAfterAuth(); return; }
+    if (aw?.$id && !cbUserId) { redirectAfterAuth(); return; }
   } catch {}
 
   // Check wallet localStorage
   try {
     const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
-    if (w?.pubkey && !mlUserId) { redirectAfterAuth(); return; }
+    if (w?.pubkey && !cbUserId) { redirectAfterAuth(); return; }
   } catch {}
 
   // Wait for wallet extensions to inject
@@ -319,11 +345,15 @@ if (mlUserId && mlSecret) {
 })();
 
 // ── Google OAuth ───────────────────────
+// Uses createOAuth2Token (not the deprecated createOAuth2Session).
+// After Google auth, Appwrite redirects back HERE with ?userId=&secret=
+// We then call createSession() to finalize the session.
 googleBtn.addEventListener('click', () => {
-  setLoading(googleBtn, true, 'Redirecting…');
-  const success = location.origin + '/';
-  const failure = location.origin + '/login.html';
-  account.createOAuth2Session('google', success, failure);
+  setLoading(googleBtn, true, 'Redirecting to Google…');
+  sessionStorage.setItem('pending_auth', 'oauth');
+  const successUrl = `${location.origin}/login.html?next=${encodeURIComponent(nextUrl)}`;
+  const failureUrl = `${location.origin}/login.html?error=oauth_failed`;
+  account.createOAuth2Token('google', successUrl, failureUrl);
 });
 
 // ── Email magic link ───────────────────
@@ -408,8 +438,6 @@ async function doWalletLogin(provider, name) {
     setLoading(walletBtn, false, walletInfo ? `${walletInfo.icon} Connect ${walletInfo.name}` : '🔑 Connect Wallet');
   }
 }
-
-let walletInfo = null;
 
 walletBtn.addEventListener('click', () => {
   if (walletInfo) {
