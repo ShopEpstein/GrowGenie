@@ -1,0 +1,12 @@
+{
+  "name": "FudFun.xyz — You don't hate these people enough.",
+  "short_name": "FudFun 💀",
+  "description": "The internet's coordinated hate machine. Launch FUD campaigns against crypto ruggers, KOL frauds, and politicians who deserve it.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#04050a",
+  "theme_color": "#FF3D00",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
