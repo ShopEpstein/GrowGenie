@@ -15,7 +15,7 @@ export default async function handler(req) {
 
   const badgeText  = isSmear ? 'SMEAR CAMPAIGN' : 'FUD CAMPAIGN';
   const siteLabel  = isSmear ? 'SmearFun.xyz' : 'FudFun.xyz';
-  const handleText = isSmear ? '@smearfunxyz on X' : '@fudfunn on X';
+  const handleText = isSmear ? '@smearfun on X' : '@fudfunn on X';
   const domainText = isSmear ? 'smearfun.xyz' : 'fudfun.xyz';
 
   const targetSize = target.length > 28 ? 56 : target.length > 18 ? 68 : 80;
