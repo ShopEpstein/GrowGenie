@@ -534,8 +534,7 @@ a{color:inherit;text-decoration:none}
     </div>
     <button class="btn-main" id="btnSubmit" onclick="handleSubmit()">Submit FUD 💀</button>
     <div class="field-note" style="margin-top:8px" id="submitGateNote">
-      🔒 Requires holding <strong style="color:var(--gold)">$SCROLL</strong> or <strong style="color:var(--gold)">$FUD</strong> in your wallet &nbsp;·&nbsp;
-      No profile? <span onclick="openProfileModal()">Create one →</span>
+      No profile? <span onclick="openProfileModal()" style="cursor:pointer;text-decoration:underline;color:var(--text)">Create one →</span>
     </div>
   </div>
 </section>
@@ -585,14 +584,14 @@ a{color:inherit;text-decoration:none}
       <input id="pm-x" placeholder="@yourhandle"/>
     </div>
     <div class="field">
-      <label>Wallet address (to receive SOL tips)</label>
+      <label>Wallet address <span style="color:var(--dim2)">(optional — needed to receive SOL tips)</span></label>
       <div class="wallet-btns" id="pm-walletBtns"></div>
       <div class="connected-row hidden" id="pm-connected">✅ <span id="pm-connAddr">—</span></div>
       <div class="or-div">— or paste address —</div>
-      <input id="pm-wallet" class="mono" placeholder="Your Solana wallet address"/>
+      <input id="pm-wallet" class="mono" placeholder="Leave blank to post anonymously"/>
     </div>
     <button class="btn-main" onclick="saveProfile()">Save profile 💀</button>
-    <div class="field-note" style="margin-top:10px">Stored locally on this device only</div>
+    <div class="field-note" style="margin-top:10px">Stored locally on this device only · No wallet required to post</div>
   </div>
 </div>
 
@@ -698,16 +697,21 @@ function getProfile() {
 function syncProfileUI() {
   const p = getProfile();
   const btn = $('btnProfile');
+  const note = $('submitGateNote');
   if (p?.username) {
     btn.textContent = '@' + p.username;
     btn.classList.add('set');
     $('inp-uname').value = '@' + p.username;
     $('inp-wallet').value = p.wallet || '';
+    if (note) note.innerHTML = p.wallet
+      ? '✅ Wallet connected — tips enabled 💸'
+      : '💡 <span onclick="openProfileModal()" style="cursor:pointer;text-decoration:underline;color:var(--text)">Add a wallet</span> to your profile to receive SOL tips';
   } else {
     btn.textContent = 'Create profile';
     btn.classList.remove('set');
     $('inp-uname').value = '';
     $('inp-wallet').value = '';
+    if (note) note.innerHTML = 'No profile? <span onclick="openProfileModal()" style="cursor:pointer;text-decoration:underline;color:var(--text)">Create one →</span>';
   }
 }
 
@@ -728,8 +732,7 @@ window.saveProfile = function() {
   const xhandle  = $('pm-x').value.trim().replace(/^@/,'');
   const wallet   = ($('pm-wallet').value.trim() || $('pm-connAddr').textContent).replace(/[^a-zA-Z0-9]/g,'');
   if (!username) { toast('Enter a username','err'); return; }
-  if (!wallet || wallet === '—') { toast('Add a wallet to receive tips','err'); return; }
-  saveProfileToStorage({ username, wallet, xhandle });
+  saveProfileToStorage({ username, wallet: wallet === '—' ? '' : wallet, xhandle });
   syncProfileUI();
   closeModal('profileModal');
   toast('Profile saved 💀','win');
@@ -830,7 +833,7 @@ function applyBranding() {
     $('lb-head').innerHTML        = '🏆 Top Smear Merchants <span class="sec-sub" style="margin-left:auto">ranked by SOL earned</span>';
     $('feed-head').innerHTML      = '📣 Smear Feed <span class="sec-sub">latest receipts</span>';
     $('btnSubmit').textContent    = 'Submit Smear 🇺🇸';
-    $('submitGateNote').innerHTML = '🔒 Requires holding <strong style="color:var(--gold)">$SCROLL</strong> or <strong style="color:var(--gold)">$FUD</strong> in your wallet &nbsp;·&nbsp; No profile? <span onclick="openProfileModal()">Create one →</span>';
+    syncProfileUI();
     // Playbook
     renderSmearPlaybook();
   }
@@ -1169,91 +1172,42 @@ window.handleSubmit = async function() {
   if (!url) { toast('Paste your tweet / post URL first','err'); return; }
 
   const btn = $('btnSubmit');
-  btn.disabled = true; btn.textContent = 'Connecting wallet…';
+  btn.disabled = true; btn.textContent = 'Submitting…';
 
-  // Step 1: require a live wallet connection — no trusting self-reported addresses
-  const provider = getProvider();
-  if (!provider) {
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) {
-      const here = encodeURIComponent(location.href);
-      const ref  = encodeURIComponent(location.origin);
-      toast('Open this page inside Phantom or Solflare to verify your tokens', 'err');
-      showGateBanner(`
-        <a href="https://phantom.app/ul/browse/${here}?ref=${ref}" target="_blank" rel="noopener"
-           style="display:block;margin-top:10px;padding:10px 16px;border-radius:10px;text-align:center;
-           background:linear-gradient(135deg,#ab9ff2,#6b5bd2);color:#fff;font-weight:700;text-decoration:none;font-size:13px">
-           Open in Phantom →
-        </a>
-        <a href="https://solflare.com/ul/v1/browse/${here}?ref=${ref}" target="_blank" rel="noopener"
-           style="display:block;margin-top:8px;padding:10px 16px;border-radius:10px;text-align:center;
-           background:linear-gradient(135deg,#ff6e38,#ffd339);color:#1a0a00;font-weight:700;text-decoration:none;font-size:13px">
-           Open in Solflare →
-        </a>`);
-    } else {
-      toast('Install Phantom or Solflare to verify token holdings', 'err');
-      showGateBanner();
+  // Opportunistically grab wallet from extension if profile has none yet
+  let walletAddr = p.wallet || '';
+  if (!walletAddr) {
+    const provider = getProvider();
+    if (provider) {
+      try {
+        const res = await provider.connect({ onlyIfTrusted: true }).catch(() => null);
+        const pub = (res?.publicKey || provider.publicKey)?.toString();
+        if (pub) {
+          walletAddr = pub;
+          saveProfileToStorage({ ...p, wallet: pub });
+          try {
+            const existing = JSON.parse(localStorage.getItem('fud_wallet') || '{}');
+            localStorage.setItem('fud_wallet', JSON.stringify({ ...existing, pubkey: pub }));
+          } catch {}
+          syncProfileUI();
+        }
+      } catch {}
     }
-    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
-    return;
   }
 
-  // Step 2: connect and read the actual public key (proves ownership)
-  let verifiedWallet;
-  try {
-    let pub = provider.publicKey?.toString();
-    if (!pub) {
-      // Try silent first, fall back to full connect popup
-      const res = await provider.connect({ onlyIfTrusted: true }).catch(() => provider.connect());
-      pub = (res?.publicKey || provider.publicKey)?.toString();
-    }
-    verifiedWallet = pub;
-  } catch {
-    toast('Wallet connection cancelled', 'err');
-    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
-    return;
-  }
-
-  if (!verifiedWallet) {
-    toast('Could not read wallet address', 'err');
-    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
-    return;
-  }
-
-  // Auto-save the verified wallet to profile and fud_wallet so delete buttons recognize ownership
-  saveProfileToStorage({ ...p, wallet: verifiedWallet });
-  try {
-    const existing = JSON.parse(localStorage.getItem('fud_wallet') || '{}');
-    localStorage.setItem('fud_wallet', JSON.stringify({ ...existing, pubkey: verifiedWallet }));
-  } catch {}
-  syncProfileUI();
-  syncProfileUI();
-
-  // Step 3: check token balance against the VERIFIED wallet (not self-reported)
-  btn.textContent = 'Checking tokens…';
-  const holds = await checkHoldsGateToken(verifiedWallet);
-  if (!holds) {
-    toast('Hold $SCROLL or $FUD to post 💀', 'err');
-    btn.disabled = false; btn.textContent = 'Submit FUD 💀';
-    showGateBanner();
-    return;
-  }
-
-  // Step 4: submit with proven wallet address
-  btn.textContent = 'Submitting…';
   try {
     const r = await fetch('/api/fud-post', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action: 'submit', campaignId: campId,
-        username: p.username, wallet: verifiedWallet,
+        username: p.username, wallet: walletAddr,
         xHandle: p.xhandle || '', tweetUrl: url,
       }),
     });
     if (!r.ok) throw new Error((await r.json()).error || 'Failed');
     $('inp-url').value = '';
-    toast('FUD submitted 💀 Start collecting tips!','win');
+    toast(walletAddr ? 'FUD submitted 💀 Tips incoming!' : 'FUD submitted 💀 Add a wallet to earn tips!','win');
     await loadPosts();
   } catch(e) {
     toast('Error: ' + e.message, 'err');

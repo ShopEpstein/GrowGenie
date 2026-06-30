@@ -245,15 +245,16 @@ async function load() {
     cursor = res.documents[res.documents.length - 1].$id;
   }
 
-  // Aggregate by username
+  // Aggregate by username (case-insensitive to avoid "sabrokie" vs "Sabrokie" duplicates)
   const byUser = {};
   for (const p of allPosts) {
-    const u = p.username || 'anon';
-    if (!byUser[u]) byUser[u] = { username: u, xHandle: p.xHandle || '', sol: 0, posts: 0, tipCount: 0 };
-    byUser[u].sol      += parseFloat(p.tipsReceived || '0');
-    byUser[u].posts    += 1;
-    byUser[u].tipCount += p.tipCount || 0;
-    if (p.xHandle && !byUser[u].xHandle) byUser[u].xHandle = p.xHandle;
+    const raw = p.username || 'anon';
+    const key = raw.toLowerCase();
+    if (!byUser[key]) byUser[key] = { username: raw, xHandle: p.xHandle || '', sol: 0, posts: 0, tipCount: 0 };
+    byUser[key].sol      += parseFloat(p.tipsReceived || '0');
+    byUser[key].posts    += 1;
+    byUser[key].tipCount += p.tipCount || 0;
+    if (p.xHandle && !byUser[key].xHandle) byUser[key].xHandle = p.xHandle;
   }
 
   const ranked = Object.values(byUser).sort((a, b) => b.sol - a.sol || b.posts - a.posts);
