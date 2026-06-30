@@ -707,7 +707,8 @@ html[data-mode="smear"] .btn-mode{
         </div>
 
         <div class="m-error" id="lf-err"></div>
-        <button type="submit" class="btn-main" id="lf-submit">🎰 Launch Campaign</button>
+        <button type="submit" class="btn-main" id="lf-submit">🎰 Launch Campaign — 0.01 SOL</button>
+        <p style="text-align:center;font-family:'Space Mono';font-size:10px;color:var(--dim);margin-top:8px">0.01 SOL launch fee · wallet required · funds the platform 💀</p>
       </form>
     </div>
 
@@ -1644,40 +1645,7 @@ function runSlotMachine() {
 }
 
 // ── Launch modal ───────────────────
-document.getElementById('launch-btn').addEventListener('click', async () => {
-  const provider = getWalletProvider();
-
-  if (!provider) {
-    // No wallet detected — on mobile, redirect into the wallet's in-app browser
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile) { showMobileWalletModal(); return; }
-    // Desktop without a wallet extension — skip gate, open launch
-    document.getElementById('launch-overlay').classList.add('open');
-    return;
-  }
-
-  // Wallet detected — connect (silently if already trusted, else prompt) then check gate
-  try {
-    let pub = provider.publicKey?.toString();
-    if (!pub) {
-      // Try silent first; if that yields nothing, do a real prompt
-      const silent = await provider.connect({ onlyIfTrusted: true }).catch(() => null);
-      pub = silent?.publicKey?.toString() || provider.publicKey?.toString();
-      if (!pub) {
-        const prompted = await provider.connect();
-        pub = prompted?.publicKey?.toString() || provider.publicKey?.toString();
-      }
-    }
-    if (!pub) { showGateModal(); return; }
-    const gateOk = await checkGateTokens(pub);
-    if (!gateOk) { showGateModal(); return; }
-    connectedWalletPub = pub;
-  } catch (e) {
-    // User rejected connect prompt — don't open launch
-    console.warn('Wallet connect error:', e);
-    return;
-  }
-
+document.getElementById('launch-btn').addEventListener('click', () => {
   document.getElementById('launch-overlay').classList.add('open');
 });
 document.getElementById('lc-close').addEventListener('click', closeLaunch);
@@ -1798,6 +1766,19 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     }
   } catch {}
 
+  // Collect 0.01 SOL launch fee
+  btn.textContent = '💳 Approve 0.01 SOL in wallet…';
+  let txSignature;
+  try {
+    txSignature = await collectLaunchFee();
+  } catch (err) {
+    lfErr(err.message || 'Payment cancelled — wallet required to launch.');
+    btn.disabled = false; btn.textContent = '🎰 Launch Campaign — 0.01 SOL';
+    return;
+  }
+
+  btn.textContent = '🎰 Loading…';
+
   const payload = {
     target, why,
     category:  selectedCat,
@@ -1807,6 +1788,7 @@ document.getElementById('lc-form').addEventListener('submit', async e => {
     social:    social || null,
     banner:    banner || (previewData?.thumbnailUrl) || null,
     bounty:    bounty > 0 ? bounty : null,
+    txSignature,
   };
 
   // Run slot + create in parallel via server API (bypasses Appwrite permission issues)
@@ -1848,7 +1830,7 @@ document.getElementById('lc-done').addEventListener('click', () => {
     document.getElementById('lf-preview').classList.remove('show');
     document.getElementById('lf-bounty').value = '';
     const btn = document.getElementById('lf-submit');
-    btn.disabled = false; btn.textContent = '🎰 Launch Campaign';
+    btn.disabled = false; btn.textContent = '🎰 Launch Campaign — 0.01 SOL';
     selectedCat = 'hate';
     document.querySelectorAll('#lf-pills .pill').forEach(p => p.classList.remove('on'));
     document.querySelector('#lf-pills .pill[data-v="hate"]').classList.add('on');
@@ -1897,6 +1879,39 @@ document.getElementById('tp-lucky').addEventListener('click', function() {
   selectedTipAmt = pick;
   toast(`🎲 Lucky spin: ◎ ${pick}`, '');
 });
+
+async function collectLaunchFee() {
+  const COLLECT_WALLET = '78f1wkpK7gGH7uXvwyybGwSNkPuxEKQxPezVXBGQ7Stb';
+  const FEE_LAMPORTS   = BigInt(10_000_000); // 0.01 SOL
+
+  const provider = getWalletProvider();
+  if (!provider) {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) { showMobileWalletModal(); }
+    throw new Error('No wallet detected — install Phantom or Solflare to launch');
+  }
+
+  let pub = provider.publicKey?.toString();
+  if (!pub) {
+    const res = await provider.connect({ onlyIfTrusted: true }).catch(() => provider.connect());
+    pub = (res?.publicKey || provider.publicKey)?.toString();
+  }
+  if (!pub) throw new Error('Could not connect wallet');
+  connectedWalletPub = pub;
+
+  const sw3  = await loadSolana();
+  const conn = new sw3.Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+  const { blockhash } = await conn.getLatestBlockhash();
+
+  const from = new sw3.PublicKey(pub);
+  const to   = new sw3.PublicKey(COLLECT_WALLET);
+  const tx   = new sw3.Transaction({ recentBlockhash: blockhash, feePayer: from });
+  tx.add(sw3.SystemProgram.transfer({ fromPubkey: from, toPubkey: to, lamports: FEE_LAMPORTS }));
+
+  const { signature } = await provider.signAndSendTransaction(tx);
+  await conn.confirmTransaction(signature, 'confirmed');
+  return signature;
+}
 
 async function loadSolana() {
   if (solanaWeb3) return solanaWeb3;
