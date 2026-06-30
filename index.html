@@ -1041,8 +1041,12 @@ function applyMode(m) {
 }
 
 function toggleMode() {
+  // On production domains, cross-navigate to the other site
+  const h = location.hostname;
+  if (h === 'fudfun.xyz' || h === 'www.fudfun.xyz') { window.location.href = 'https://smearfun.xyz'; return; }
+  if (h === 'smearfun.xyz' || h === 'www.smearfun.xyz') { window.location.href = 'https://fudfun.xyz'; return; }
+  // Local dev: just toggle the skin
   applyMode(mode === 'fud' ? 'smear' : 'fud');
-  // keep dropdown label in sync
   const mob = document.getElementById('drop-mode-mobile');
   if (mob) mob.textContent = mode === 'fud' ? '🎭 Switch to Politics Mode' : '💀 Switch to FUD Mode';
 }
@@ -1104,7 +1108,7 @@ function showMobileWalletModal() {
 // Apply saved mode on load (before auth/feed)
 applyMode(mode);
 
-// Lock smearfun.xyz to smear mode, hide toggle, update meta
+// Lock smearfun.xyz to smear mode, hide toggle, update meta + copy
 if (IS_SMEAR_DOMAIN) {
   document.getElementById('mode-toggle').style.display = 'none';
   document.getElementById('drop-mode-mobile').style.display = 'none';
@@ -1112,6 +1116,29 @@ if (IS_SMEAR_DOMAIN) {
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', 'SmearFun.xyz — Political Smear Campaigns');
   document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://smearfun.xyz');
   document.querySelector('.logo').textContent = '🇺🇸 SmearFun';
+
+  // Welcome overlay — political copy
+  const wt = document.querySelector('.welcome-title');
+  if (wt) wt.textContent = 'The internet\'s political hit machine.';
+  const ws = document.querySelector('.welcome-sub');
+  if (ws) ws.textContent = 'SmearFun.xyz — opposition research, scandal drops, and coordinated smear campaigns.\nFor politicians, candidates, and anyone who deserves it.';
+  const we = document.querySelector('.welcome-enter');
+  if (we) we.textContent = 'Enter the War Room 🇺🇸';
+  const wbh = document.querySelector('.welcome-boost-hook');
+  if (wbh) wbh.innerHTML = '<strong>Want professionals to run it?</strong> Launch your campaign and pay SmearFun to deploy — coordinated network, AI-crafted opposition research, War Room access. You have the receipts, we burn the building.';
+
+  // Swap pills to political categories
+  const pillsEl = document.getElementById('lf-pills');
+  if (pillsEl) pillsEl.innerHTML = `
+    <div class="pill on" data-v="hate">🏛️ Politician</div>
+    <div class="pill" data-v="coin">🗳️ Candidate</div>
+    <div class="pill" data-v="boss">💼 Corporate</div>
+    <div class="pill" data-v="fun">🎤 Celebrity</div>
+    <div class="pill" data-v="profit">💰 Corruption</div>
+    <div class="pill" data-v="boredom">📰 Media</div>
+    <div class="pill" data-v="ex">🌐 Lobby</div>
+    <div class="pill" data-v="family">🤡 Clown</div>
+  `;
 }
 
 // ── Auth (silent) ─────────────────
