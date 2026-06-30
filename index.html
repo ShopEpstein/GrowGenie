@@ -985,7 +985,8 @@ const MODES = {
   }
 };
 
-let mode = localStorage.getItem('fud_mode') || 'fud';
+const IS_SMEAR_DOMAIN = /smearfun\.xyz/i.test(location.hostname);
+let mode = IS_SMEAR_DOMAIN ? 'smear' : (localStorage.getItem('fud_mode') || 'fud');
 
 function applyMode(m) {
   mode = m;
@@ -1103,21 +1104,39 @@ function showMobileWalletModal() {
 // Apply saved mode on load (before auth/feed)
 applyMode(mode);
 
+// Lock smearfun.xyz to smear mode, hide toggle, update meta
+if (IS_SMEAR_DOMAIN) {
+  document.getElementById('mode-toggle').style.display = 'none';
+  document.getElementById('drop-mode-mobile').style.display = 'none';
+  document.title = 'SmearFun.xyz — Political Smear Campaigns in Seconds';
+  document.querySelector('meta[property="og:title"]')?.setAttribute('content', 'SmearFun.xyz — Political Smear Campaigns');
+  document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://smearfun.xyz');
+  document.querySelector('.logo').textContent = '🇺🇸 SmearFun';
+}
+
 // ── Auth (silent) ─────────────────
-(function initAuth() {
+(async function initAuth() {
+  // Check active Appwrite session first (Google / email auth)
+  try {
+    const aw = await account.get();
+    if (aw?.$id) {
+      user = { $id: aw.$id, name: aw.name || aw.email?.split('@')[0] || 'anon', email: aw.email, authType: 'appwrite' };
+      updateAccountUI();
+      return;
+    }
+  } catch {}
+  // Fall back to wallet auth
   try {
     const w   = JSON.parse(localStorage.getItem('fud_wallet')  || 'null');
     const p   = JSON.parse(localStorage.getItem('fud_profile') || 'null');
     const pub = w?.pubkey || p?.wallet || null;
     if (pub) {
       const name = p?.username ? '@' + p.username : pub.slice(0,4)+'…'+pub.slice(-4);
-      user = { $id: pub, name };
+      user = { $id: pub, name, authType: 'wallet' };
       connectedWalletPub = pub;
     }
   } catch {}
   updateAccountUI();
-  // Sign out any stale Appwrite session — prevents campaign permission errors
-  account.deleteSession('current').catch(() => {});
 })();
 
 function updateAccountUI() {
@@ -1133,7 +1152,10 @@ function updateAccountUI() {
     } catch {}
     btn.innerHTML = `${ph.emoji} ${savedName}`;
     btn.classList.add('logged-in');
-    document.getElementById('acct-email-row').textContent = pubkey.slice(0,6)+'…'+pubkey.slice(-4);
+    const idLabel = user.authType === 'appwrite'
+      ? (user.email || user.name || pubkey.slice(0,12))
+      : pubkey.slice(0,6)+'…'+pubkey.slice(-4);
+    document.getElementById('acct-email-row').textContent = idLabel;
     tabMine.style.display = '';
   } else {
     btn.textContent = 'Sign In';
@@ -1364,9 +1386,10 @@ function makeCard(doc, flash) {
 // ── Feed ───────────────────────────
 async function loadFeed(flash) {
   try {
-    let queries = [Query.equal('active', true), Query.limit(80), Query.orderDesc('$createdAt')];
+    const typeFilter = IS_SMEAR_DOMAIN ? [Query.equal('campaignType', 'smear')] : [];
+    let queries = [Query.equal('active', true), Query.limit(80), Query.orderDesc('$createdAt'), ...typeFilter];
     if (sortMode === 'mine' && user) {
-      queries = [Query.equal('clientId', user.$id), Query.limit(80), Query.orderDesc('$createdAt')];
+      queries = [Query.equal('clientId', user.$id), Query.limit(80), Query.orderDesc('$createdAt'), ...typeFilter];
     }
     const res  = await dbs.listDocuments(DB, COLL, queries);
     let docs   = res.documents;
