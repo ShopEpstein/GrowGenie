@@ -2,10 +2,11 @@ const { Client, Databases } = require('node-appwrite');
 const nacl   = require('tweetnacl');
 const bs58   = require('bs58');
 
-const ENDPOINT = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
-const PROJECT  = process.env.APPWRITE_PROJECT_ID || '6a2bc15c00065b3c91a0';
-const API_KEY  = process.env.APPWRITE_API_KEY    || '';
-const DB       = 'growthgenie';
+const ENDPOINT     = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
+const PROJECT      = process.env.APPWRITE_PROJECT_ID || '6a2bc15c00065b3c91a0';
+const API_KEY      = process.env.APPWRITE_API_KEY    || '';
+const DB           = 'growthgenie';
+const ADMIN_WALLET = '78f1wkpK7gGH7uXvwyybGwSNkPuxEKQxPezVXBGQ7Stb';
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
@@ -46,7 +47,7 @@ module.exports = async (req, res) => {
     return res.status(404).json({ error: 'Campaign not found' });
   }
 
-  if (doc.clientId !== pubkey) {
+  if (doc.clientId !== pubkey && pubkey !== ADMIN_WALLET) {
     return res.status(403).json({ error: 'Not your campaign' });
   }
 

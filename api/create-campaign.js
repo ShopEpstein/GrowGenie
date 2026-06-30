@@ -5,6 +5,27 @@ const PROJECT  = '6a2bc15c00065b3c91a0';
 const DB       = 'growthgenie';
 const COLL     = 'campaigns';
 
+async function aiModerate(text) {
+  if (!process.env.GROQ_API_KEY || !text) return { allowed: true };
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 64,
+        messages: [
+          { role: 'system', content: 'You moderate FudFun.xyz. BLOCK: sexual content, porn, CSAM, real doxxing (home address/SSN/financial accounts), credible violence threats, illegal content. ALLOW: harsh criticism, dark humor, satire, political commentary, profanity. Respond ONLY: {"allowed":true} or {"allowed":false,"reason":"..."}' },
+          { role: 'user',   content: text.slice(0, 500) },
+        ],
+      }),
+    });
+    if (!r.ok) return { allowed: true };
+    const j = await r.json();
+    return JSON.parse(j.choices?.[0]?.message?.content?.trim() || '{"allowed":true}');
+  } catch { return { allowed: true }; }
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
@@ -22,6 +43,10 @@ module.exports = async (req, res) => {
   if (!target || !why) {
     return res.status(400).json({ error: 'Missing target or why' });
   }
+
+  // AI moderation — block sexual/illegal content before saving
+  const mod = await aiModerate(`Target: ${target}\nReason: ${why}`);
+  if (!mod.allowed) return res.status(422).json({ error: mod.reason || 'Content not allowed' });
 
   const isSmear = campaignType === 'smear';
   const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

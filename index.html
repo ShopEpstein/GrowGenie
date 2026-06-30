@@ -906,6 +906,7 @@ function haterAvatar(key, size = 32) {
 function haterName(key) { return PLAYER_HATERS[haterIdx(key)].name; }
 
 // ── State ──────────────────────────
+const ADMIN_WALLET    = '78f1wkpK7gGH7uXvwyybGwSNkPuxEKQxPezVXBGQ7Stb';
 let user              = null;
 let connectedWalletPub = null;
 let sortMode       = 'new';
@@ -1343,7 +1344,7 @@ function makeCard(doc, flash) {
         ? `<a class="card-creator-wrap" href="/profile.html?w=${encodeURIComponent(doc.clientId)}" onclick="event.stopPropagation()" title="View ${haterName(doc.clientId)}'s profile">${haterAvatar(doc.clientId, 28)}<span class="card-creator-name">${haterName(doc.clientId)}</span></a>`
         : ''
       }
-      ${user && doc.clientId === user.$id
+      ${user && (doc.clientId === user.$id || user.$id === ADMIN_WALLET)
         ? `<button class="btn-delete-card" data-id="${esc(doc.$id)}" title="Delete campaign">🗑️</button>`
         : ''
       }

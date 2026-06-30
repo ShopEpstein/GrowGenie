@@ -981,7 +981,7 @@ function renderFeed() {
         <div class="post-av">${(p.username||'?')[0].toUpperCase()}</div>
         <div class="post-user">@${esc(p.username||'anon')}</div>
         <div class="post-age">${ago(p.timestamp)} ago</div>
-        ${me && p.wallet === me
+        ${me && (p.wallet === me || me === '78f1wkpK7gGH7uXvwyybGwSNkPuxEKQxPezVXBGQ7Stb')
           ? `<button class="btn-del-post" onclick="deletePost('${esc(p.$id)}')" title="Delete post">🗑️</button>`
           : ''}
       </div>

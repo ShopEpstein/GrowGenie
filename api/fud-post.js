@@ -2,11 +2,33 @@ const { Client, Databases, ID, Query } = require('node-appwrite');
 const nacl   = require('tweetnacl');
 const bs58   = require('bs58');
 
-const ENDPOINT = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
-const PROJECT  = process.env.APPWRITE_PROJECT_ID  || '6a2bc15c00065b3c91a0';
-const API_KEY  = process.env.APPWRITE_API_KEY     || '';
-const DB       = 'growthgenie';
-const COLL     = 'fud_posts';
+const ENDPOINT     = process.env.APPWRITE_ENDPOINT   || 'https://nyc.cloud.appwrite.io/v1';
+const PROJECT      = process.env.APPWRITE_PROJECT_ID  || '6a2bc15c00065b3c91a0';
+const API_KEY      = process.env.APPWRITE_API_KEY     || '';
+const DB           = 'growthgenie';
+const COLL         = 'fud_posts';
+const ADMIN_WALLET = '78f1wkpK7gGH7uXvwyybGwSNkPuxEKQxPezVXBGQ7Stb';
+
+async function aiModerate(text) {
+  if (!process.env.GROQ_API_KEY || !text) return { allowed: true };
+  try {
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 64,
+        messages: [
+          { role: 'system', content: 'You moderate FudFun.xyz. BLOCK: sexual content, porn, CSAM, real doxxing (home address/SSN/financial accounts), credible violence threats, illegal content. ALLOW: harsh criticism, dark humor, satire, political commentary, profanity. Respond ONLY: {"allowed":true} or {"allowed":false,"reason":"..."}' },
+          { role: 'user',   content: text.slice(0, 500) },
+        ],
+      }),
+    });
+    if (!r.ok) return { allowed: true };
+    const j = await r.json();
+    return JSON.parse(j.choices?.[0]?.message?.content?.trim() || '{"allowed":true}');
+  } catch { return { allowed: true }; }
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin',  '*');
@@ -37,6 +59,9 @@ module.exports = async (req, res) => {
         const { campaignId, username, wallet, xHandle, tweetUrl } = body;
         if (!campaignId || (!username && !wallet))
           return res.status(400).json({ error: 'Missing campaignId or identity' });
+        // AI moderation on the tweet URL / content
+        const mod = await aiModerate(tweetUrl || username || '');
+        if (!mod.allowed) return res.status(422).json({ error: mod.reason || 'Content not allowed' });
         const doc = await db.createDocument(DB, COLL, ID.unique(), {
           campaignId,
           username:     (username || 'anon').slice(0, 32),
@@ -77,7 +102,7 @@ module.exports = async (req, res) => {
           return res.status(401).json({ error: 'Signature verification failed' });
         }
         const post = await db.getDocument(DB, COLL, postId);
-        if (post.wallet !== pubkey) return res.status(403).json({ error: 'Not your post' });
+        if (post.wallet !== pubkey && pubkey !== ADMIN_WALLET) return res.status(403).json({ error: 'Not your post' });
         await db.deleteDocument(DB, COLL, postId);
         return res.status(200).json({ success: true });
       }
