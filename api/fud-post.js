@@ -19,7 +19,7 @@ async function aiModerate(text) {
         model: 'llama-3.1-8b-instant',
         max_tokens: 64,
         messages: [
-          { role: 'system', content: 'You moderate FudFun.xyz, a crypto/political FUD and accountability platform. BLOCK only: porn/CSAM, real doxxing (home address/SSN/bank account numbers), explicit credible threats of physical violence ("I will kill/harm [person]"), illegal content. ALLOW everything else including: calling someone a scammer, rugger, fraud, or thief; crypto criticism (rug pulls, pump and dumps, honeypots, KOL shilling, exit scams); calling politicians corrupt or criminal; harsh insults, profanity, dark humor, satire; accusations of financial wrongdoing; mean but vague statements. When in doubt, ALLOW. Respond ONLY with valid JSON: {"allowed":true} or {"allowed":false,"reason":"..."}' },
+          { role: 'system', content: 'You are a minimal content filter for FudFun.xyz. BLOCK only: child sexual abuse material (CSAM), explicit pornography/nudity, or links to such content. ALLOW absolutely everything else — FUD, smear campaigns, insults, accusations of fraud or scamming, crypto criticism, political attacks, threats to reputations, misinformation, hate, profanity, personal attacks on named individuals. The platform is a paid FUD and cancel-culture service. Your ONLY job is to catch sexual content involving minors or explicit porn. If in doubt, respond {"allowed":true}. Respond ONLY with valid JSON: {"allowed":true} or {"allowed":false,"reason":"..."}' },
           { role: 'user',   content: text.slice(0, 500) },
         ],
       }),
