@@ -1585,6 +1585,28 @@ function bindCards() {
           return;
         }
 
+        // Appwrite-authenticated user (Google/email) — use JWT, no wallet needed
+        if (user) {
+          const jwt = await account.createJWT();
+          const r = await fetch('/api/campaign-delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ campaignId, appwriteJwt: jwt.jwt }),
+          });
+          if (r.ok) {
+            const card = btn.closest('.card');
+            card.style.transition = 'opacity .3s,transform .3s';
+            card.style.opacity = '0'; card.style.transform = 'scale(.95)';
+            setTimeout(() => card.remove(), 310);
+            toast('🗑️ Campaign deleted', '');
+          } else {
+            const d = await r.json();
+            toast('Error: ' + (d.error || 'delete failed'), '');
+            btn.textContent = '🗑️'; btn.disabled = false;
+          }
+          return;
+        }
+
         const provider = getWalletProvider();
         if (!provider) {
           const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);

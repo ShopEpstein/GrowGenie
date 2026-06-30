@@ -1,4 +1,4 @@
-const { Client, Databases } = require('node-appwrite');
+const { Client, Databases, Account } = require('node-appwrite');
 const nacl   = require('tweetnacl');
 const bs58   = require('bs58');
 
@@ -15,8 +15,36 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { campaignId, pubkey, signature, message } = req.body || {};
-  if (!campaignId || !pubkey || !signature || !message) {
+  const { campaignId, pubkey, signature, message, appwriteJwt } = req.body || {};
+  if (!campaignId) return res.status(400).json({ error: 'Missing campaignId' });
+
+  const adm = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
+  const dbs = new Databases(adm);
+
+  // Appwrite JWT path — for Google/email users who don't have a wallet
+  if (appwriteJwt) {
+    let appUser;
+    try {
+      const userClient = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setJWT(appwriteJwt);
+      appUser = await new Account(userClient).get();
+    } catch {
+      return res.status(401).json({ error: 'Invalid session' });
+    }
+    let doc;
+    try {
+      doc = await dbs.getDocument(DB, 'campaigns', campaignId);
+    } catch {
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    if (doc.clientId !== appUser.$id) {
+      return res.status(403).json({ error: 'Not your campaign' });
+    }
+    await dbs.deleteDocument(DB, 'campaigns', campaignId);
+    return res.status(200).json({ success: true });
+  }
+
+  // Wallet signature path
+  if (!pubkey || !signature || !message) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -36,9 +64,6 @@ module.exports = async (req, res) => {
   } catch {
     return res.status(401).json({ error: 'Signature verification failed' });
   }
-
-  const adm = new Client().setEndpoint(ENDPOINT).setProject(PROJECT).setKey(API_KEY);
-  const dbs = new Databases(adm);
 
   let doc;
   try {
