@@ -642,7 +642,7 @@ html[data-mode="smear"] .btn-mode{
 
     <div id="lc-form-wrap">
       <div class="m-title">Launch a FUD Campaign 💀</div>
-      <p class="m-sub">Free. Instant. The internet does the rest.</p>
+      <p class="m-sub">0.01 SOL to launch. Instant. The internet does the rest.</p>
       <form id="lc-form" novalidate>
         <div class="field">
           <label for="lf-target">Who's getting FUD'd?</label>
@@ -930,7 +930,7 @@ const MODES = {
     modeBtn:         '🎭 FUD Mode',
     launchBtn:       'Launch Campaign 💀',
     modalTitle:      'Launch a FUD Campaign 💀',
-    modalSub:        'Free. Instant. The internet does the rest.',
+    modalSub:        '0.01 SOL to launch. Instant. The internet does the rest.',
     targetLabel:     "Who's getting FUD'd?",
     grievanceLabel:  'The Grievance',
     grievancePh:     'Give the internet ammunition. The more specific, the better.',
@@ -1469,7 +1469,19 @@ function bindCards() {
       btn.textContent = '…'; btn.disabled = true;
       try {
         const provider = getWalletProvider();
-        if (!provider) { toast('Open in Phantom or Solflare to delete', ''); btn.textContent = '🗑️'; btn.disabled = false; return; }
+        if (!provider) {
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          if (isMobile) {
+            const here = encodeURIComponent(location.href);
+            const ref  = encodeURIComponent(location.origin);
+            if (confirm('Delete requires your wallet. Open in Phantom mobile?')) {
+              window.location.href = `https://phantom.app/ul/browse/${here}?ref=${ref}`;
+            }
+          } else {
+            toast('Install Phantom or Solflare to delete', '');
+          }
+          btn.textContent = '🗑️'; btn.disabled = false; return;
+        }
         let pubkey = provider.publicKey?.toString();
         if (!pubkey) {
           const conn = await provider.connect({ onlyIfTrusted: true }).catch(() => provider.connect());
