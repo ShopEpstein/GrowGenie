@@ -476,47 +476,27 @@ a{color:inherit;text-decoration:none}
 
 <!-- FUD PLAYBOOK -->
 <section class="section" style="margin-top:8px" id="playbookSection">
-  <div class="sec-head">💀 Get Your Hate Squad <span class="sec-sub">we run it for you</span></div>
+  <div class="sec-head">💀 Want More Firepower? <span class="sec-sub">professional campaigns</span></div>
 
   <div style="
     background:linear-gradient(135deg,rgba(255,61,0,.08),rgba(255,140,0,.04));
     border:1px solid rgba(255,61,0,.28);border-radius:var(--r);padding:20px 18px;
   ">
     <div style="font-family:'Space Grotesk';font-weight:900;font-size:22px;margin-bottom:8px;line-height:1.2">
-      You launch. We attack. 💀
+      You launch. We amplify. 💀
     </div>
     <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:18px">
-      Send SOL, DM us your campaign link — our coordinated network deploys against your target across platforms within 24 hours. You get War Room access for real-time coordination.
+      Want a professionally run campaign? DM us your campaign link and we'll coordinate the attack — content, timing, and distribution handled for you.
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
-        <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Light Strike</div>
-        <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:var(--orange)">0.5 SOL</div>
-      </div>
-      <div style="background:var(--bg3);border:1px solid rgba(255,61,0,.35);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
-        <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Full Op</div>
-        <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:var(--red)">5 SOL</div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-      <div id="boost-wallet-addr" style="
-        font-family:'Space Mono';font-size:11px;color:var(--text);
-        background:var(--bg3);border:1px solid var(--border2);
-        border-radius:8px;padding:8px 12px;flex:1;min-width:0;
-        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-        cursor:pointer;user-select:all;
-      " onclick="copyBoostWallet()" title="Click to copy"></div>
-      <button onclick="copyBoostWallet()" style="
-        background:var(--bg3);border:1px solid var(--border2);color:var(--dim);
-        border-radius:8px;padding:8px 14px;font-size:12px;font-family:'Space Mono';
-        cursor:pointer;white-space:nowrap;transition:all .12s;
-      " onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--dim)'">
-        📋 Copy
-      </button>
-    </div>
-    <div style="font-size:12px;color:var(--dim);line-height:1.6">
-      After sending, DM <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="color:var(--orange)">@fudfunn on X</a> with your TX hash + this campaign URL.
-    </div>
+    <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="
+      display:inline-flex;align-items:center;gap:8px;
+      background:linear-gradient(135deg,var(--red),var(--orange));
+      color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:14px;
+      padding:12px 22px;border-radius:99px;text-decoration:none;
+      transition:opacity .13s;
+    " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+      💬 DM @fudfunn on X →
+    </a>
   </div>
 </section>
 
@@ -674,15 +654,6 @@ function toast(msg, type='') {
   t._t = setTimeout(() => t.className = '', 2600);
 }
 
-function copyBoostWallet() {
-  navigator.clipboard.writeText(BOOST_WALLET).then(() => toast('Wallet address copied!', 'tip')).catch(() => {});
-}
-
-// Populate boost wallet display
-(function() {
-  const el = document.getElementById('boost-wallet-addr');
-  if (el) el.textContent = BOOST_WALLET;
-})();
 
 // ── Profile ────────────────────────────────────────────────
 const PK = 'fud_profile';
@@ -1184,19 +1155,6 @@ window.deletePost = async function(postId) {
   }
 };
 
-// ── Token gate ─────────────────────────────────────────────
-const GATE_TOKENS = [
-  { symbol: '$SCROLL', mint: '9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump', buy: 'https://pump.fun/coin/9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump' },
-  { symbol: '$FUD',    mint: 'TBD', buy: '#' },  // swap CA when $FUD launches
-];
-async function checkHoldsGateToken(walletAddress) {
-  try {
-    const r = await fetch(`/api/check-gate?wallet=${encodeURIComponent(walletAddress)}`);
-    if (!r.ok) return false;
-    const j = await r.json();
-    return j.allowed === true;
-  } catch { return false; }
-}
 
 // ── Submit FUD ─────────────────────────────────────────────
 window.handleSubmit = async function() {
@@ -1251,37 +1209,6 @@ window.handleSubmit = async function() {
   }
 };
 
-function showGateBanner(extraHtml = '') {
-  const existing = $('gate-banner');
-  if (existing) existing.remove();
-  const div = document.createElement('div');
-  div.id = 'gate-banner';
-  div.innerHTML = `
-    <div style="
-      background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);
-      border-radius:14px;padding:14px 16px;margin-top:12px;
-    ">
-      <div style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#FFD700;margin-bottom:6px">
-        🔒 Token Required to Post FUD
-      </div>
-      <div style="font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:10px">
-        Connect your wallet and hold $SCROLL or $FUD to post FUD and earn SOL tips.
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${GATE_TOKENS.filter(t => t.mint !== 'TBD').map(t => `
-          <a href="${t.buy}" target="_blank" rel="noopener" style="
-            display:inline-flex;align-items:center;gap:5px;
-            background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);
-            border-radius:99px;padding:6px 14px;
-            font-family:'Space Mono';font-size:11px;font-weight:700;
-            color:#FFD700;text-decoration:none;transition:all .13s;
-          ">Buy ${t.symbol} →</a>
-        `).join('')}
-      </div>
-      ${extraHtml}
-    </div>`;
-  $('btnSubmit').insertAdjacentElement('afterend', div);
-}
 
 // ── Tip flow ───────────────────────────────────────────────
 window.openTip = function(postId, wallet, username, postCount) {
@@ -1363,44 +1290,26 @@ function renderSmearPlaybook() {
   const sec = $('playbookSection');
   if (!sec) return;
   sec.innerHTML = `
-    <div class="sec-head">⭐ Get Your Smear Squad <span class="sec-sub">we run it for you</span></div>
+    <div class="sec-head">⭐ Want More Firepower? <span class="sec-sub">professional campaigns</span></div>
     <div style="
       background:linear-gradient(135deg,rgba(178,34,52,.08),rgba(60,59,110,.06));
       border:1px solid rgba(178,34,52,.3);border-radius:var(--r);padding:20px 18px;
     ">
       <div style="font-family:'Space Grotesk';font-weight:900;font-size:22px;margin-bottom:8px;line-height:1.2">
-        You launch. We deploy. ⭐
+        You launch. We amplify. ⭐
       </div>
       <div style="font-size:13px;color:var(--dim);line-height:1.7;margin-bottom:18px">
-        Send SOL, DM us your campaign link — our coordinated network deploys opposition content across platforms within 24 hours. You get War Room access for real-time coordination.
+        Want a professionally run smear campaign? DM us your campaign link and we'll coordinate the operation — content, timing, and distribution handled for you.
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
-        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
-          <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Light Strike</div>
-          <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:#FF8C00">0.5 SOL</div>
-        </div>
-        <div style="background:var(--bg3);border:1px solid rgba(178,34,52,.35);border-radius:10px;padding:12px 16px;flex:1;min-width:120px;text-align:center">
-          <div style="font-family:'Space Mono';font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Full Op</div>
-          <div style="font-family:'Space Grotesk';font-weight:800;font-size:22px;color:#B22234">5 SOL</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <div id="boost-wallet-addr" style="
-          font-family:'Space Mono';font-size:11px;color:var(--text);
-          background:var(--bg3);border:1px solid var(--border2);
-          border-radius:8px;padding:8px 12px;flex:1;min-width:0;
-          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-          cursor:pointer;user-select:all;
-        " onclick="copyBoostWallet()" title="Click to copy">${BOOST_WALLET}</div>
-        <button onclick="copyBoostWallet()" style="
-          background:var(--bg3);border:1px solid var(--border2);color:var(--dim);
-          border-radius:8px;padding:8px 14px;font-size:12px;font-family:'Space Mono';
-          cursor:pointer;white-space:nowrap;transition:all .12s;
-        " onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--dim)'">📋 Copy</button>
-      </div>
-      <div style="font-size:12px;color:var(--dim);line-height:1.6">
-        After sending, DM <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="color:#FF8C00">@fudfunn on X</a> with your TX hash + this campaign URL.
-      </div>
+      <a href="https://x.com/smearfun" target="_blank" rel="noopener" style="
+        display:inline-flex;align-items:center;gap:8px;
+        background:linear-gradient(135deg,#B22234,#3C3B6E);
+        color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:14px;
+        padding:12px 22px;border-radius:99px;text-decoration:none;
+        transition:opacity .13s;
+      " onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        💬 DM @smearfun on X →
+      </a>
     </div>`;
 }
 

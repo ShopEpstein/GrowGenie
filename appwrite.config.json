@@ -159,6 +159,27 @@
         { "key": "idx_fp_campaign", "type": "key", "attributes": ["campaignId"], "orders": ["ASC"] },
         { "key": "idx_fp_ts",       "type": "key", "attributes": ["campaignId","timestamp"], "orders": ["ASC","DESC"] }
       ]
+    },
+    {
+      "$id": "war_room",
+      "databaseId": "growthgenie",
+      "name": "war_room",
+      "documentSecurity": false,
+      "$permissions": [
+        "read(\"any\")",
+        "create(\"any\")"
+      ],
+      "attributes": [
+        { "key": "campaignId", "type": "string",  "size": 64,  "required": true  },
+        { "key": "message",    "type": "string",  "size": 280, "required": true  },
+        { "key": "username",   "type": "string",  "size": 24,  "required": true  },
+        { "key": "wallet",     "type": "string",  "size": 64,  "required": false },
+        { "key": "timestamp",  "type": "integer", "required": false }
+      ],
+      "indexes": [
+        { "key": "idx_wr_campaign", "type": "key", "attributes": ["campaignId"],              "orders": ["ASC"] },
+        { "key": "idx_wr_ts",       "type": "key", "attributes": ["campaignId","timestamp"],   "orders": ["ASC","ASC"] }
+      ]
     }
   ]
 }

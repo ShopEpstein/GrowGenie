@@ -1,9 +1,8 @@
 {
-  "name": "growgenie",
+  "name": "fudfun",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
     "@vercel/og": "^0.6.3",
     "bs58": "^5.0.0",
     "node-appwrite": "^14.1.0",
