@@ -801,9 +801,12 @@ html[data-mode="smear"] .btn-mode{
         <a id="gate-buy-scroll" href="https://pump.fun/coin/9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump" target="_blank" rel="noopener" class="btn-gate-buy">
           Buy $SCROLL on pump.fun →
         </a>
-        <a id="gate-buy-fud" href="#" class="btn-gate-buy" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
-          Buy $FUD — coming soon
+        <a id="gate-buy-fud" href="https://pump.fun/coin/o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump" target="_blank" rel="noopener" class="btn-gate-buy" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
+          Buy $FUD on pump.fun →
         </a>
+        <div style="margin-top:8px;font-family:'Space Mono';font-size:10px;color:var(--dim);text-align:center">
+          CA: <span id="fud-ca-gate" style="cursor:pointer;color:var(--dim2)" title="Click to copy" onclick="navigator.clipboard.writeText('o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump').then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='o8CatcjnjZhX…41pump'},1500)})">o8CatcjnjZhX…41pump</span>
+        </div>
         <button class="btn-gate-cancel" onclick="document.getElementById('gate-overlay').classList.remove('open')">Maybe later</button>
       </div>
     </div>
@@ -967,6 +970,13 @@ html[data-mode="smear"] .btn-mode{
 <button class="help-fab" id="help-fab" title="How it works" onclick="document.getElementById('help-overlay').classList.add('open')">?</button>
 
 <footer class="site-footer">
+  <div style="margin-bottom:8px">
+    <a href="https://pump.fun/coin/o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump" target="_blank" rel="noopener" style="color:var(--red);font-weight:700;text-decoration:none">$FUD</a>
+    &nbsp;·&nbsp;
+    <span style="font-family:'Space Mono';font-size:11px">CA: <span id="fud-ca-footer" style="cursor:pointer;color:var(--dim)" title="Click to copy" onclick="navigator.clipboard.writeText('o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump').then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump'},1500)})">o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump</span></span>
+    &nbsp;·&nbsp;
+    <a href="https://pump.fun/coin/o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump" target="_blank" rel="noopener">Buy on pump.fun →</a>
+  </div>
   <div>Made with 💀 by the internet's finest haters &nbsp;·&nbsp; <a href="https://x.com/fudfunn" target="_blank" rel="noopener" id="footer-x">@fudfunn on X</a> &nbsp;·&nbsp; <a href="haters.html">Hall of Haters 🏆</a> &nbsp;·&nbsp; <a href="#" onclick="event.preventDefault();document.getElementById('help-overlay').classList.add('open')">How it works</a></div>
   <div style="margin-top:5px;font-size:11px" id="footer-support">Got a problem? <a href="/" id="footer-support-link" style="color:var(--red)">Launch a FUD campaign against us</a> until we notice.</div>
 </footer>
