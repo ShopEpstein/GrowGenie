@@ -7,6 +7,16 @@ export default async function handler(req) {
   const target  = (searchParams.get('t') || 'Unknown').slice(0, 42);
   const why     = (searchParams.get('w') || '').slice(0, 110);
   const isSmear = searchParams.get('m') === 's';
+  const rawImg  = searchParams.get('img');
+
+  // Verify the banner image is actually fetchable before including it
+  let imgUrl = null;
+  if (rawImg) {
+    try {
+      const r = await fetch(rawImg, { signal: AbortSignal.timeout(3000) });
+      if (r.ok) imgUrl = rawImg;
+    } catch {}
+  }
 
   const accent     = isSmear ? '#B22234' : '#FF3D00';
   const accent2    = isSmear ? '#3C3B6E' : '#FF8C00';
@@ -18,6 +28,7 @@ export default async function handler(req) {
   const handleText = isSmear ? '@smearfun on X' : '@fudfunn on X';
   const domainText = isSmear ? 'smearfun.xyz' : 'fudfun.xyz';
 
+  const TEXT_WIDTH = imgUrl ? 660 : 1040;
   const targetSize = target.length > 28 ? 56 : target.length > 18 ? 68 : 80;
 
   return new ImageResponse(
@@ -27,10 +38,8 @@ export default async function handler(req) {
         height: '630px',
         background: '#04050a',
         display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        padding: '60px 80px',
         position: 'relative',
+        overflow: 'hidden',
         fontFamily: 'system-ui, sans-serif',
       }}
     >
@@ -48,63 +57,95 @@ export default async function handler(req) {
         display: 'flex',
       }} />
 
-      {/* badge row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '32px' }}>
-        <div style={{
-          background: `linear-gradient(135deg, ${accent}, ${accent2})`,
-          borderRadius: '99px',
-          padding: '10px 24px',
-          fontSize: '18px',
-          fontWeight: 800,
-          color: '#fff',
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          display: 'flex',
-        }}>
-          {badgeText}
-        </div>
-        <div style={{ color: '#3a3d52', fontSize: '17px', fontWeight: 600, display: 'flex' }}>
-          {domainText}
-        </div>
-      </div>
-
-      {/* target name */}
+      {/* Left text area */}
       <div style={{
-        fontSize: `${targetSize}px`,
-        fontWeight: 900,
-        color: '#F0F1FA',
-        lineHeight: 1.08,
-        marginBottom: '22px',
-        letterSpacing: '-0.03em',
         display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        width: `${TEXT_WIDTH}px`,
+        padding: imgUrl ? '60px 40px 80px 80px' : '60px 80px 80px',
+        position: 'relative',
+        zIndex: 1,
       }}>
-        {target}
-      </div>
+        {/* badge row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '32px' }}>
+          <div style={{
+            background: `linear-gradient(135deg, ${accent}, ${accent2})`,
+            borderRadius: '99px',
+            padding: '10px 24px',
+            fontSize: '18px',
+            fontWeight: 800,
+            color: '#fff',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            display: 'flex',
+          }}>
+            {badgeText}
+          </div>
+          <div style={{ color: '#3a3d52', fontSize: '17px', fontWeight: 600, display: 'flex' }}>
+            {domainText}
+          </div>
+        </div>
 
-      {/* accent bar */}
-      <div style={{
-        width: '80px',
-        height: '4px',
-        background: `linear-gradient(90deg, ${accent}, ${accent2})`,
-        borderRadius: '99px',
-        marginBottom: '24px',
-        display: 'flex',
-      }} />
-
-      {/* why text */}
-      {why ? (
+        {/* target name */}
         <div style={{
-          fontSize: '26px',
-          color: '#8890b0',
-          lineHeight: 1.45,
-          maxWidth: '900px',
+          fontSize: `${targetSize}px`,
+          fontWeight: 900,
+          color: '#F0F1FA',
+          lineHeight: 1.08,
+          marginBottom: '22px',
+          letterSpacing: '-0.03em',
           display: 'flex',
         }}>
-          {'“'}{why}{'”'}
+          {target}
+        </div>
+
+        {/* accent bar */}
+        <div style={{
+          width: '80px',
+          height: '4px',
+          background: `linear-gradient(90deg, ${accent}, ${accent2})`,
+          borderRadius: '99px',
+          marginBottom: '24px',
+          display: 'flex',
+        }} />
+
+        {/* why text */}
+        {why ? (
+          <div style={{
+            fontSize: '26px',
+            color: '#8890b0',
+            lineHeight: 1.45,
+            maxWidth: `${TEXT_WIDTH - 140}px`,
+            display: 'flex',
+          }}>
+            {'"'}{why}{'"'}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Right banner image */}
+      {imgUrl ? (
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          overflow: 'hidden',
+          position: 'relative',
+        }}>
+          <img
+            src={imgUrl}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          {/* fade from dark background into the image on the left edge */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, bottom: 0, width: '120px',
+            background: 'linear-gradient(to right, #04050a, transparent)',
+            display: 'flex',
+          }} />
         </div>
       ) : null}
 
-      {/* footer */}
+      {/* Footer */}
       <div style={{
         position: 'absolute',
         bottom: 0,

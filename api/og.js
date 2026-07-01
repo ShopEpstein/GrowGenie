@@ -37,10 +37,10 @@ module.exports = async (req, res) => {
   const host     = req.headers.host || 'fudfun.xyz';
   const baseUrl  = `${proto}://${host}`;
 
-  // Always generate a dynamic OG image; use campaign banner as override if it exists
-  const ogImageUrl = thumb
-    ? thumb
-    : `${baseUrl}/api/og-image?t=${encodeURIComponent(who)}&w=${encodeURIComponent(why.slice(0, 110))}&m=${isSmear ? 's' : 'f'}`;
+  // Always serve the OG image from our domain so third-party CDNs can't block it.
+  // Pass the campaign banner as ?img= for the edge function to embed in the card.
+  const imgParam = thumb ? `&img=${encodeURIComponent(thumb)}` : '';
+  const ogImageUrl = `${baseUrl}/api/og-image?t=${encodeURIComponent(who)}&w=${encodeURIComponent(why.slice(0, 110))}&m=${isSmear ? 's' : 'f'}${imgParam}`;
 
   const verb     = isSmear ? "getting Smeared" : "getting FUD'd";
   const icon     = isSmear ? '⭐' : '💀';
