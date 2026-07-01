@@ -990,6 +990,30 @@ const IS_SMEAR_DOMAIN = /smearfun\.xyz/i.test(location.hostname);
 const WELCOME_KEY     = IS_SMEAR_DOMAIN ? 'smear_welcomed_v1' : 'fud_welcomed_v2';
 let mode = IS_SMEAR_DOMAIN ? 'smear' : 'fud';
 
+// Cross-domain wallet session handoff receiver
+// When navigating fudfun.xyz ↔ smearfun.xyz, wallet data is passed as URL params
+// so the destination domain can bootstrap auth without requiring a second wallet connect.
+(function receiveCrossDomainSession() {
+  const sp = new URLSearchParams(location.search);
+  const w = sp.get('w'), t = sp.get('t');
+  if (!w || !t) return;
+  try {
+    if (!localStorage.getItem('fud_wallet')) {
+      localStorage.setItem('fud_wallet', JSON.stringify({ pubkey: w, token: t, ts: Date.now() }));
+      const u = sp.get('u'), x = sp.get('x');
+      if (u !== null || x !== null) {
+        localStorage.setItem('fud_profile', JSON.stringify({ wallet: w, username: u || '', xhandle: x || '', ts: Date.now() }));
+      }
+    }
+  } catch {}
+  // Strip handoff params from URL without triggering a reload
+  const cleaned = location.pathname + location.search
+    .replace(/[?&](w|t|u|x)=[^&]*/g, '')
+    .replace(/^[?&]/, '?')
+    .replace(/^\?$/, '');
+  history.replaceState({}, '', cleaned || location.pathname);
+})();
+
 function applyMode(m) {
   mode = m;
   localStorage.setItem('fud_mode', m);
@@ -1042,11 +1066,27 @@ function applyMode(m) {
   }
 }
 
+// Navigate cross-domain, carrying wallet session in URL params so the
+// destination can bootstrap auth without a second wallet connect.
+function crossDomainNavigate(url) {
+  try {
+    const w = JSON.parse(localStorage.getItem('fud_wallet') || 'null');
+    const p = JSON.parse(localStorage.getItem('fud_profile') || 'null');
+    if (w?.pubkey && w?.token) {
+      const q = new URLSearchParams({ w: w.pubkey, t: w.token });
+      if (p?.username) q.set('u', p.username);
+      if (p?.xhandle)  q.set('x', p.xhandle);
+      url += '?' + q.toString();
+    }
+  } catch {}
+  window.location.href = url;
+}
+
 function toggleMode() {
   // On production domains, cross-navigate to the other site
   const h = location.hostname;
-  if (h === 'fudfun.xyz' || h === 'www.fudfun.xyz') { window.location.href = 'https://smearfun.xyz'; return; }
-  if (h === 'smearfun.xyz' || h === 'www.smearfun.xyz') { window.location.href = 'https://fudfun.xyz'; return; }
+  if (h === 'fudfun.xyz' || h === 'www.fudfun.xyz') { crossDomainNavigate('https://smearfun.xyz'); return; }
+  if (h === 'smearfun.xyz' || h === 'www.smearfun.xyz') { crossDomainNavigate('https://fudfun.xyz'); return; }
   // Local dev: just toggle the skin
   applyMode(mode === 'fud' ? 'smear' : 'fud');
   const mob = document.getElementById('drop-mode-mobile');
@@ -1126,14 +1166,14 @@ if (IS_SMEAR_DOMAIN) {
   // Mode toggle → back-to-FudFun button (visible on desktop)
   const modeToggle = document.getElementById('mode-toggle');
   modeToggle.textContent = '💀 FudFun.xyz';
-  modeToggle.onclick = () => { window.location.href = 'https://fudfun.xyz'; };
+  modeToggle.onclick = () => { crossDomainNavigate('https://fudfun.xyz'); };
 
   // Mobile dropdown → back-to-FudFun link (keep visible)
   const mobToggle = document.getElementById('drop-mode-mobile');
   mobToggle.textContent = '💀 Switch to FudFun.xyz';
   mobToggle.onclick = () => {
     document.getElementById('acct-drop').classList.remove('open');
-    window.location.href = 'https://fudfun.xyz';
+    crossDomainNavigate('https://fudfun.xyz');
   };
   document.title = 'SmearFun.xyz — Political Smear Campaigns in Seconds';
   document.querySelector('meta[property="og:title"]')?.setAttribute('content', 'SmearFun.xyz — Political Smear Campaigns');
