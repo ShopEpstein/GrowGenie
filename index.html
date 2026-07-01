@@ -565,6 +565,28 @@ html[data-mode="smear"] .btn-mode{
 .site-footer a:hover{color:var(--text)}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ── HOW IT WORKS ─────────────── */
+.help-fab{
+  position:fixed;bottom:22px;right:22px;width:44px;height:44px;border-radius:50%;
+  background:var(--bg3);border:1px solid var(--border2);color:var(--dim);
+  font-size:19px;cursor:pointer;z-index:300;display:flex;align-items:center;
+  justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .13s;
+}
+.help-fab:hover{color:var(--text);border-color:var(--border3);transform:scale(1.07)}
+.help-step{display:flex;gap:14px;align-items:flex-start}
+.help-step-num{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--red),var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Mono';font-size:11px;font-weight:700;color:#fff;
+}
+.help-step-body{}
+.help-step-title{font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px}
+.help-step-desc{font-size:13px;color:var(--dim);line-height:1.5}
+.help-faq-item{margin-bottom:12px}
+.help-faq-q{font-family:'Space Grotesk';font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px}
+.help-faq-a{font-size:13px;color:var(--dim);line-height:1.5}
 </style>
 </head>
 <body>
@@ -592,6 +614,7 @@ html[data-mode="smear"] .btn-mode{
         <button class="acct-drop-item" id="drop-profile">🎩 My Profile</button>
         <button class="acct-drop-item" id="drop-mine">👤 My Campaigns</button>
         <a href="haters.html" class="acct-drop-item" style="display:block">🏆 Hall of Haters</a>
+        <button class="acct-drop-item" id="drop-howto">❓ How it works</button>
         <div class="acct-drop-divider"></div>
         <button class="acct-drop-item danger" id="drop-signout">Sign Out</button>
       </div>
@@ -869,8 +892,82 @@ html[data-mode="smear"] .btn-mode{
   </div>
 </div>
 
+<!-- HOW IT WORKS OVERLAY -->
+<div class="overlay" id="help-overlay">
+  <div class="modal" style="max-width:480px;overflow-y:auto;max-height:90vh">
+    <button class="m-close" onclick="document.getElementById('help-overlay').classList.remove('open')">×</button>
+    <div class="m-title" style="font-size:20px;margin-bottom:4px">How FudFun Works</div>
+    <p style="color:var(--dim);font-size:13px;margin:0 0 22px">You don't need to know the people or the project. You just need to think they're going to 0.</p>
+
+    <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:26px">
+      <div class="help-step">
+        <div class="help-step-num">1</div>
+        <div class="help-step-body">
+          <div class="help-step-title">🎯 Pick any target</div>
+          <div class="help-step-desc">Any token, KOL, or project you think is heading to 0. No inside knowledge required — just a conviction and an internet connection.</div>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="help-step-num">2</div>
+        <div class="help-step-body">
+          <div class="help-step-title">🔥 Launch the campaign</div>
+          <div class="help-step-desc">Write your case in 60 seconds. Add their X handle, a banner image, and your grievance. Free to browse — small SOL fee to launch.</div>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="help-step-num">3</div>
+        <div class="help-step-body">
+          <div class="help-step-title">𝕏 Share it on X</div>
+          <div class="help-step-desc">Tag your target. The campaign link previews with your banner image. Let the community pile on — the more it spreads, the more it burns.</div>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="help-step-num">4</div>
+        <div class="help-step-body">
+          <div class="help-step-title">💰 Earn tips</div>
+          <div class="help-step-desc">Other FudFun users tip campaigns they believe in. Quality FUD earns real SOL from believers who want the bag sent to 0.</div>
+        </div>
+      </div>
+      <div class="help-step">
+        <div class="help-step-num">5</div>
+        <div class="help-step-body">
+          <div class="help-step-title">💀 Watch it burn</div>
+          <div class="help-step-desc">The War Room inside each campaign is where believers coordinate. The community amplifies. The internet does the rest.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:18px;margin-bottom:22px">
+      <div style="font-family:'Space Mono';font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:14px">FAQ</div>
+      <div class="help-faq-item">
+        <div class="help-faq-q">Do I need a wallet?</div>
+        <div class="help-faq-a">Browsing and reacting is free — sign in with Google or email. You need a Phantom or Solflare wallet to launch a campaign.</div>
+      </div>
+      <div class="help-faq-item">
+        <div class="help-faq-q">How do I earn tips?</div>
+        <div class="help-faq-a">Other users tip campaigns they believe in. Get your FUD shared widely, earn real SOL directly to your wallet.</div>
+      </div>
+      <div class="help-faq-item">
+        <div class="help-faq-q">What is the War Room?</div>
+        <div class="help-faq-a">A live chat inside each campaign where believers coordinate the pressure. Open on any campaign page.</div>
+      </div>
+      <div class="help-faq-item">
+        <div class="help-faq-q">Want professionals to run it?</div>
+        <div class="help-faq-a">DM <a href="https://x.com/fudfunn" target="_blank" rel="noopener" style="color:var(--red)">@fudfunn on X</a> with your campaign link for a coordinated operation — AI ammo, network boost, War Room support.</div>
+      </div>
+    </div>
+
+    <button class="btn-main" style="width:100%;font-size:15px" onclick="document.getElementById('help-overlay').classList.remove('open');document.getElementById('launch-btn').click()">
+      Launch a Campaign 💀
+    </button>
+  </div>
+</div>
+
+<!-- FLOATING HELP BUTTON -->
+<button class="help-fab" id="help-fab" title="How it works" onclick="document.getElementById('help-overlay').classList.add('open')">?</button>
+
 <footer class="site-footer">
-  <div>Made with 💀 by the internet's finest haters &nbsp;·&nbsp; <a href="https://x.com/fudfunn" target="_blank" rel="noopener" id="footer-x">@fudfunn on X</a> &nbsp;·&nbsp; <a href="haters.html">Hall of Haters 🏆</a></div>
+  <div>Made with 💀 by the internet's finest haters &nbsp;·&nbsp; <a href="https://x.com/fudfunn" target="_blank" rel="noopener" id="footer-x">@fudfunn on X</a> &nbsp;·&nbsp; <a href="haters.html">Hall of Haters 🏆</a> &nbsp;·&nbsp; <a href="#" onclick="event.preventDefault();document.getElementById('help-overlay').classList.add('open')">How it works</a></div>
   <div style="margin-top:5px;font-size:11px" id="footer-support">Got a problem? <a href="/" id="footer-support-link" style="color:var(--red)">Launch a FUD campaign against us</a> until we notice.</div>
 </footer>
 
@@ -1346,6 +1443,11 @@ document.getElementById('drop-mine').addEventListener('click', () => {
   seenIds.clear();
   document.getElementById('grid').innerHTML = '<div class="skel"></div>'.repeat(6);
   loadFeed(false);
+});
+
+document.getElementById('drop-howto').addEventListener('click', () => {
+  document.getElementById('acct-drop').classList.remove('open');
+  document.getElementById('help-overlay').classList.add('open');
 });
 
 document.getElementById('drop-signout').addEventListener('click', async () => {
