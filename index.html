@@ -1084,14 +1084,23 @@ async function checkGateTokens(walletAddress) {
 }
 
 // ── Welcome overlay ────────────────
+function _welcomed() {
+  try { if (localStorage.getItem(WELCOME_KEY)) return true; } catch {}
+  try { return document.cookie.split(';').some(c => c.trim().startsWith(WELCOME_KEY + '=')); } catch {}
+  return false;
+}
+function _setWelcomed() {
+  try { localStorage.setItem(WELCOME_KEY, '1'); } catch {}
+  try { document.cookie = WELCOME_KEY + '=1;max-age=31536000;path=/;SameSite=Lax'; } catch {}
+}
 (function initWelcome() {
-  if (!localStorage.getItem(WELCOME_KEY)) {
+  if (!_welcomed()) {
     document.getElementById('welcome-overlay').classList.add('open');
   }
 })();
 
 window.dismissWelcome = function() {
-  localStorage.setItem(WELCOME_KEY, '1');
+  _setWelcomed();
   document.getElementById('welcome-overlay').classList.remove('open');
   const from = new URLSearchParams(location.search).get('from');
   if (from) location.href = '/campaign.html?c=' + encodeURIComponent(from);
