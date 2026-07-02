@@ -1627,7 +1627,11 @@ async function loadFeed(flash) {
     updateStats(filtered.length, filtered.reduce((s, d) => s + totalReacts(d), 0));
     updateTicker(docs.slice(0, 12));
     bindCards();
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+    document.getElementById('grid').innerHTML =
+      `<div class="empty"><h3>Failed to load campaigns</h3><p style="font-family:'Space Mono';font-size:11px;color:var(--red)">${err?.message || err}</p></div>`;
+  }
 }
 
 function updateStats(campaigns, reactions) {
