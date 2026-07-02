@@ -165,10 +165,9 @@ nav{
 <div class="hero">
   <div class="hero-crown">🏆</div>
   <h1 class="hero-title">Hall of Haters</h1>
-  <p class="hero-sub">The all-time leaderboard of the internet's greatest FUDders. Rank up by earning SOL tips and reactions. The best haters get hired.</p>
+  <p class="hero-sub">The all-time leaderboard of the internet's greatest FUDders. Rank up by posting and getting tips. The best haters get hired.</p>
   <div class="stats-row" id="global-stats">
     <div class="stat-pill">💀 <strong id="gs-haters">—</strong> FUDders</div>
-    <div class="stat-pill">◎ <strong id="gs-sol">—</strong> SOL tipped</div>
     <div class="stat-pill">🔥 <strong id="gs-posts">—</strong> FUD posts</div>
   </div>
 </div>
@@ -181,9 +180,9 @@ nav{
   <div class="lb-head">
     <div>#</div>
     <div>Hater</div>
-    <div>◎ SOL earned</div>
     <div>Posts fired</div>
-    <div class="col-reacts">Reactions</div>
+    <div>Tips received</div>
+    <div class="col-reacts">Score</div>
   </div>
   <div id="lb-body">
     <div class="skel" style="margin:6px 0"></div>
@@ -260,12 +259,9 @@ async function load() {
     if (p.xHandle && !byUser[key].xHandle) byUser[key].xHandle = p.xHandle;
   }
 
-  const ranked = Object.values(byUser).sort((a, b) => b.sol - a.sol || b.posts - a.posts);
+  const ranked = Object.values(byUser).sort((a, b) => (b.posts + b.tipCount) - (a.posts + a.tipCount));
 
-  // Global stats
-  const totalSol = ranked.reduce((s, u) => s + u.sol, 0);
   document.getElementById('gs-haters').textContent = ranked.length;
-  document.getElementById('gs-sol').textContent    = totalSol.toFixed(2);
   document.getElementById('gs-posts').textContent  = allPosts.length;
 
   renderPodium(ranked.slice(0, 3));
@@ -295,8 +291,8 @@ function renderPodium(top) {
           <span class="podium-tier lb-tier-badge ${rank.cls}">${rank.icon} ${rank.label}</span>
         </div>
         <div class="podium-stats">
-          <div class="podium-stat"><strong>◎ ${u.sol.toFixed(2)}</strong>earned</div>
           <div class="podium-stat"><strong>${u.posts}</strong>posts</div>
+          <div class="podium-stat"><strong>${u.tipCount}</strong>tips</div>
         </div>
       </div>`;
   }).join('');
@@ -325,9 +321,9 @@ function renderLeaderboard(ranked) {
             <span class="lb-tier-badge ${rank.cls}">${rank.icon} ${rank.label}</span>
           </div>
         </div>
-        <div class="lb-sol">◎ ${u.sol.toFixed(3)}</div>
-        <div class="lb-posts">${u.posts} post${u.posts !== 1 ? 's' : ''}</div>
-        <div class="lb-reacts">${u.tipCount}</div>
+        <div class="lb-sol">${u.posts} post${u.posts !== 1 ? 's' : ''}</div>
+        <div class="lb-posts">${u.tipCount} tips</div>
+        <div class="lb-reacts">${u.posts + u.tipCount}</div>
       </div>`;
   }).join('');
 }
