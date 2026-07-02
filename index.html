@@ -786,32 +786,6 @@ html[data-mode="smear"] .btn-mode{
   </div>
 </div>
 
-<!-- GATE MODAL -->
-<div class="overlay" id="gate-overlay">
-  <div class="modal" style="max-width:420px">
-    <button class="m-close" onclick="document.getElementById('gate-overlay').classList.remove('open')">×</button>
-    <div class="gate-body">
-      <span class="gate-icon">🔒</span>
-      <div class="gate-title">Token-Gated Access</div>
-      <p class="gate-desc">
-        You need to hold <strong>$SCROLL</strong> or <strong>$FUD</strong> to launch a FUD campaign.<br/><br/>
-        These tokens are your ticket to the Player Hater's Ball. No bag, no FUD.
-      </p>
-      <div class="gate-actions">
-        <a id="gate-buy-scroll" href="https://pump.fun/coin/9yfXvj9pYzS92v8JKp7K25oFFjz9emH6nHGtbBexpump" target="_blank" rel="noopener" class="btn-gate-buy">
-          Buy $SCROLL on pump.fun →
-        </a>
-        <a id="gate-buy-fud" href="https://pump.fun/coin/o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump" target="_blank" rel="noopener" class="btn-gate-buy" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">
-          Buy $FUD on pump.fun →
-        </a>
-        <div style="margin-top:8px;font-family:'Space Mono';font-size:10px;color:var(--dim);text-align:center">
-          CA: <span id="fud-ca-gate" style="cursor:pointer;color:var(--dim2)" title="Click to copy" onclick="navigator.clipboard.writeText('o8CatcjnjZhXwwz7JRhYULLqqjw82kKn7hebu41pump').then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='o8CatcjnjZhX…41pump'},1500)})">o8CatcjnjZhX…41pump</span>
-        </div>
-        <button class="btn-gate-cancel" onclick="document.getElementById('gate-overlay').classList.remove('open')">Maybe later</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- MOBILE WALLET MODAL -->
 <!-- WELCOME OVERLAY -->
@@ -1253,9 +1227,6 @@ window.dismissWelcome = function() {
   if (from) location.href = '/campaign.html?c=' + encodeURIComponent(from);
 };
 
-function showGateModal() {
-  document.getElementById('gate-overlay').classList.add('open');
-}
 
 function showMobileWalletModal() {
   const url = encodeURIComponent(location.href);
